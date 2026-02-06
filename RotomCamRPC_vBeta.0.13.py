@@ -3047,7 +3047,7 @@ class ProfileTab:
             if hasattr(self.frame, 'update_idletasks'):
                 try:
                     self.frame.update_idletasks()
-                except:
+                except tk.TclError:
                     pass
         
         if self._settings_frame and self._settings_frame.winfo_exists():
