@@ -4421,7 +4421,7 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=1
         )
-        self.btn_settings.pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
+        self.btn_settings.pack(pady=STANDARD_BUTTON_PADY, padx=21, ipadx=STANDARD_BUTTON_IPADX)
 
         # Start button (below settings) - 420px wide standard button
         self.btn_start = tk.Button(
@@ -4432,7 +4432,7 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=2
         )
-        self.btn_start.pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
+        self.btn_start.pack(pady=STANDARD_BUTTON_PADY, padx=21, ipadx=STANDARD_BUTTON_IPADX)
 
         spacer = tk.Frame(self.container, bg=DARK_BG, height=7)
         spacer.pack(pady=7)
