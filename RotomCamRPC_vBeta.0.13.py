@@ -3797,6 +3797,8 @@ class ProfileTab:
         if not current:
             # Reset to default only when focus is lost with empty field
             self.profile_name_var.set(self.default_tab_name)
+            self.set_tab_title()
+            self.mark_dirty()
 
     def reset_rpc_options(self):
         if self.rpc_is_running:
