@@ -4157,7 +4157,7 @@ class ProfileTab:
         frame = self.frame
 
         self.container = tk.Frame(frame, bg=DARK_BG)
-        self.container.pack(pady=6, anchor="nw")  # Removed padx to allow full 420px button width
+        self.container.pack(pady=6, anchor="n")  # Center anchor to prevent buttons expanding to full width
         self._bind_root_drag(self.container)
 
         def make_row(pady=5):
