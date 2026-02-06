@@ -3048,7 +3048,10 @@ class ProfileTab:
     def _close_sub_setting(self):
         """Close sub-setting and return to settings menu."""
         if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame:
-            self._sub_setting_frame.destroy()
+            try:
+                self._sub_setting_frame.destroy()
+            except:
+                pass
             self._sub_setting_frame = None
         
         # Clear global sub-setting flag
@@ -3101,8 +3104,16 @@ class ProfileTab:
                     self.open_reset_profile_inline()
             else:
                 # No sub-setting should be open - close any existing sub-setting
-                if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame and self._sub_setting_frame.winfo_exists():
-                    self._close_sub_setting()
+                if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame:
+                    try:
+                        if self._sub_setting_frame.winfo_exists():
+                            self._sub_setting_frame.destroy()
+                    except:
+                        pass
+                    self._sub_setting_frame = None
+                    # Ensure main settings frame is visible
+                    if self._settings_frame and self._settings_frame.winfo_exists():
+                        self._settings_frame.pack(padx=10, pady=6, fill="both", expand=True)
         else:
             # Settings should be hidden
             if settings_frame_packed:
