@@ -2941,6 +2941,9 @@ class ProfileTab:
             font=(FONT_NAME, BASE_FONT_SIZE, "bold")
         ).pack(pady=(0, 4))
         
+        # Store initial profile name for change detection
+        initial_profile_name = self.profile_name_var.get()
+        
         profile_name_entry = tk.Entry(
             self._settings_frame,
             textvariable=self.profile_name_var,
@@ -2948,9 +2951,76 @@ class ProfileTab:
             justify="center",
             width=20
         )
-        profile_name_entry.pack(pady=(0, 12))
+        profile_name_entry.pack(pady=(0, 4))
         # Validate profile name when user clicks outside the field
         profile_name_entry.bind("<FocusOut>", self._on_profile_name_focus_out)
+        
+        # Apply button for profile name
+        def check_profile_name_changes():
+            """Check if profile name has changed from initial value."""
+            current_name = self.profile_name_var.get().strip()
+            return current_name != initial_profile_name.strip()
+        
+        def update_profile_name_apply_button_color():
+            """Update Apply button color based on whether name has changed."""
+            if check_profile_name_changes():
+                profile_name_apply_btn.config(bg=START_ACTIVE_COLOR, activebackground=START_ACTIVE_COLOR)
+            else:
+                profile_name_apply_btn.config(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
+        
+        def apply_profile_name_changes():
+            """Apply profile name changes - validate and save."""
+            nonlocal initial_profile_name
+            current = self.profile_name_var.get().strip()
+            
+            # Check if empty
+            if not current:
+                self.profile_name_var.set(self.default_tab_name)
+                self.set_tab_title()
+                self.mark_dirty()
+                initial_profile_name = self.default_tab_name
+                update_profile_name_apply_button_color()
+                return
+            
+            # Check for duplicate names (excluding current profile)
+            all_profiles = globals().get('profiles', [])
+            current_lower = current.lower()
+            for other_profile in all_profiles:
+                if other_profile is self:
+                    continue
+                other_name = other_profile.profile_name_var.get().strip()
+                if other_name.lower() == current_lower:
+                    # Duplicate found - show error and revert
+                    show_custom_error(
+                        "duplicate_name",
+                        "Duplicate Profile Name",
+                        f"Profile name '{current}' is already in use by another profile.\nPlease choose a different name."
+                    )
+                    self.profile_name_var.set(initial_profile_name)
+                    update_profile_name_apply_button_color()
+                    return
+            
+            # Valid name - update and save
+            self.set_tab_title()
+            self.mark_dirty()
+            initial_profile_name = current
+            update_profile_name_apply_button_color()
+        
+        profile_name_apply_btn = tk.Button(
+            self._settings_frame,
+            text="Apply",
+            command=apply_profile_name_changes,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
+            height=BUTTON_HEIGHT
+        )
+        profile_name_apply_btn.pack(fill="x", pady=(0, 12), padx=68)
+        
+        # Bind trace to detect changes
+        self.profile_name_var.trace_add("write", lambda *args: update_profile_name_apply_button_color())
+        
+        # Initialize button color
+        update_profile_name_apply_button_color()
 
         def open_hotkeys_from_settings():
             self._validate_and_fix_profile_name()
