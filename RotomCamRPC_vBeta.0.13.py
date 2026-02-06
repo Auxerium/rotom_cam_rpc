@@ -5592,7 +5592,7 @@ class ProfileTab:
             textvariable=odds_var,
             values=odds_options,
             state="readonly",
-            width=18,
+            width=8,
             style="Rpc.TCombobox"
         )
         odds_combo.grid(row=9, column=1, padx=10, pady=(0, 6), sticky="w")
@@ -5600,7 +5600,7 @@ class ProfileTab:
         # Custom odds entry (only shown when Custom selected)
         tk.Label(content_frame, text="Custom Odds:").grid(row=10, column=0, padx=10, pady=(0, 6), sticky="w")
         custom_odds_var = tk.IntVar(value=self.rpc_odds if current_odds_display is None else 8192)
-        custom_odds_entry = tk.Entry(content_frame, textvariable=custom_odds_var, width=20)
+        custom_odds_entry = tk.Entry(content_frame, textvariable=custom_odds_var, width=8)
         custom_odds_entry.grid(row=10, column=1, padx=10, pady=(0, 6), sticky="w")
         
         def on_odds_change(*args):
@@ -5899,7 +5899,7 @@ class ProfileTab:
             activeforeground=DARK_FG,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT,
+            height=2,
             font=(FONT_NAME, BASE_FONT_SIZE, "bold"),
             state="disabled"  # Start disabled
         )
@@ -5911,14 +5911,14 @@ class ProfileTab:
         # Initialize validation state
         validate_entry()
         
-        # Cancel button
+        # Back button (was Cancel)
         tk.Button(
             button_frame,
-            text="Cancel",
+            text="Back",
             command=cancel_reset,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT
+            height=2
         ).pack(fill="x", pady=(6, 6), padx=10)
 
 
