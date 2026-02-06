@@ -2953,16 +2953,24 @@ class ProfileTab:
         profile_name_entry.bind("<FocusOut>", self._on_profile_name_focus_out)
 
         def open_hotkeys_from_settings():
+            self._validate_and_fix_profile_name()
             open_hotkeys_inline(self)
 
         def open_configure_from_settings():
+            self._validate_and_fix_profile_name()
             self.open_configure_inline()
 
         def open_rpc_from_settings():
+            self._validate_and_fix_profile_name()
             self.open_rpc_inline()
 
         def open_alerts_from_settings():
+            self._validate_and_fix_profile_name()
             self.open_alert_settings_inline()
+
+        def open_reset_from_settings():
+            self._validate_and_fix_profile_name()
+            self.open_reset_profile_inline()
 
         tk.Button(
             self._settings_frame,
@@ -3003,7 +3011,7 @@ class ProfileTab:
         tk.Button(
             self._settings_frame,
             text="Reset Profile",
-            command=self.open_reset_profile_inline,
+            command=open_reset_from_settings,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
@@ -3789,6 +3797,19 @@ class ProfileTab:
             self.profile_name_var.set(current)
         # Don't auto-update tab title or mark dirty on keystroke
         # All validation and updates happen on focus out instead
+    
+    def _validate_and_fix_profile_name(self):
+        """Validate profile name and set to default if empty/whitespace.
+        
+        This should be called before opening sub-menus to ensure the profile
+        name is valid before rendering content that uses it.
+        """
+        current = self.profile_name_var.get().strip()
+        if not current:
+            # Set to default if empty or whitespace-only
+            self.profile_name_var.set(self.default_tab_name)
+            self.set_tab_title()
+            self.mark_dirty()
     
     def _on_profile_name_focus_out(self, *_):
         """Validate profile name when user clicks outside the field."""
