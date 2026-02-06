@@ -608,6 +608,7 @@ def open_hotkeys_inline(profile):
         return
     
     container = profile._show_sub_setting("Hotkeys")
+    profile._current_sub_setting = "hotkeys"  # Track current sub-setting
     
     hotkey_manager.suspend()
     
@@ -2640,6 +2641,7 @@ class ProfileTab:
         self._suppress_text_path_change = False
         self._settings_view_active = False
         self._settings_frame = None
+        self._current_sub_setting = None  # Track which sub-setting is currently open
 
         self.rpc = None
         self.rpc_thread = None
@@ -3022,6 +3024,7 @@ class ProfileTab:
         self._settings_view_active = False
         ProfileTab._global_settings_open = False  # Mark settings as globally closed
         ProfileTab._global_sub_setting_active = None  # Also clear any sub-setting flag
+        self._current_sub_setting = None  # Clear tracking
         
         # Restore the container with its original pack info
         if hasattr(self, '_original_container_pack_info'):
@@ -3069,6 +3072,7 @@ class ProfileTab:
         
         # Clear global sub-setting flag
         ProfileTab._global_sub_setting_active = None
+        self._current_sub_setting = None  # Clear tracking
         
         # Restore settings menu frame
         if self._settings_frame and self._settings_frame.winfo_exists():
@@ -3104,17 +3108,19 @@ class ProfileTab:
             # Check if a sub-setting should be open
             if ProfileTab._global_sub_setting_active:
                 sub_setting = ProfileTab._global_sub_setting_active
-                # Open the appropriate sub-setting for this profile
-                if sub_setting == "alerts":
-                    self.open_alert_settings_inline()  # Fixed method name
-                elif sub_setting == "auto":
-                    self.open_configure_inline()  # Fixed method name
-                elif sub_setting == "rpc":
-                    self.open_rpc_inline()
-                elif sub_setting == "hotkeys":
-                    open_hotkeys_inline(self)  # Fixed - it's a function, pass self
-                elif sub_setting == "reset":
-                    self.open_reset_profile_inline()
+                # Only open if different from what's currently open
+                if self._current_sub_setting != sub_setting:
+                    # Open the appropriate sub-setting for this profile
+                    if sub_setting == "alerts":
+                        self.open_alert_settings_inline()
+                    elif sub_setting == "auto":
+                        self.open_configure_inline()
+                    elif sub_setting == "rpc":
+                        self.open_rpc_inline()
+                    elif sub_setting == "hotkeys":
+                        open_hotkeys_inline(self)
+                    elif sub_setting == "reset":
+                        self.open_reset_profile_inline()
             else:
                 # No sub-setting should be open - close any existing sub-setting
                 # Note: We don't call _close_sub_setting() here to avoid redundantly setting
@@ -3125,6 +3131,7 @@ class ProfileTab:
                     except tk.TclError:
                         pass
                     self._sub_setting_frame = None
+                    self._current_sub_setting = None  # Clear tracking
                     # Ensure main settings frame is visible
                     if self._settings_frame and self._settings_frame.winfo_exists():
                         self._settings_frame.pack(padx=10, pady=6, fill="both", expand=True)
@@ -3370,6 +3377,7 @@ class ProfileTab:
         """Open alert settings as an inline view (not popup)."""
         ProfileTab._global_sub_setting_active = "alerts"  # Set global flag
         container = self._show_sub_setting("Configure Alerts")
+        self._current_sub_setting = "alerts"  # Track current sub-setting
         
         enable_alerts_var = self.audio_enabled_var
 
@@ -4854,6 +4862,7 @@ class ProfileTab:
             return
         
         container = self._show_sub_setting("Configure RPC")
+        self._current_sub_setting = "rpc"  # Track current sub-setting
         
         # Store initial values
         initial_game_id = self.rpc_game_id
@@ -5558,6 +5567,7 @@ class ProfileTab:
         ProfileTab._global_sub_setting_active = "reset"  # Set global flag
         # Hide settings menu, show reset confirmation view
         container = self._show_sub_setting()
+        self._current_sub_setting = "reset"  # Track current sub-setting
         
         profile_name = self.profile_name_var.get() or self.default_tab_name
         
@@ -6074,6 +6084,7 @@ class ProfileTab:
         """Open configure (auto) settings as an inline view (not popup)."""
         ProfileTab._global_sub_setting_active = "auto"  # Set global flag
         container = self._show_sub_setting("Configure Auto")
+        self._current_sub_setting = "auto"  # Track current sub-setting
         
         # Store initial values for change detection
         initial_cooldown = self.cooldown_var.get()
