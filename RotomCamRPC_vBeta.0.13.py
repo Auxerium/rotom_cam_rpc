@@ -3115,8 +3115,7 @@ class ProfileTab:
                 # No sub-setting should be open - close any existing sub-setting
                 if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame:
                     try:
-                        if self._sub_setting_frame.winfo_exists():
-                            self._sub_setting_frame.destroy()
+                        self._sub_setting_frame.destroy()
                     except tk.TclError:
                         pass
                     self._sub_setting_frame = None
