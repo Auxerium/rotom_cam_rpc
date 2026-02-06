@@ -6300,6 +6300,9 @@ for i in range(1, 4):
     tab.load_from_config()
     profiles.append(tab)
 
+# Track the last selected tab to allow reverting when settings are open
+_last_selected_tab_index = 0
+
 # Add tab change handler to sync settings menu state across profiles
 def on_tab_changed(event):
     """Handle tab changes to sync settings menu state"""
@@ -6439,11 +6442,30 @@ def on_rename_profile(_event=None):
 
 
 def on_profile_tab_change(_event=None):
-    """Handle tab changes - sync settings and refresh hotkeys"""
+    """Handle tab changes - prevent switching if settings are open"""
+    global _last_selected_tab_index
+    
     try:
-        # Sync settings menu state
         current_index = notebook.index(notebook.select())
+        
+        # Check if settings are currently open
+        if ProfileTab._global_settings_open:
+            # Settings are open - prevent tab switching
+            # Revert to the last valid tab
+            notebook.select(profiles[_last_selected_tab_index].frame)
+            
+            # Show message to user
+            show_custom_error(
+                "settings_error",
+                "Settings Menu Open",
+                "Please close the settings menu (press Back) before switching profiles."
+            )
+            return
+        
+        # Tab switch is allowed - update tracking
         if 0 <= current_index < len(profiles):
+            _last_selected_tab_index = current_index
+            # Sync settings menu state (now should always be no settings open)
             profiles[current_index]._sync_settings_state()
     except Exception:
         pass
