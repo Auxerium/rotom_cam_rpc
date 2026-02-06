@@ -3015,7 +3015,7 @@ class ProfileTab:
         if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame:
             try:
                 self._sub_setting_frame.destroy()
-            except Exception:
+            except tk.TclError:
                 pass
             self._sub_setting_frame = None
 
@@ -3059,7 +3059,7 @@ class ProfileTab:
         if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame:
             try:
                 self._sub_setting_frame.destroy()
-            except Exception:
+            except tk.TclError:
                 pass
             self._sub_setting_frame = None
         
@@ -3117,7 +3117,7 @@ class ProfileTab:
                     try:
                         if self._sub_setting_frame.winfo_exists():
                             self._sub_setting_frame.destroy()
-                    except Exception:
+                    except tk.TclError:
                         pass
                     self._sub_setting_frame = None
                     # Ensure main settings frame is visible
