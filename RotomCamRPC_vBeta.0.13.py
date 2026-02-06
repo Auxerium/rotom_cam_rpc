@@ -3044,11 +3044,10 @@ class ProfileTab:
                 pass
             self._sub_setting_frame = None
             # Force UI update to ensure old frame is removed
-            if hasattr(self.frame, 'update_idletasks'):
-                try:
-                    self.frame.update_idletasks()
-                except tk.TclError:
-                    pass
+            try:
+                self.frame.update_idletasks()
+            except tk.TclError:
+                pass
         
         if self._settings_frame and self._settings_frame.winfo_exists():
             self._settings_frame.pack_forget()
