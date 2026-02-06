@@ -67,6 +67,12 @@ BUTTON_PADX = 12
 BUTTON_PADY = 0
 BUTTON_HEIGHT = 1
 COUNTER_BUTTON_HEIGHT = 1
+
+# Standard button sizing for consistent UI (420px wide buttons)
+STANDARD_BUTTON_WIDTH_PX = 420  # Target pixel width for standard buttons
+STANDARD_BUTTON_IPADX = 186     # Internal padding to achieve 420px width
+STANDARD_BUTTON_PADY = (2, 2)   # Vertical padding (2px top, 2px bottom)
+
 FONT_NAME = "Pokémon DP Pro Regular"
 FONT_FILENAME = "pokemon-dp-pro.ttf"
 FR_PRIVATE = 0x10
@@ -821,26 +827,22 @@ def open_hotkeys_inline(profile):
     spacer = tk.Frame(container, bg=DARK_BG)
     spacer.pack(fill="both", expand=True)
     
-    # Back button at bottom
+    # Back button at bottom - 420px wide standard button
     tk.Button(
         container,
         text="Back",
         command=on_close,
-        padx=BUTTON_PADX,
-        pady=BUTTON_PADY,
         height=2
-    ).pack(fill="x", pady=(0, 6), padx=10, side="bottom")
+    ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
     
-    # Apply button above Back
+    # Apply button above Back - 420px wide standard button
     apply_button = tk.Button(
         container,
         text="Apply",
         command=apply_changes,
-        padx=BUTTON_PADX,
-        pady=BUTTON_PADY,
         height=BUTTON_HEIGHT
     )
-    apply_button.pack(fill="x", pady=(0, 4), padx=10, side="bottom")
+    apply_button.pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
     
     # Initial button color
     update_apply_button_color()
@@ -3044,35 +3046,35 @@ class ProfileTab:
             text="Configure Alerts",
             command=open_alerts_from_settings,
             height=BUTTON_HEIGHT
-        ).pack(pady=(6, 4), ipadx=185)
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
         tk.Button(
             self._settings_frame,
             text="Configure Auto",
             command=open_configure_from_settings,
             height=BUTTON_HEIGHT
-        ).pack(pady=4, ipadx=185)
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
         tk.Button(
             self._settings_frame,
             text="Configure RPC",
             command=open_rpc_from_settings,
             height=BUTTON_HEIGHT
-        ).pack(pady=4, ipadx=185)
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
         tk.Button(
             self._settings_frame,
             text="Hotkeys",
             command=open_hotkeys_from_settings,
             height=BUTTON_HEIGHT
-        ).pack(pady=4, ipadx=185)
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
         tk.Button(
             self._settings_frame,
             text="Reset Profile",
             command=open_reset_from_settings,
             height=BUTTON_HEIGHT
-        ).pack(pady=4, ipadx=185)
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
         def close_settings():
             self.close_settings_view()
@@ -3083,7 +3085,7 @@ class ProfileTab:
             text="Back",
             command=close_settings,
             height=2
-        ).pack(pady=(0, 6), side="bottom", ipadx=195)
+        ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
 
         # Add expanding spacer after Back button to fill remaining space
         spacer_settings = tk.Frame(self._settings_frame, bg=DARK_BG)
@@ -3622,26 +3624,22 @@ class ProfileTab:
         spacer = tk.Frame(container, bg=DARK_BG)
         spacer.pack(fill="both", expand=True)
 
-        # Back button at bottom
+        # Back button at bottom - 420px wide standard button
         tk.Button(
             container,
             text="Back",
             command=self._close_sub_setting,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
             height=2
-        ).pack(fill="x", pady=(0, 6), padx=10, side="bottom")
+        ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
 
-        # Apply button above Back
+        # Apply button above Back - 420px wide standard button
         apply_button = tk.Button(
             container,
             text="Apply",
             command=apply_changes,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         )
-        apply_button.pack(fill="x", pady=(0, 4), padx=10, side="bottom")
+        apply_button.pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
 
         # Initial state setup
         update_apply_button_color()
@@ -4394,23 +4392,23 @@ class ProfileTab:
         spacer_rpc_settings.pack(pady=5)
         self._bind_root_drag(spacer_rpc_settings)
 
-        # Settings button (above start button) - 418px wide like settings page buttons
+        # Settings button (above start button) - 420px wide standard button
         self.btn_settings = tk.Button(
             self.container,
             text="Settings",
             command=self.open_settings_window,
             height=1
         )
-        self.btn_settings.pack(pady=(0, 2.5), ipadx=185)
+        self.btn_settings.pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
-        # Start button (below settings) - 418px wide like settings page buttons
+        # Start button (below settings) - 420px wide standard button
         self.btn_start = tk.Button(
             self.container,
             text="Start",
             command=self.on_toggle_start,
             height=2
         )
-        self.btn_start.pack(pady=(2.5, 0), ipadx=185)
+        self.btn_start.pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
         spacer = tk.Frame(self.container, bg=DARK_BG, height=7)
         spacer.pack(pady=7)
@@ -5860,7 +5858,7 @@ class ProfileTab:
                     state="disabled"
                 )
         
-        # Confirm Reset button (starts disabled)
+        # Confirm Reset button (starts disabled) - 420px wide standard button
         confirm_btn = tk.Button(
             button_frame,
             text="Confirm Reset",
@@ -5869,14 +5867,11 @@ class ProfileTab:
             fg=DARK_FG,
             activebackground=DARK_BUTTON,
             activeforeground=DARK_FG,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
             height=BUTTON_HEIGHT,
             font=(FONT_NAME, BASE_FONT_SIZE, "bold"),
-            state="disabled",  # Start disabled
-            width=418
+            state="disabled"  # Start disabled
         )
-        confirm_btn.pack(pady=(6, 0))
+        confirm_btn.pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
         
         # Bind validation to entry changes
         entry_var.trace_add("write", lambda *args: validate_entry())
@@ -5884,16 +5879,14 @@ class ProfileTab:
         # Initialize validation state
         validate_entry()
         
-        # Back button (was Cancel)
+        # Back button (was Cancel) - 420px wide standard button
         tk.Button(
             button_frame,
             text="Back",
             command=cancel_reset,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
-            height=2,
-            width=418
-        ).pack(pady=(6, 6))
+            height=2
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
+
 
 
     def start_broadcast_async(self, game_id, target, odds):
@@ -6294,26 +6287,22 @@ class ProfileTab:
         spacer = tk.Frame(container, bg=DARK_BG)
         spacer.pack(fill="both", expand=True)
 
-        # Back button at bottom
+        # Back button at bottom - 420px wide standard button
         tk.Button(
             container,
             text="Back",
             command=self._close_sub_setting,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
             height=2
-        ).pack(fill="x", pady=(0, 6), padx=10, side="bottom")
+        ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
 
-        # Apply button above Back
+        # Apply button above Back - 420px wide standard button
         apply_button = tk.Button(
             container,
             text="Apply",
             command=apply_changes,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         )
-        apply_button.pack(fill="x", pady=(0, 4), padx=10, side="bottom")
+        apply_button.pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
 
         # Initial button color
         update_apply_button_color()
