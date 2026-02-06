@@ -5639,7 +5639,7 @@ class ProfileTab:
             command=self._close_sub_setting,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=2
+            height=BUTTON_HEIGHT
         ).pack(fill="x", pady=(0, 6), padx=10)
         
         # Initial button color
@@ -5824,7 +5824,7 @@ class ProfileTab:
             activeforeground=DARK_FG,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=2,
+            height=BUTTON_HEIGHT,
             font=(FONT_NAME, BASE_FONT_SIZE, "bold"),
             state="disabled"  # Start disabled
         )
@@ -5843,7 +5843,7 @@ class ProfileTab:
             command=cancel_reset,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=2
+            height=BUTTON_HEIGHT
         ).pack(fill="x", pady=(6, 6), padx=10)
 
 
