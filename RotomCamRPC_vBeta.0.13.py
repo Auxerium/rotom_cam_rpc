@@ -5778,7 +5778,7 @@ class ProfileTab:
         
         # Button frame at bottom (fixed)
         button_frame = tk.Frame(container, bg=DARK_BG)
-        button_frame.pack(side="bottom", fill="x", padx=10, pady=0)
+        button_frame.pack(side="bottom", fill="x", pady=0)  # Removed padx to allow full 420px button width
         
         def confirm_reset():
             # Extra validation - must match profile name
