@@ -2949,6 +2949,8 @@ class ProfileTab:
             width=20
         )
         profile_name_entry.pack(pady=(0, 12))
+        # Validate profile name when user clicks outside the field
+        profile_name_entry.bind("<FocusOut>", self._on_profile_name_focus_out)
 
         def open_hotkeys_from_settings():
             open_hotkeys_inline(self)
@@ -3784,10 +3786,17 @@ class ProfileTab:
         if len(current) > PROFILE_NAME_MAX_LENGTH:
             current = current[:PROFILE_NAME_MAX_LENGTH]
             self.profile_name_var.set(current)
-        if not current:
-            self.profile_name_var.set(self.default_tab_name)
+        # Don't auto-reset to default on keystroke - let user clear and type
+        # Validation happens on focus out instead
         self.set_tab_title()
         self.mark_dirty()
+    
+    def _on_profile_name_focus_out(self, *_):
+        """Validate profile name when user clicks outside the field."""
+        current = self.profile_name_var.get().strip()
+        if not current:
+            # Reset to default only when focus is lost with empty field
+            self.profile_name_var.set(self.default_tab_name)
 
     def reset_rpc_options(self):
         if self.rpc_is_running:
