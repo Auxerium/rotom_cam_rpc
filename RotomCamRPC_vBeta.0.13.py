@@ -3794,8 +3794,8 @@ class ProfileTab:
         """Validate profile name when user clicks outside the field."""
         current = self.profile_name_var.get().strip()
         
-        # Treat whitespace-only as empty
-        if not current or current.isspace():
+        # Check if empty (strip already handles whitespace-only)
+        if not current:
             # Reset to default only when focus is lost with empty field
             self.profile_name_var.set(self.default_tab_name)
             self.set_tab_title()
@@ -3804,11 +3804,12 @@ class ProfileTab:
         
         # Check for duplicate names (excluding current profile)
         all_profiles = globals().get('profiles', [])
+        current_lower = current.lower()  # Convert once for efficiency
         for other_profile in all_profiles:
             if other_profile is self:
                 continue  # Skip self
             other_name = other_profile.profile_name_var.get().strip()
-            if other_name.lower() == current.lower():
+            if other_name.lower() == current_lower:
                 # Duplicate found - show error and revert
                 show_custom_error(
                     "duplicate_name",
