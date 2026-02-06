@@ -3039,9 +3039,8 @@ class ProfileTab:
         # Close any existing sub-setting frame first to prevent duplicates
         if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame:
             try:
-                if self._sub_setting_frame.winfo_exists():
-                    self._sub_setting_frame.destroy()
-            except:
+                self._sub_setting_frame.destroy()
+            except tk.TclError:
                 pass
             self._sub_setting_frame = None
         
