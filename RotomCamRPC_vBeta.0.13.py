@@ -6485,9 +6485,9 @@ def on_tab_changed(event):
 # Removed - merged into on_profile_tab_change below
 
 root.update_idletasks()
-root.geometry("482x760")  # Increased to accommodate container padding (12px) + button padding (20px)
-root.minsize(482, 760)
-root.maxsize(482, 760)
+root.geometry("462x760")  # Increased to accommodate container padding (12px) + button padding (20px)
+root.minsize(462, 760)
+root.maxsize(462, 760)
 root.resizable(False, False)
 
 
