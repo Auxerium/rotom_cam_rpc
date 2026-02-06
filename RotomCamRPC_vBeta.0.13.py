@@ -3047,8 +3047,9 @@ class ProfileTab:
             command=open_alerts_from_settings,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT
-        ).pack(fill="x", pady=(6, 4), padx=10)
+            height=BUTTON_HEIGHT,
+            width=418
+        ).pack(pady=(6, 4))
 
         tk.Button(
             self._settings_frame,
@@ -3056,8 +3057,9 @@ class ProfileTab:
             command=open_configure_from_settings,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT
-        ).pack(fill="x", pady=4, padx=10)
+            height=BUTTON_HEIGHT,
+            width=418
+        ).pack(pady=4)
 
         tk.Button(
             self._settings_frame,
@@ -3065,8 +3067,9 @@ class ProfileTab:
             command=open_rpc_from_settings,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT
-        ).pack(fill="x", pady=4, padx=10)
+            height=BUTTON_HEIGHT,
+            width=418
+        ).pack(pady=4)
 
         tk.Button(
             self._settings_frame,
@@ -3074,8 +3077,9 @@ class ProfileTab:
             command=open_hotkeys_from_settings,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT
-        ).pack(fill="x", pady=4, padx=10)
+            height=BUTTON_HEIGHT,
+            width=418
+        ).pack(pady=4)
 
         tk.Button(
             self._settings_frame,
@@ -3083,8 +3087,9 @@ class ProfileTab:
             command=open_reset_from_settings,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT
-        ).pack(fill="x", pady=4, padx=10)
+            height=BUTTON_HEIGHT,
+            width=418
+        ).pack(pady=4)
 
         def close_settings():
             self.close_settings_view()
@@ -3096,8 +3101,9 @@ class ProfileTab:
             command=close_settings,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=2
-        ).pack(fill="x", pady=(0, 6), padx=10, side="bottom")
+            height=2,
+            width=418
+        ).pack(pady=(0, 6), side="bottom")
 
         # Add expanding spacer after Back button to fill remaining space
         spacer_settings = tk.Frame(self._settings_frame, bg=DARK_BG)
@@ -4424,11 +4430,6 @@ class ProfileTab:
             height=1
         )
         self.btn_settings.grid(row=0, column=0, sticky="we")
-
-        # Spacer between Settings and Start buttons (5px)
-        spacer_between_buttons = tk.Frame(self.container, bg=DARK_BG, height=5)
-        spacer_between_buttons.pack(pady=0)
-        self._bind_root_drag(spacer_between_buttons)
 
         # Start button (below settings)
         row_config_buttons = make_row()
