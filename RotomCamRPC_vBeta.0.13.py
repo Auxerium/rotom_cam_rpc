@@ -3010,7 +3010,7 @@ class ProfileTab:
             command=apply_profile_name_changes,
             height=BUTTON_HEIGHT
         )
-        profile_name_apply_btn.pack(pady=(0, 12), ipadx=80)
+        profile_name_apply_btn.pack(pady=(0, 12), ipadx=0)
         
         # Bind trace to detect changes (note: trace is on instance var, will be cleaned up with instance)
         self.profile_name_var.trace_add("write", lambda *args: update_profile_name_apply_button_color())
@@ -4393,39 +4393,23 @@ class ProfileTab:
         spacer_rpc_settings.pack(pady=5)
         self._bind_root_drag(spacer_rpc_settings)
 
-        # Settings button (above start button)
-        row_settings = make_row()
-        row_settings.pack(fill="x", padx=20)
-        row_settings.grid_columnconfigure(0, weight=1)
-        row_settings.configure(width=462)
-        row_settings.pack_propagate(False)
-
+        # Settings button (above start button) - 418px wide like settings page buttons
         self.btn_settings = tk.Button(
-            row_settings,
+            self.container,
             text="Settings",
             command=self.open_settings_window,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
             height=1
         )
-        self.btn_settings.grid(row=0, column=0, sticky="we")
+        self.btn_settings.pack(pady=(0, 2.5), ipadx=185)
 
-        # Start button (below settings)
-        row_config_buttons = make_row()
-        row_config_buttons.pack(fill="x", padx=20)
-        row_config_buttons.grid_columnconfigure(0, weight=1)
-        row_config_buttons.configure(width=462)  # Increased to accommodate container padding (12px) + button padding (20px)
-        row_config_buttons.pack_propagate(False)
-
+        # Start button (below settings) - 418px wide like settings page buttons
         self.btn_start = tk.Button(
-            row_config_buttons,
+            self.container,
             text="Start",
             command=self.on_toggle_start,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
             height=2
         )
-        self.btn_start.grid(row=0, column=0, sticky="we")
+        self.btn_start.pack(pady=(2.5, 0), ipadx=185)
 
         spacer = tk.Frame(self.container, bg=DARK_BG, height=7)
         spacer.pack(pady=7)
