@@ -832,6 +832,8 @@ def open_hotkeys_inline(profile):
         container,
         text="Back",
         command=on_close,
+        padx=BUTTON_PADX,
+        pady=BUTTON_PADY,
         height=2
     ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
     
@@ -840,6 +842,8 @@ def open_hotkeys_inline(profile):
         container,
         text="Apply",
         command=apply_changes,
+        padx=BUTTON_PADX,
+        pady=BUTTON_PADY,
         height=BUTTON_HEIGHT
     )
     apply_button.pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
@@ -3045,6 +3049,8 @@ class ProfileTab:
             self._settings_frame,
             text="Configure Alerts",
             command=open_alerts_from_settings,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
@@ -3052,6 +3058,8 @@ class ProfileTab:
             self._settings_frame,
             text="Configure Auto",
             command=open_configure_from_settings,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
@@ -3059,6 +3067,8 @@ class ProfileTab:
             self._settings_frame,
             text="Configure RPC",
             command=open_rpc_from_settings,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
@@ -3066,6 +3076,8 @@ class ProfileTab:
             self._settings_frame,
             text="Hotkeys",
             command=open_hotkeys_from_settings,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
@@ -3073,6 +3085,8 @@ class ProfileTab:
             self._settings_frame,
             text="Reset Profile",
             command=open_reset_from_settings,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
@@ -3084,6 +3098,8 @@ class ProfileTab:
             self._settings_frame,
             text="Back",
             command=close_settings,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             height=2
         ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
 
@@ -3629,6 +3645,8 @@ class ProfileTab:
             container,
             text="Back",
             command=self._close_sub_setting,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             height=2
         ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
 
@@ -3637,6 +3655,8 @@ class ProfileTab:
             container,
             text="Apply",
             command=apply_changes,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         )
         apply_button.pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
@@ -4397,6 +4417,8 @@ class ProfileTab:
             self.container,
             text="Settings",
             command=self.open_settings_window,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             height=1
         )
         self.btn_settings.pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
@@ -4406,6 +4428,8 @@ class ProfileTab:
             self.container,
             text="Start",
             command=self.on_toggle_start,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             height=2
         )
         self.btn_start.pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
@@ -5671,10 +5695,9 @@ class ProfileTab:
             command=apply_changes,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT,
-            width=418
+            height=BUTTON_HEIGHT
         )
-        apply_button.pack(pady=(0, 4))
+        apply_button.pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
         
         # Back button below Apply
         tk.Button(
@@ -5683,9 +5706,8 @@ class ProfileTab:
             command=self._close_sub_setting,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=2,
-            width=418
-        ).pack(pady=(0, 6))
+            height=2
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
         
         # Initial button color
         update_apply_button_color()
@@ -5863,6 +5885,8 @@ class ProfileTab:
             button_frame,
             text="Confirm Reset",
             command=confirm_reset,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             bg=DARK_BUTTON,
             fg=DARK_FG,
             activebackground=DARK_BUTTON,
@@ -5884,6 +5908,8 @@ class ProfileTab:
             button_frame,
             text="Back",
             command=cancel_reset,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             height=2
         ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
@@ -6292,6 +6318,8 @@ class ProfileTab:
             container,
             text="Back",
             command=self._close_sub_setting,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             height=2
         ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
 
@@ -6300,6 +6328,8 @@ class ProfileTab:
             container,
             text="Apply",
             command=apply_changes,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         )
         apply_button.pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
