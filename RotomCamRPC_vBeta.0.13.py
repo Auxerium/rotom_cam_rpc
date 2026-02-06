@@ -4410,7 +4410,7 @@ class ProfileTab:
 
         # Settings button (above start button)
         row_settings = make_row()
-        row_settings.pack(fill="x")
+        row_settings.pack(fill="x", padx=20)
         row_settings.grid_columnconfigure(0, weight=1)
         row_settings.configure(width=462)
         row_settings.pack_propagate(False)
@@ -4425,9 +4425,14 @@ class ProfileTab:
         )
         self.btn_settings.grid(row=0, column=0, sticky="we")
 
+        # Spacer between Settings and Start buttons (5px)
+        spacer_between_buttons = tk.Frame(self.container, bg=DARK_BG, height=5)
+        spacer_between_buttons.pack(pady=0)
+        self._bind_root_drag(spacer_between_buttons)
+
         # Start button (below settings)
         row_config_buttons = make_row()
-        row_config_buttons.pack(fill="x")
+        row_config_buttons.pack(fill="x", padx=20)
         row_config_buttons.grid_columnconfigure(0, weight=1)
         row_config_buttons.configure(width=462)  # Increased to accommodate container padding (12px) + button padding (20px)
         row_config_buttons.pack_propagate(False)
@@ -5694,7 +5699,7 @@ class ProfileTab:
         # ===== BUTTONS AT BOTTOM (FIXED, NOT SCROLLING) =====
         # Create button frame at bottom (outside scrollable area)
         button_frame = tk.Frame(container, bg=DARK_BG)
-        button_frame.pack(side="bottom", fill="x", padx=10, pady=0)
+        button_frame.pack(side="bottom", fill="x", pady=0)
         
         # Apply button (packed first, appears at top of button_frame)
         apply_button = tk.Button(
@@ -5703,9 +5708,10 @@ class ProfileTab:
             command=apply_changes,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT
+            height=BUTTON_HEIGHT,
+            width=418
         )
-        apply_button.pack(fill="x", pady=(0, 4), padx=10)
+        apply_button.pack(pady=(0, 4))
         
         # Back button below Apply
         tk.Button(
@@ -5714,8 +5720,9 @@ class ProfileTab:
             command=self._close_sub_setting,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT
-        ).pack(fill="x", pady=(0, 6), padx=10)
+            height=2,
+            width=418
+        ).pack(pady=(0, 6))
         
         # Initial button color
         update_apply_button_color()
@@ -5899,11 +5906,12 @@ class ProfileTab:
             activeforeground=DARK_FG,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=2,
+            height=BUTTON_HEIGHT,
             font=(FONT_NAME, BASE_FONT_SIZE, "bold"),
-            state="disabled"  # Start disabled
+            state="disabled",  # Start disabled
+            width=418
         )
-        confirm_btn.pack(fill="x", pady=(6, 0), padx=10)
+        confirm_btn.pack(pady=(6, 0))
         
         # Bind validation to entry changes
         entry_var.trace_add("write", lambda *args: validate_entry())
@@ -5918,8 +5926,9 @@ class ProfileTab:
             command=cancel_reset,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=2
-        ).pack(fill="x", pady=(6, 6), padx=10)
+            height=2,
+            width=418
+        ).pack(pady=(6, 6))
 
 
     def start_broadcast_async(self, game_id, target, odds):
