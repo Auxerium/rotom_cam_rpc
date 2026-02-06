@@ -2967,10 +2967,14 @@ class ProfileTab:
         
         def update_profile_name_apply_button_color():
             """Update Apply button color based on whether name has changed."""
-            if check_profile_name_changes():
-                profile_name_apply_btn.config(bg=START_ACTIVE_COLOR, activebackground=START_ACTIVE_COLOR)
-            else:
-                profile_name_apply_btn.config(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
+            try:
+                if check_profile_name_changes():
+                    profile_name_apply_btn.config(bg=START_ACTIVE_COLOR, activebackground=START_ACTIVE_COLOR)
+                else:
+                    profile_name_apply_btn.config(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
+            except tk.TclError:
+                # Button has been destroyed (settings closed), ignore
+                pass
         
         def apply_profile_name_changes():
             """Apply profile name changes - validate and save."""
