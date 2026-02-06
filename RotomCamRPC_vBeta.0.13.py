@@ -3113,6 +3113,8 @@ class ProfileTab:
                     self.open_reset_profile_inline()
             else:
                 # No sub-setting should be open - close any existing sub-setting
+                # Note: We don't call _close_sub_setting() here to avoid redundantly setting
+                # _global_sub_setting_active = None (it's already None in this branch)
                 if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame:
                     try:
                         self._sub_setting_frame.destroy()
