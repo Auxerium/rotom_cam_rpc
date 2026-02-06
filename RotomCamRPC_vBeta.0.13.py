@@ -3010,9 +3010,18 @@ class ProfileTab:
         if self._settings_frame:
             self._settings_frame.destroy()
             self._settings_frame = None
+        
+        # Destroy any sub-setting frame
+        if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame:
+            try:
+                self._sub_setting_frame.destroy()
+            except:
+                pass
+            self._sub_setting_frame = None
 
         self._settings_view_active = False
         ProfileTab._global_settings_open = False  # Mark settings as globally closed
+        ProfileTab._global_sub_setting_active = None  # Also clear any sub-setting flag
         
         # Restore the container with its original pack info
         if hasattr(self, '_original_container_pack_info'):
