@@ -4157,7 +4157,7 @@ class ProfileTab:
         frame = self.frame
 
         self.container = tk.Frame(frame, bg=DARK_BG)
-        self.container.pack(padx=6, pady=6, anchor="nw")
+        self.container.pack(pady=6, anchor="nw")  # Removed padx to allow full 420px button width
         self._bind_root_drag(self.container)
 
         def make_row(pady=5):
@@ -5722,7 +5722,7 @@ class ProfileTab:
         profile_name = self.profile_name_var.get() or self.default_tab_name
         
         # Create simple content frame (no scrollbar needed for concise text)
-        content_frame = tk.Frame(container, bg=DARK_BG, padx=20, pady=20)
+        content_frame = tk.Frame(container, bg=DARK_BG, pady=20)  # Removed padx to allow full 420px button width
         content_frame.pack(fill="both", expand=True)
         
         # Load reset icon
