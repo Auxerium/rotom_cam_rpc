@@ -3782,23 +3782,48 @@ class ProfileTab:
         self.mark_dirty()
 
     def _on_profile_name_change(self, *_):
+        """Handle profile name changes on keystroke - only enforce max length."""
         current = self.profile_name_var.get().strip()
         if len(current) > PROFILE_NAME_MAX_LENGTH:
             current = current[:PROFILE_NAME_MAX_LENGTH]
             self.profile_name_var.set(current)
-        # Don't auto-reset to default on keystroke - let user clear and type
-        # Validation happens on focus out instead
-        self.set_tab_title()
-        self.mark_dirty()
+        # Don't auto-update tab title or mark dirty on keystroke
+        # All validation and updates happen on focus out instead
     
     def _on_profile_name_focus_out(self, *_):
         """Validate profile name when user clicks outside the field."""
         current = self.profile_name_var.get().strip()
-        if not current:
+        
+        # Treat whitespace-only as empty
+        if not current or current.isspace():
             # Reset to default only when focus is lost with empty field
             self.profile_name_var.set(self.default_tab_name)
             self.set_tab_title()
             self.mark_dirty()
+            return
+        
+        # Check for duplicate names (excluding current profile)
+        all_profiles = globals().get('profiles', [])
+        for other_profile in all_profiles:
+            if other_profile is self:
+                continue  # Skip self
+            other_name = other_profile.profile_name_var.get().strip()
+            if other_name.lower() == current.lower():
+                # Duplicate found - show error and revert
+                show_custom_error(
+                    "duplicate_name",
+                    "Duplicate Profile Name",
+                    f"Profile name '{current}' is already in use by another profile.\nPlease choose a different name."
+                )
+                # Revert to default name
+                self.profile_name_var.set(self.default_tab_name)
+                self.set_tab_title()
+                self.mark_dirty()
+                return
+        
+        # Valid name - update tab and save
+        self.set_tab_title()
+        self.mark_dirty()
 
     def reset_rpc_options(self):
         if self.rpc_is_running:
