@@ -3012,11 +3012,12 @@ class ProfileTab:
         )
         profile_name_apply_btn.pack(pady=(0, 12), ipadx=0)
         
-        # Bind trace to detect changes (note: trace is on instance var, will be cleaned up with instance)
-        self.profile_name_var.trace_add("write", lambda *args: update_profile_name_apply_button_color())
-        
-        # Initialize button color
+        # Initialize button color first
         update_profile_name_apply_button_color()
+        
+        # Bind trace to detect changes (note: trace is on instance var, will be cleaned up with instance)
+        # Added after initialization to avoid triggering during setup
+        self.profile_name_var.trace_add("write", lambda *args: update_profile_name_apply_button_color())
 
         def open_hotkeys_from_settings():
             self._validate_and_fix_profile_name()
