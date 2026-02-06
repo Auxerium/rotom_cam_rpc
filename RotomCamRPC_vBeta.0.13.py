@@ -2941,8 +2941,8 @@ class ProfileTab:
             font=(FONT_NAME, BASE_FONT_SIZE, "bold")
         ).pack(pady=(0, 4))
         
-        # Store initial profile name for change detection
-        initial_profile_name = self.profile_name_var.get()
+        # Store initial profile name for change detection (stripped once)
+        initial_profile_name = self.profile_name_var.get().strip()
         
         profile_name_entry = tk.Entry(
             self._settings_frame,
@@ -2959,7 +2959,7 @@ class ProfileTab:
         def check_profile_name_changes():
             """Check if profile name has changed from initial value."""
             current_name = self.profile_name_var.get().strip()
-            return current_name != initial_profile_name.strip()
+            return current_name != initial_profile_name
         
         def update_profile_name_apply_button_color():
             """Update Apply button color based on whether name has changed."""
@@ -2978,7 +2978,7 @@ class ProfileTab:
                 self.profile_name_var.set(self.default_tab_name)
                 self.set_tab_title()
                 self.mark_dirty()
-                initial_profile_name = self.default_tab_name
+                initial_profile_name = self.default_tab_name.strip()
                 update_profile_name_apply_button_color()
                 return
             
@@ -3016,7 +3016,7 @@ class ProfileTab:
         )
         profile_name_apply_btn.pack(fill="x", pady=(0, 12), padx=68)
         
-        # Bind trace to detect changes
+        # Bind trace to detect changes (note: trace is on instance var, will be cleaned up with instance)
         self.profile_name_var.trace_add("write", lambda *args: update_profile_name_apply_button_color())
         
         # Initialize button color
