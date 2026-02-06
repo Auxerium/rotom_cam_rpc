@@ -3008,12 +3008,9 @@ class ProfileTab:
             self._settings_frame,
             text="Apply",
             command=apply_profile_name_changes,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT,
-            width=184
+            height=BUTTON_HEIGHT
         )
-        profile_name_apply_btn.pack(pady=(0, 12))
+        profile_name_apply_btn.pack(pady=(0, 12), ipadx=80)
         
         # Bind trace to detect changes (note: trace is on instance var, will be cleaned up with instance)
         self.profile_name_var.trace_add("write", lambda *args: update_profile_name_apply_button_color())
@@ -3045,51 +3042,36 @@ class ProfileTab:
             self._settings_frame,
             text="Configure Alerts",
             command=open_alerts_from_settings,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT,
-            width=418
-        ).pack(pady=(6, 4))
+            height=BUTTON_HEIGHT
+        ).pack(pady=(6, 4), ipadx=185)
 
         tk.Button(
             self._settings_frame,
             text="Configure Auto",
             command=open_configure_from_settings,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT,
-            width=418
-        ).pack(pady=4)
+            height=BUTTON_HEIGHT
+        ).pack(pady=4, ipadx=185)
 
         tk.Button(
             self._settings_frame,
             text="Configure RPC",
             command=open_rpc_from_settings,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT,
-            width=418
-        ).pack(pady=4)
+            height=BUTTON_HEIGHT
+        ).pack(pady=4, ipadx=185)
 
         tk.Button(
             self._settings_frame,
             text="Hotkeys",
             command=open_hotkeys_from_settings,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT,
-            width=418
-        ).pack(pady=4)
+            height=BUTTON_HEIGHT
+        ).pack(pady=4, ipadx=185)
 
         tk.Button(
             self._settings_frame,
             text="Reset Profile",
             command=open_reset_from_settings,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT,
-            width=418
-        ).pack(pady=4)
+            height=BUTTON_HEIGHT
+        ).pack(pady=4, ipadx=185)
 
         def close_settings():
             self.close_settings_view()
@@ -3099,11 +3081,8 @@ class ProfileTab:
             self._settings_frame,
             text="Back",
             command=close_settings,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
-            height=2,
-            width=418
-        ).pack(pady=(0, 6), side="bottom")
+            height=2
+        ).pack(pady=(0, 6), side="bottom", ipadx=195)
 
         # Add expanding spacer after Back button to fill remaining space
         spacer_settings = tk.Frame(self._settings_frame, bg=DARK_BG)
