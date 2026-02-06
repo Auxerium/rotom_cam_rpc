@@ -2932,6 +2932,24 @@ class ProfileTab:
         # Disable other profile tabs
         update_profile_tabs_state()
 
+        # Add profile name editor at top
+        tk.Label(
+            self._settings_frame,
+            text="Profile Name:",
+            bg=DARK_BG,
+            fg=DARK_FG,
+            font=(FONT_NAME, BASE_FONT_SIZE, "bold")
+        ).pack(pady=(0, 4))
+        
+        profile_name_entry = tk.Entry(
+            self._settings_frame,
+            textvariable=self.profile_name_var,
+            font=(FONT_NAME, BASE_FONT_SIZE),
+            justify="center",
+            width=20
+        )
+        profile_name_entry.pack(pady=(0, 12))
+
         def open_hotkeys_from_settings():
             open_hotkeys_inline(self)
 
@@ -6477,7 +6495,8 @@ def on_profile_tab_change(_event=None):
         hotkey_manager.refresh_profile_hotkeys()
 
 
-notebook.bind("<Double-Button-1>", on_rename_profile)
+# Profile name editing has been moved to the settings menu
+# notebook.bind("<Double-Button-1>", on_rename_profile)
 notebook.bind("<<NotebookTabChanged>>", on_profile_tab_change)
 
 hotkeys, global_enabled = load_hotkeys_config()
