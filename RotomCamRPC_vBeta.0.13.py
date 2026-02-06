@@ -3109,7 +3109,8 @@ class ProfileTab:
             if ProfileTab._global_sub_setting_active:
                 sub_setting = ProfileTab._global_sub_setting_active
                 # Only open if different from what's currently open
-                if self._current_sub_setting != sub_setting:
+                current_sub = getattr(self, '_current_sub_setting', None)
+                if current_sub != sub_setting:
                     # Open the appropriate sub-setting for this profile
                     if sub_setting == "alerts":
                         self.open_alert_settings_inline()
