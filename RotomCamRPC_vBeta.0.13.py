@@ -2952,8 +2952,6 @@ class ProfileTab:
             width=20
         )
         profile_name_entry.pack(pady=(0, 4))
-        # Validate profile name when user clicks outside the field
-        profile_name_entry.bind("<FocusOut>", self._on_profile_name_focus_out)
         
         # Apply button for profile name
         def check_profile_name_changes():
@@ -3012,9 +3010,10 @@ class ProfileTab:
             command=apply_profile_name_changes,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT
+            height=BUTTON_HEIGHT,
+            width=184
         )
-        profile_name_apply_btn.pack(fill="x", pady=(0, 12), padx=68)
+        profile_name_apply_btn.pack(pady=(0, 12))
         
         # Bind trace to detect changes (note: trace is on instance var, will be cleaned up with instance)
         self.profile_name_var.trace_add("write", lambda *args: update_profile_name_apply_button_color())
@@ -4256,7 +4255,7 @@ class ProfileTab:
             font=(FONT_NAME, BASE_FONT_SIZE, "bold"),
             command=lambda: self.on_manual_adjust(-1, source="manual")
         )
-        self.btn_decrement.pack(side="left", padx=(0, 0))
+        self.btn_decrement.pack(side="left", padx=(4, 0))
         self.lbl_current_count = tk.Label(
             row_counter_increment,
             text="0",
@@ -4409,10 +4408,27 @@ class ProfileTab:
         spacer_rpc_settings.pack(pady=5)
         self._bind_root_drag(spacer_rpc_settings)
 
+        # Settings button (above start button)
+        row_settings = make_row()
+        row_settings.pack(fill="x")
+        row_settings.grid_columnconfigure(0, weight=1)
+        row_settings.configure(width=462)
+        row_settings.pack_propagate(False)
+
+        self.btn_settings = tk.Button(
+            row_settings,
+            text="Settings",
+            command=self.open_settings_window,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
+            height=1
+        )
+        self.btn_settings.grid(row=0, column=0, sticky="we")
+
+        # Start button (below settings)
         row_config_buttons = make_row()
         row_config_buttons.pack(fill="x")
         row_config_buttons.grid_columnconfigure(0, weight=1)
-        row_config_buttons.grid_columnconfigure(1, weight=0)
         row_config_buttons.configure(width=462)  # Increased to accommodate container padding (12px) + button padding (20px)
         row_config_buttons.pack_propagate(False)
 
@@ -4425,17 +4441,6 @@ class ProfileTab:
             height=2
         )
         self.btn_start.grid(row=0, column=0, sticky="we")
-
-        self.btn_settings = tk.Button(
-            row_config_buttons,
-            text="⚙",
-            command=self.open_settings_window,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
-            width=7,
-            height=2
-        )
-        self.btn_settings.grid(row=0, column=1, sticky="e")
 
         spacer = tk.Frame(self.container, bg=DARK_BG, height=7)
         spacer.pack(pady=7)
