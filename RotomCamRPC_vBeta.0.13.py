@@ -3031,22 +3031,27 @@ class ProfileTab:
 
         def open_hotkeys_from_settings():
             self._validate_and_fix_profile_name()
+            self._reset_profile_name_to_saved()  # Discard unapplied changes
             open_hotkeys_inline(self)
 
         def open_configure_from_settings():
             self._validate_and_fix_profile_name()
+            self._reset_profile_name_to_saved()  # Discard unapplied changes
             self.open_configure_inline()
 
         def open_rpc_from_settings():
             self._validate_and_fix_profile_name()
+            self._reset_profile_name_to_saved()  # Discard unapplied changes
             self.open_rpc_inline()
 
         def open_alerts_from_settings():
             self._validate_and_fix_profile_name()
+            self._reset_profile_name_to_saved()  # Discard unapplied changes
             self.open_alert_settings_inline()
 
         def open_reset_from_settings():
             self._validate_and_fix_profile_name()
+            self._reset_profile_name_to_saved()  # Discard unapplied changes
             self.open_reset_profile_inline()
 
         tk.Button(
@@ -3117,11 +3122,7 @@ class ProfileTab:
             return
 
         # Reset profile name to saved value (discard any unapplied changes)
-        saved_profile_name = self.load_config_value(CONFIG_KEY_PROFILE_NAME, "")
-        if saved_profile_name:
-            self.profile_name_var.set(saved_profile_name[:PROFILE_NAME_MAX_LENGTH])
-        else:
-            self.profile_name_var.set(self.default_tab_name)
+        self._reset_profile_name_to_saved()
 
         # Destroy the settings frame
         if self._settings_frame:
@@ -3894,6 +3895,14 @@ class ProfileTab:
             self.profile_name_var.set(self.default_tab_name)
             self.set_tab_title()
             self.mark_dirty()
+    
+    def _reset_profile_name_to_saved(self):
+        """Reset profile name StringVar to saved config value, discarding unapplied changes."""
+        saved_profile_name = self.load_config_value(CONFIG_KEY_PROFILE_NAME, "")
+        if saved_profile_name:
+            self.profile_name_var.set(saved_profile_name[:PROFILE_NAME_MAX_LENGTH])
+        else:
+            self.profile_name_var.set(self.default_tab_name)
     
     def _on_profile_name_focus_out(self, *_):
         """Validate profile name when user clicks outside the field."""
