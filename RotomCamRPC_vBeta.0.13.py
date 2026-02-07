@@ -3116,6 +3116,13 @@ class ProfileTab:
         if not self._settings_view_active:
             return
 
+        # Reset profile name to saved value (discard any unapplied changes)
+        saved_profile_name = self.load_config_value(CONFIG_KEY_PROFILE_NAME, "")
+        if saved_profile_name:
+            self.profile_name_var.set(saved_profile_name[:PROFILE_NAME_MAX_LENGTH])
+        else:
+            self.profile_name_var.set(self.default_tab_name)
+
         # Destroy the settings frame
         if self._settings_frame:
             self._settings_frame.destroy()
