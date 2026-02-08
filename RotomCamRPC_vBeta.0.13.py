@@ -2950,14 +2950,14 @@ class ProfileTab:
         # Store initial profile name for change detection (stripped once)
         initial_profile_name = self.profile_name_var.get().strip()
         
-        profile_name_entry = tk.Entry(
+        self.profile_name_entry = tk.Entry(
             self._settings_frame,
             textvariable=self.profile_name_var,
             font=(FONT_NAME, BASE_FONT_SIZE),
             justify="center",
             width=20
         )
-        profile_name_entry.pack(pady=(0, 4))
+        self.profile_name_entry.pack(pady=(0, 4))
         
         # Apply button for profile name
         def check_profile_name_changes():
@@ -3032,26 +3032,31 @@ class ProfileTab:
         def open_hotkeys_from_settings():
             self._validate_and_fix_profile_name()
             self._reset_profile_name_to_saved()  # Discard unapplied changes
+            self._clear_profile_name_focus()  # Clear focus from profile name entry
             open_hotkeys_inline(self)
 
         def open_configure_from_settings():
             self._validate_and_fix_profile_name()
             self._reset_profile_name_to_saved()  # Discard unapplied changes
+            self._clear_profile_name_focus()  # Clear focus from profile name entry
             self.open_configure_inline()
 
         def open_rpc_from_settings():
             self._validate_and_fix_profile_name()
             self._reset_profile_name_to_saved()  # Discard unapplied changes
+            self._clear_profile_name_focus()  # Clear focus from profile name entry
             self.open_rpc_inline()
 
         def open_alerts_from_settings():
             self._validate_and_fix_profile_name()
             self._reset_profile_name_to_saved()  # Discard unapplied changes
+            self._clear_profile_name_focus()  # Clear focus from profile name entry
             self.open_alert_settings_inline()
 
         def open_reset_from_settings():
             self._validate_and_fix_profile_name()
             self._reset_profile_name_to_saved()  # Discard unapplied changes
+            self._clear_profile_name_focus()  # Clear focus from profile name entry
             self.open_reset_profile_inline()
 
         tk.Button(
@@ -3123,6 +3128,9 @@ class ProfileTab:
 
         # Reset profile name to saved value (discard any unapplied changes)
         self._reset_profile_name_to_saved()
+        
+        # Clear focus from profile name entry
+        self._clear_profile_name_focus()
 
         # Destroy the settings frame
         if self._settings_frame:
@@ -3904,6 +3912,18 @@ class ProfileTab:
         else:
             self.profile_name_var.set(self.default_tab_name)
     
+    def _clear_profile_name_focus(self):
+        """Clear focus from profile name entry field."""
+        try:
+            if hasattr(self, 'profile_name_entry') and self.profile_name_entry.winfo_exists():
+                self.profile_name_entry.selection_clear()
+                # Move focus to the settings frame itself
+                if self._settings_frame and self._settings_frame.winfo_exists():
+                    self._settings_frame.focus_set()
+        except tk.TclError:
+            # Widget destroyed, ignore
+            pass
+    
     def _on_profile_name_focus_out(self, *_):
         """Validate profile name when user clicks outside the field."""
         current = self.profile_name_var.get().strip()
@@ -4205,7 +4225,7 @@ class ProfileTab:
             height=BUTTON_HEIGHT,
             font=(FONT_NAME, SMALL_BUTTON_FONT_SIZE)
         )
-        self.btn_pick_window.pack(side="left", padx=(4, 0))
+        self.btn_pick_window.pack(side="left", padx=(0, 0))
 
         spacer_capture_ref = tk.Frame(self.container, bg=DARK_BG, height=10)
         spacer_capture_ref.pack(pady=6)
@@ -4228,7 +4248,7 @@ class ProfileTab:
             height=BUTTON_HEIGHT,
             font=(FONT_NAME, SMALL_BUTTON_FONT_SIZE)
         )
-        self.btn_browse_image.pack(side="left", padx=(4, 0))
+        self.btn_browse_image.pack(side="left", padx=(0, 0))
 
         row_capture_button = make_row(pady=5)
         self.btn_capture_image = tk.Button(
@@ -4263,7 +4283,7 @@ class ProfileTab:
             height=BUTTON_HEIGHT,
             font=(FONT_NAME, SMALL_BUTTON_FONT_SIZE)
         )
-        self.btn_browse_text.pack(side="left", padx=(4, 0))
+        self.btn_browse_text.pack(side="left", padx=(0, 0))
 
         spacer_counter_increment = tk.Frame(self.container, bg=DARK_BG, height=10)
         spacer_counter_increment.pack(pady=6)
@@ -4303,8 +4323,8 @@ class ProfileTab:
 
         self.lbl_increment = tk.Label(row_counter_increment, text="Increment:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_increment.pack(side="left", padx=(0, 4))
-        self.entry_increment = tk.Entry(row_counter_increment, width=6, textvariable=self.increment_var, justify="center")
-        self.entry_increment.pack(side="left", padx=10)
+        self.entry_increment = tk.Entry(row_counter_increment, width=3, textvariable=self.increment_var, justify="center")
+        self.entry_increment.pack(side="left", padx=(5, 10))
         self.entry_increment.bind("<FocusOut>", self._on_increment_focus_out)
 
         spacer_increment_to_rpc = tk.Frame(self.container, bg=DARK_BG, height=0)
@@ -4441,7 +4461,7 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=1
         )
-        self.btn_settings.pack(pady=STANDARD_BUTTON_PADY, padx=21, ipadx=STANDARD_BUTTON_IPADX)
+        self.btn_settings.pack(pady=STANDARD_BUTTON_PADY, padx=10, ipadx=STANDARD_BUTTON_IPADX)
 
         # Start button (below settings) - 420px wide standard button
         self.btn_start = tk.Button(
@@ -4452,7 +4472,7 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=2
         )
-        self.btn_start.pack(pady=STANDARD_BUTTON_PADY, padx=21, ipadx=STANDARD_BUTTON_IPADX)
+        self.btn_start.pack(pady=STANDARD_BUTTON_PADY, padx=10, ipadx=STANDARD_BUTTON_IPADX)
 
         spacer = tk.Frame(self.container, bg=DARK_BG, height=7)
         spacer.pack(pady=7)
