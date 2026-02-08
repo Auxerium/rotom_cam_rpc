@@ -2935,8 +2935,8 @@ class ProfileTab:
         self._settings_view_active = True
         ProfileTab._global_settings_open = True  # Mark settings as globally open
         
-        # Make settings frame draggable
-        self._bind_root_drag(self._settings_frame)
+        # Make settings frame and all non-interactive children draggable
+        self._bind_drag_recursively(self._settings_frame)
         
         # Disable other profile tabs
         update_profile_tabs_state()
@@ -3189,8 +3189,8 @@ class ProfileTab:
         self._sub_setting_frame = tk.Frame(self.frame, bg=DARK_BG)
         self._sub_setting_frame.pack(padx=10, pady=6, fill="both", expand=True)
         
-        # Make sub-setting frame draggable
-        self._bind_root_drag(self._sub_setting_frame)
+        # Make sub-setting frame and all non-interactive children draggable
+        self._bind_drag_recursively(self._sub_setting_frame)
         
         return self._sub_setting_frame
 
@@ -4003,6 +4003,26 @@ class ProfileTab:
     def _bind_root_drag(self, widget):
         widget.bind("<ButtonPress-1>", self._on_root_drag_start)
         widget.bind("<B1-Motion>", self._on_root_drag)
+    
+    def _bind_drag_recursively(self, widget):
+        """Recursively bind drag events to widget and all non-interactive children."""
+        # Define interactive widget types that should NOT have drag binding
+        interactive_types = (tk.Entry, tk.Text, tk.Button, tk.Checkbutton, 
+                           tk.Radiobutton, tk.Scale, tk.Scrollbar, tk.Listbox,
+                           tk.Spinbox, ttk.Combobox, ttk.Entry, ttk.Button,
+                           ttk.Checkbutton, ttk.Radiobutton, ttk.Scale, ttk.Spinbox)
+        
+        # Bind to the widget itself if it's not interactive
+        if not isinstance(widget, interactive_types):
+            self._bind_root_drag(widget)
+        
+        # Recursively bind to all children
+        try:
+            for child in widget.winfo_children():
+                self._bind_drag_recursively(child)
+        except AttributeError:
+            # Widget doesn't have children
+            pass
 
     def on_reset_profile(self):
         # Get current profile name for the dialog
@@ -4204,7 +4224,7 @@ class ProfileTab:
         frame = self.frame
 
         self.container = tk.Frame(frame, bg=DARK_BG)
-        self.container.pack(pady=6, anchor="n")  # Center anchor to prevent buttons expanding to full width
+        self.container.pack(pady=(6, 0), anchor="n")  # Only top padding, no bottom padding
         self._bind_root_drag(self.container)
 
         def make_row(pady=5):
