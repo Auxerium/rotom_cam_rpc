@@ -2935,6 +2935,9 @@ class ProfileTab:
         self._settings_view_active = True
         ProfileTab._global_settings_open = True  # Mark settings as globally open
         
+        # Make settings frame draggable
+        self._bind_root_drag(self._settings_frame)
+        
         # Disable other profile tabs
         update_profile_tabs_state()
 
@@ -3185,6 +3188,9 @@ class ProfileTab:
         # Create sub-setting frame
         self._sub_setting_frame = tk.Frame(self.frame, bg=DARK_BG)
         self._sub_setting_frame.pack(padx=10, pady=6, fill="both", expand=True)
+        
+        # Make sub-setting frame draggable
+        self._bind_root_drag(self._sub_setting_frame)
         
         return self._sub_setting_frame
 
@@ -4216,7 +4222,7 @@ class ProfileTab:
 
         row_title = make_row()
         self.entry_title = tk.Entry(row_title, width=40, textvariable=self.title_var)
-        self.entry_title.pack(side="left", padx=10)
+        self.entry_title.pack(side="left", padx=(10, 0))  # No right padding to attach to browse button
         self.btn_pick_window = tk.Button(
             row_title,
             text="...",
@@ -4239,7 +4245,7 @@ class ProfileTab:
 
         row_image = make_row()
         self.entry_image_path = tk.Entry(row_image, width=40, textvariable=self.image_path_var)
-        self.entry_image_path.pack(side="left", padx=10)
+        self.entry_image_path.pack(side="left", padx=(10, 0))  # No right padding to attach to browse button
         self.btn_browse_image = tk.Button(
             row_image,
             text="...",
@@ -4274,7 +4280,7 @@ class ProfileTab:
 
         row_text = make_row()
         self.entry_text_path = tk.Entry(row_text, width=40, textvariable=self.text_path_var)
-        self.entry_text_path.pack(side="left", padx=10)
+        self.entry_text_path.pack(side="left", padx=(10, 0))  # No right padding to attach to browse button
         self.btn_browse_text = tk.Button(
             row_text,
             text="...",
@@ -4474,7 +4480,7 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=2
         )
-        self.btn_start.pack(pady=STANDARD_BUTTON_PADY, padx=10, ipadx=STANDARD_BUTTON_IPADX)
+        self.btn_start.pack(pady=(2, 0), padx=10, ipadx=STANDARD_BUTTON_IPADX)  # No bottom padding
 
         spacer = tk.Frame(self.container, bg=DARK_BG, height=7)
         spacer.pack(pady=7)
