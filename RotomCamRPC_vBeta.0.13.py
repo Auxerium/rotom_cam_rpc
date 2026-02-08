@@ -3917,6 +3917,7 @@ class ProfileTab:
         try:
             if hasattr(self, 'profile_name_entry') and self.profile_name_entry.winfo_exists():
                 self.profile_name_entry.selection_clear()
+                self.profile_name_entry.icursor(0)  # Reset cursor to start position
                 # Move focus to the settings frame itself
                 if self._settings_frame and self._settings_frame.winfo_exists():
                     self._settings_frame.focus_set()
@@ -4324,6 +4325,7 @@ class ProfileTab:
         self.lbl_increment = tk.Label(row_counter_increment, text="Increment:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_increment.pack(side="left", padx=(0, 4))
         self.entry_increment = tk.Entry(row_counter_increment, width=3, textvariable=self.increment_var, justify="center")
+        # 5px left padding to match spacing, 10px right padding for visual separation from next element
         self.entry_increment.pack(side="left", padx=(5, 10))
         self.entry_increment.bind("<FocusOut>", self._on_increment_focus_out)
 
