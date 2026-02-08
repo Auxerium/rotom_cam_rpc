@@ -6509,7 +6509,7 @@ TAB_BADGE_ACTIVE = build_tab_badge(size=12, color=START_ACTIVE_COLOR, filled=Tru
 TAB_BADGE_INACTIVE = build_tab_badge(size=12, color="#6b6b6b", filled=False)
 
 notebook = ttk.Notebook(root, width=462)  # Increased to accommodate container padding (12px) + button padding (20px)
-notebook.pack(anchor="nw", fill="both", expand=True)
+notebook.pack(anchor="nw", fill="x")  # Fill horizontally only, don't expand vertically to keep Start button at bottom
 
 profiles = []
 for i in range(1, 4):
