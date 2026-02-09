@@ -5788,7 +5788,13 @@ class ProfileTab:
             selected_items = tree.selection()
             selected_game_id = selected_items[0] if selected_items else ""
             
+            # Preserve existing target if user didn't select a new Pokemon
             selected_target = selected_pokemon_name
+            if not selected_target and selected_game_id:
+                # Load current config to preserve existing target
+                config_path = os.path.join(self.rpc_config_dir, f"{selected_game_id}.txt")
+                cfg = rpc_read_config(config_path)
+                selected_target = cfg.get("target", "")
             
             selected_odds_display = odds_var.get()
             if selected_odds_display == "Custom":
@@ -5820,7 +5826,7 @@ class ProfileTab:
             self.update_config_value(CONFIG_KEY_RPC_SUFFIX, self.rpc_counter_suffix)
             
             self.mark_dirty()
-            self._close_sub_setting()
+            # Don't auto-close - user must click Back button
         
         # ===== BUTTONS AT BOTTOM (FIXED, NOT SCROLLING) =====
         # Create button frame at bottom (outside scrollable area)
@@ -6811,7 +6817,7 @@ def on_tab_changed(event):
 # Removed - merged into on_profile_tab_change below
 
 root.update_idletasks()
-root.geometry("462x810")  #  WINDOW SIZE
+root.geometry("462x802")  #  WINDOW SIZE (reduced by 8px from 810)
 root.minsize(462, 810)
 root.maxsize(462, 810)
 root.resizable(False, False)
