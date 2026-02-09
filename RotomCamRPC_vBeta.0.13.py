@@ -4926,7 +4926,7 @@ class ProfileTab:
 
         # Add profile name label at the top
         # Use getattr to safely get profile name with fallback
-        profile_name = getattr(self, 'profile_name', f"Profile {self.profile_index + 1}")
+        profile_name = getattr(self, 'profile_name', f"Profile {self.profile_index}")
         profile_label = tk.Label(
             self.test_window, 
             text=f"Profile: {profile_name}",
@@ -4952,7 +4952,7 @@ class ProfileTab:
                 return
 
             # Update profile name in case it changed (use getattr for safety)
-            profile_name = getattr(self, 'profile_name', f"Profile {self.profile_index + 1}")
+            profile_name = getattr(self, 'profile_name', f"Profile {self.profile_index}")
             profile_label.config(text=f"Profile: {profile_name}")
 
             hwnd = find_window_by_title_exact(title)
