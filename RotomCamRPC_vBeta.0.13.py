@@ -25,6 +25,7 @@ import time
 import ctypes
 import threading
 import json
+import webbrowser
 import tkinter as tk
 import tkinter.font as tkfont
 from ctypes import wintypes
@@ -60,6 +61,7 @@ DARK_ACCENT = "#2d2d2d"
 DARK_BUTTON = "#3a3a3a"
 DARK_BORDER = "#444444"
 DARK_HOTKEY_WAIT_BG = "#4a4a4a"
+LINK_COLOR = "#4a90e2"  # Blue color for clickable links
 
 HOTKEY_WAIT_BG = DARK_HOTKEY_WAIT_BG
 
@@ -6008,8 +6010,6 @@ class ProfileTab:
 
     def open_report_bug_inline(self):
         """Open the Report a Bug inline view with Discord link."""
-        import webbrowser
-        
         self._show_sub_setting()
         
         # Instructional text (centered, wrapped)
@@ -6029,7 +6029,7 @@ class ProfileTab:
             self._sub_setting_frame,
             text=discord_url,
             bg=DARK_BG,
-            fg="#4a90e2",  # Blue color for link
+            fg=LINK_COLOR,  # Blue color for link
             font=(FONT_NAME, BASE_FONT_SIZE, "underline"),
             cursor="hand2",
             justify="center"
