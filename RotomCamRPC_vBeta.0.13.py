@@ -6662,6 +6662,10 @@ class ProfileTab:
         
         # Save reference to button so we can change its color when test window is open
         self.test_image_button = test_button
+        
+        # If test window is already open, set button to orange (persists through menu changes)
+        if hasattr(self, 'test_window') and self.test_window and self.test_window.winfo_exists():
+            self.test_image_button.config(bg=ACTIVE_START_BUTTON_BG)
 
         button_row = tk.Frame(self.configure_window, bg=DARK_BG)
         button_row.grid(row=7, column=0, padx=12, pady=(0, 12))
@@ -6768,6 +6772,10 @@ class ProfileTab:
         
         # Save reference to button so we can change its color when test window is open
         self.test_image_button = test_button
+        
+        # If test window is already open, set button to orange (persists through menu changes)
+        if hasattr(self, 'test_window') and self.test_window and self.test_window.winfo_exists():
+            self.test_image_button.config(bg=ACTIVE_START_BUTTON_BG)
 
         def apply_changes():
             self.cooldown_var.set(temp_cooldown_var.get())
