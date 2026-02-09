@@ -26,9 +26,8 @@ import ctypes
 import threading
 import json
 import tkinter as tk
-import tkinter.font as tkfont
 from ctypes import wintypes
-from tkinter import messagebox, filedialog, ttk, simpledialog
+from tkinter import messagebox, filedialog, ttk
 from PIL import Image, ImageTk, ImageSequence, ImageDraw
 
 try:
@@ -591,7 +590,7 @@ def open_hotkeys_window(parent_grab=None, profile=None):
         entry.bind("<KeyRelease>", lambda e: update_apply_button_color())
     count_plus_entry.bind("<KeyRelease>", lambda e: update_apply_button_color())
     count_minus_entry.bind("<KeyRelease>", lambda e: update_apply_button_color())
-    global_var.trace_add("write", lambda *args: update_apply_button_color())
+    global_var.trace_add("write", lambda *_: update_apply_button_color())
 
     # Initial button color
     update_apply_button_color()
@@ -814,7 +813,7 @@ def open_hotkeys_inline(profile):
         entry.bind("<KeyRelease>", lambda e: update_apply_button_color())
     count_plus_entry.bind("<KeyRelease>", lambda e: update_apply_button_color())
     count_minus_entry.bind("<KeyRelease>", lambda e: update_apply_button_color())
-    global_var.trace_add("write", lambda *args: update_apply_button_color())
+    global_var.trace_add("write", lambda *_: update_apply_button_color())
     
     # Spacer to push buttons to bottom
     spacer = tk.Frame(container, bg=DARK_BG)
@@ -1085,7 +1084,7 @@ def show_reset_confirmation(profile_name, parent=None):
     close_btn.pack(side="left", padx=5)
     
     # Bind validation to entry changes
-    entry_var.trace_add("write", lambda *args: validate_entry())
+    entry_var.trace_add("write", lambda *_: validate_entry())
     
     # Initialize validation state
     validate_entry()
@@ -1751,7 +1750,7 @@ def rpc_open_options(profile, parent_grab=None):
             if not filter_text or filter_lower in game['name'].lower():
                 tree.insert("", "end", iid=game['id'], text=f"  {game['name']}", image=game['icon'])
     
-    def on_filter_change(*args):
+    def on_filter_change(*_):
         """Update tree when filter text changes"""
         populate_tree(filter_entry.get())
     
@@ -2162,7 +2161,7 @@ def rpc_open_options(profile, parent_grab=None):
             win.selected_pokemon_name = win.filtered_pokemon[0]['original']
             highlight_selected_pokemon()
     
-    def on_pokemon_filter_change(*args):
+    def on_pokemon_filter_change(*_):
         """Update Pokemon grid when filter text changes"""
         populate_pokemon_grid(pokemon_filter_entry.get())
     
@@ -2430,7 +2429,7 @@ def rpc_open_options(profile, parent_grab=None):
     # Bind change detection
     tree.bind("<<TreeviewSelect>>", lambda e: (on_game_selection_change(e), update_apply_button_color()))
     odds_entry.bind("<KeyRelease>", lambda e: update_apply_button_color())
-    counter_type_var.trace_add("write", lambda *args: update_apply_button_color())
+    counter_type_var.trace_add("write", lambda *_: update_apply_button_color())
 
     # Initial button color
     update_apply_button_color()
@@ -4147,7 +4146,7 @@ class ProfileTab:
         self.lbl_rpc_text.grid(row=1, column=2, padx=10, sticky="n")
 
         # Update icon appearance based on state
-        def update_auto_icon_appearance(*args):
+        def update_auto_icon_appearance(*_):
             # Only update if not running - running state is handled by _set_active_icons
             if not self.is_running:
                 if self.auto_count_var.get():
@@ -4161,7 +4160,7 @@ class ProfileTab:
                     if self.count_icon_img:
                         self.lbl_count_icon.config(image=self.count_icon_img)
 
-        def update_rpc_icon_appearance(*args):
+        def update_rpc_icon_appearance(*_):
             # Only update if not running - running state is handled by _set_active_icons
             if not self.is_running:
                 if self.rpc_enabled_var.get():
@@ -4175,7 +4174,7 @@ class ProfileTab:
                     if self.rpc_icon_img:
                         self.lbl_rpc_icon.config(image=self.rpc_icon_img)
         
-        def update_audio_icon_appearance(*args):
+        def update_audio_icon_appearance(*_):
             # Only update if not running - running state is handled by _set_active_icons
             if not self.is_running:
                 if self.audio_enabled_var.get():
@@ -4976,7 +4975,7 @@ class ProfileTab:
                 if not filter_text or filter_lower in game['name'].lower():
                     tree.insert("", "end", iid=game['id'], text=f"  {game['name']}", image=game['icon'])
         
-        def on_filter_change(*args):
+        def on_filter_change(*_):
             """Update tree when filter text changes"""
             populate_tree(filter_entry.get())
         
@@ -5295,7 +5294,7 @@ class ProfileTab:
                 selected_pokemon_name = filtered_pokemon[0]['original']
                 highlight_selected_pokemon()
         
-        def on_pokemon_filter_change(*args):
+        def on_pokemon_filter_change(*_):
             """Update Pokemon grid when filter text changes"""
             populate_pokemon_grid(pokemon_filter_entry.get())
         
@@ -5411,7 +5410,7 @@ class ProfileTab:
         custom_odds_entry = tk.Entry(content_frame, textvariable=custom_odds_var, width=20)
         custom_odds_entry.grid(row=10, column=1, padx=10, pady=(0, 6), sticky="w")
         
-        def on_odds_change(*args):
+        def on_odds_change(*_):
             if odds_var.get() == "Custom":
                 custom_odds_entry.config(state="normal")
             else:
@@ -5457,9 +5456,9 @@ class ProfileTab:
                 apply_button.config(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
         
         # Bind change detection
-        odds_var.trace_add("write", lambda *args: update_apply_button_color())
-        custom_odds_var.trace_add("write", lambda *args: update_apply_button_color())
-        suffix_var.trace_add("write", lambda *args: update_apply_button_color())
+        odds_var.trace_add("write", lambda *_: update_apply_button_color())
+        custom_odds_var.trace_add("write", lambda *_: update_apply_button_color())
+        suffix_var.trace_add("write", lambda *_: update_apply_button_color())
         
         def apply_changes():
             selected_items = tree.selection()
@@ -5713,7 +5712,7 @@ class ProfileTab:
         confirm_btn.pack(fill="x", pady=(6, 0), padx=10)
         
         # Bind validation to entry changes
-        entry_var.trace_add("write", lambda *args: validate_entry())
+        entry_var.trace_add("write", lambda *_: validate_entry())
         
         # Initialize validation state
         validate_entry()
@@ -6379,7 +6378,7 @@ def on_rename_profile(_event=None):
     close_btn.grid(row=0, column=1, padx=(4, 0), sticky="w")
     
     # Change detection - make Apply button orange when name changes
-    def check_for_changes(*args):
+    def check_for_changes(*_):
         has_changes = name_var.get() != current_name
         if has_changes:
             apply_btn.config(bg=START_ACTIVE_COLOR, activebackground=START_ACTIVE_COLOR)
