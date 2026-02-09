@@ -173,6 +173,7 @@ INTERACTIVE_DRAG_WIDGETS = (
     tk.Entry, ttk.Entry,
     tk.Text,
     tk.Listbox,
+    tk.Canvas,  # Added to prevent drag interference with Pokemon selection
     tk.Scale,
     ttk.Combobox,
     ttk.Treeview,
@@ -4055,6 +4056,7 @@ class ProfileTab:
         # Define interactive widget types that should NOT have drag binding
         interactive_types = (tk.Entry, tk.Text, tk.Button, tk.Checkbutton, 
                            tk.Radiobutton, tk.Scale, tk.Scrollbar, tk.Listbox,
+                           tk.Canvas,  # Added to prevent drag interference with Pokemon selection
                            tk.Spinbox, ttk.Combobox, ttk.Entry, ttk.Button,
                            ttk.Checkbutton, ttk.Radiobutton, ttk.Scale, ttk.Spinbox)
         
