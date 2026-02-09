@@ -2625,6 +2625,7 @@ class ProfileTab:
         self.is_running = False
         self.configure_window = None
         self.test_window = None
+        self.test_image_button = None
         self.capture_window = None
         self.rpc_window = None
         self.settings_window = None
@@ -2710,6 +2711,18 @@ class ProfileTab:
         else:
             self.btn_decrement.configure(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
             self.btn_increment.configure(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
+    
+    def _update_test_image_button_color(self, color):
+        btn = getattr(self, "test_image_button", None)
+        if not btn:
+            return
+        try:
+            if btn.winfo_exists():
+                btn.config(bg=color, activebackground=color)
+            else:
+                self.test_image_button = None
+        except tk.TclError:
+            self.test_image_button = None
 
     # ---------- Modal helpers ----------
     def _set_tabs_enabled(self, enabled: bool):
@@ -4619,6 +4632,8 @@ class ProfileTab:
             )
             return
 
+        self._update_test_image_button_color(START_ACTIVE_COLOR)
+
         self.test_window = tk.Toplevel(self.frame)
         apply_window_style(self.test_window)
         self.test_window.resizable(False, False)
@@ -4633,6 +4648,7 @@ class ProfileTab:
             is_active["running"] = False
             self.test_window.destroy()
             self.test_window = None
+            self._update_test_image_button_color(DARK_BUTTON)
             self.frame.winfo_toplevel().focus_force()
 
         self.test_window.protocol("WM_DELETE_WINDOW", on_close)
@@ -6013,6 +6029,9 @@ class ProfileTab:
             height=BUTTON_HEIGHT
         )
         test_button.grid(row=6, column=0, padx=12, pady=(8, 12))
+        self.test_image_button = test_button
+        if self.test_window and self.test_window.winfo_exists():
+            self._update_test_image_button_color(START_ACTIVE_COLOR)
 
         button_row = tk.Frame(self.configure_window, bg=DARK_BG)
         button_row.grid(row=7, column=0, padx=12, pady=(0, 12))
@@ -6115,6 +6134,9 @@ class ProfileTab:
             height=BUTTON_HEIGHT
         )
         test_button.pack(pady=8)
+        self.test_image_button = test_button
+        if self.test_window and self.test_window.winfo_exists():
+            self._update_test_image_button_color(START_ACTIVE_COLOR)
 
         def apply_changes():
             self.cooldown_var.set(temp_cooldown_var.get())
