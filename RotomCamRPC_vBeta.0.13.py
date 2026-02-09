@@ -652,7 +652,7 @@ def open_hotkeys_inline(profile):
     
     def add_row(row, label_text, key):
         tk.Label(content_frame, text=label_text).grid(row=row, column=0, sticky="w", pady=4)
-        entry = tk.Entry(content_frame, width=20, state="readonly")
+        entry = tk.Entry(content_frame, width=4, state="readonly")  # Width set to fit 4 characters
         entry.grid(row=row, column=1, padx=8, pady=4, sticky="w")
         entry.configure(readonlybackground=DARK_ACCENT)
         set_readonly_text(entry, hotkey_manager.hotkeys.get(key, ""))
@@ -3062,6 +3062,12 @@ class ProfileTab:
             self._clear_profile_name_focus()  # Clear focus from profile name entry
             self.open_reset_profile_inline()
 
+        def open_report_bug_from_settings():
+            self._validate_and_fix_profile_name()
+            self._reset_profile_name_to_saved()  # Discard unapplied changes
+            self._clear_profile_name_focus()  # Clear focus from profile name entry
+            self.open_report_bug_inline()
+
         tk.Button(
             self._settings_frame,
             text="Configure Alerts",
@@ -3102,6 +3108,15 @@ class ProfileTab:
             self._settings_frame,
             text="Reset Profile",
             command=open_reset_from_settings,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
+            height=BUTTON_HEIGHT
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
+
+        tk.Button(
+            self._settings_frame,
+            text="Report a Bug",
+            command=open_report_bug_from_settings,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
@@ -4508,7 +4523,7 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=2
         )
-        self.btn_start.pack(pady=(2, 5), padx=10, ipadx=STANDARD_BUTTON_IPADX)  # 5px bottom padding for spacing
+        self.btn_start.pack(pady=(2, 8), padx=10, ipadx=STANDARD_BUTTON_IPADX)  # 8px bottom padding for spacing
 
         self.cooldown_var = tk.IntVar(value=5)
         self.frequency_var = tk.DoubleVar(value=0.5)
@@ -5987,6 +6002,59 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=2
         ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
+        
+        # Make sub-setting draggable after all widgets created
+        self._finalize_sub_setting()
+
+    def open_report_bug_inline(self):
+        """Open the Report a Bug inline view with Discord link."""
+        import webbrowser
+        
+        self._show_sub_setting()
+        
+        # Instructional text (centered, wrapped)
+        text_label = tk.Label(
+            self._sub_setting_frame,
+            text="If you have found a bug in the program, please report it to me on the\nRotom Repository Discord:",
+            bg=DARK_BG,
+            fg=DARK_FG,
+            font=(FONT_NAME, BASE_FONT_SIZE),
+            justify="center"
+        )
+        text_label.pack(pady=(20, 10))
+        
+        # Discord link (clickable, centered, styled)
+        discord_url = "https://discord.gg/fQJNabqqzE"
+        link_label = tk.Label(
+            self._sub_setting_frame,
+            text=discord_url,
+            bg=DARK_BG,
+            fg="#4a90e2",  # Blue color for link
+            font=(FONT_NAME, BASE_FONT_SIZE, "underline"),
+            cursor="hand2",
+            justify="center"
+        )
+        link_label.pack(pady=(0, 20))
+        
+        # Make link clickable
+        def open_discord_link(event):
+            webbrowser.open(discord_url)
+        
+        link_label.bind("<Button-1>", open_discord_link)
+        
+        # Back button at bottom - 420px wide standard button
+        tk.Button(
+            self._sub_setting_frame,
+            text="Back",
+            command=self._close_sub_setting,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
+            height=2
+        ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
+        
+        # Add flexible bottom spacer for drag area at bottom of window
+        bottom_spacer = tk.Frame(self._sub_setting_frame, bg=DARK_BG)
+        bottom_spacer.pack(side="bottom", fill="both", expand=True)
         
         # Make sub-setting draggable after all widgets created
         self._finalize_sub_setting()
