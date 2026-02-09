@@ -4924,7 +4924,17 @@ class ProfileTab:
         self.test_window.resizable(False, False)
         self._position_popup_near_root(self.test_window)
 
-        label = tk.Label(self.test_window, text="Checking...", padx=20, pady=20)
+        # Add profile name label at the top
+        profile_label = tk.Label(
+            self.test_window, 
+            text=f"Profile: {self.profile_name}",
+            padx=20, 
+            pady=(20, 5),
+            font=(FONT_NAME, BASE_FONT_SIZE, "bold")
+        )
+        profile_label.pack()
+
+        label = tk.Label(self.test_window, text="Checking...", padx=20, pady=(5, 20))
         label.pack()
 
         is_active = {"running": True}
@@ -4940,6 +4950,9 @@ class ProfileTab:
         def update_result():
             if not is_active["running"]:
                 return
+
+            # Update profile name in case it changed
+            profile_label.config(text=f"Profile: {self.profile_name}")
 
             hwnd = find_window_by_title_exact(title)
             if not hwnd:
