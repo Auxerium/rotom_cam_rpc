@@ -3121,6 +3121,10 @@ class ProfileTab:
             height=BUTTON_HEIGHT
         ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
+        # Blank line between Reset Profile and Report a Bug
+        spacer = tk.Frame(self._settings_frame, bg=DARK_BG, height=10)
+        spacer.pack()
+
         tk.Button(
             self._settings_frame,
             text="Report a Bug",
@@ -6063,13 +6067,25 @@ class ProfileTab:
             justify="center",
             wraplength=400  # Wrap text to prevent cutoff at window edge
         )
-        link_label.pack(pady=(10, 20))
+        link_label.pack(pady=(10, 5))
         
         # Make link clickable
         def open_discord_link(event):
             webbrowser.open("https://discord.gg/fQJNabqqzE")
         
         link_label.bind("<Button-1>", open_discord_link)
+        
+        # Help text for manual Discord join (gray, smaller font)
+        help_text = tk.Label(
+            self._sub_setting_frame,
+            text='(If the link doesn\'t work, on Discord click "Add Server" > "Join a Server" and just type in the invite code "fQJNabqqzE")',
+            bg=DARK_BG,
+            fg="#888888",
+            font=(FONT_NAME, BASE_FONT_SIZE - 2),
+            justify="center",
+            wraplength=400
+        )
+        help_text.pack(pady=(5, 20))
         
         # Back button at bottom - 420px wide standard button
         tk.Button(
@@ -6140,7 +6156,7 @@ class ProfileTab:
             justify="center",
             wraplength=400  # Wrap text to prevent cutoff at window edge
         )
-        link_label.pack(pady=(10, 20))
+        link_label.pack(pady=(10, 5))
         
         # Make link clickable
         def open_discord_link(event):
@@ -6148,15 +6164,30 @@ class ProfileTab:
         
         link_label.bind("<Button-1>", open_discord_link)
         
-        # Back button at bottom - 420px wide standard button
-        tk.Button(
+        # Help text for manual Discord join (gray, smaller font)
+        help_text = tk.Label(
             self._sub_setting_frame,
+            text='(If the link doesn\'t work, on Discord click "Add Server" > "Join a Server" and just type in the invite code "fQJNabqqzE")',
+            bg=DARK_BG,
+            fg="#888888",
+            font=(FONT_NAME, BASE_FONT_SIZE - 2),
+            justify="center",
+            wraplength=400
+        )
+        help_text.pack(pady=(5, 20))
+        
+        # Back button at bottom - 420px wide standard button with height=2
+        button_frame = tk.Frame(self._sub_setting_frame, bg=DARK_BG)
+        button_frame.pack(side="bottom", fill="x", pady=0)
+        
+        tk.Button(
+            button_frame,
             text="Back",
             command=self._close_sub_setting,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
-            height=BUTTON_HEIGHT
-        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
+            height=2  # Taller like other back buttons
+        ).pack(side="bottom", pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
         
         # Add flexible bottom spacer for drag area at bottom of window
         bottom_spacer = tk.Frame(self._sub_setting_frame, bg=DARK_BG)
