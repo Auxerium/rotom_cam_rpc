@@ -6012,31 +6012,43 @@ class ProfileTab:
         """Open the Report a Bug inline view with Discord link."""
         self._show_sub_setting()
         
-        # Instructional text (centered, wrapped)
-        text_label = tk.Label(
+        # First paragraph - instructional text (centered, wrapped)
+        text_label1 = tk.Label(
             self._sub_setting_frame,
-            text="If you have found a bug in the program, please report it to me on the\nRotom Repository Discord:",
+            text="If you have found an issue or bug that needs reporting, please join the Rotom Repository Discord and let me know.",
             bg=DARK_BG,
             fg=DARK_FG,
             font=(FONT_NAME, BASE_FONT_SIZE),
             justify="center",
             wraplength=400  # Wrap text to prevent cutoff at window edge
         )
-        text_label.pack(pady=(20, 10))
+        text_label1.pack(pady=(20, 10))
         
-        # Discord link (clickable, centered, styled)
+        # Second paragraph - special badge text (centered, wrapped)
+        text_label2 = tk.Label(
+            self._sub_setting_frame,
+            text="If this is not a known bug or issue I'll give you a special badge!",
+            bg=DARK_BG,
+            fg=DARK_FG,
+            font=(FONT_NAME, BASE_FONT_SIZE),
+            justify="center",
+            wraplength=400  # Wrap text to prevent cutoff at window edge
+        )
+        text_label2.pack(pady=(10, 10))
+        
+        # Discord link (clickable, centered, styled - no underline)
         discord_url = "https://discord.gg/fQJNabqqzE"
         link_label = tk.Label(
             self._sub_setting_frame,
             text=discord_url,
             bg=DARK_BG,
             fg=LINK_COLOR,  # Blue color for link
-            font=(FONT_NAME, BASE_FONT_SIZE, "underline"),
+            font=(FONT_NAME, BASE_FONT_SIZE),  # No underline
             cursor="hand2",
             justify="center",
             wraplength=400  # Wrap text to prevent cutoff at window edge
         )
-        link_label.pack(pady=(0, 20))
+        link_label.pack(pady=(10, 20))
         
         # Make link clickable
         def open_discord_link(event):
