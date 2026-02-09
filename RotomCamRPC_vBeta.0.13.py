@@ -4921,6 +4921,7 @@ class ProfileTab:
 
         self.test_window = tk.Toplevel(self.frame)
         apply_window_style(self.test_window)
+        self.test_window.geometry("280x160")
         self.test_window.resizable(False, False)
         self._position_popup_near_root(self.test_window)
 
