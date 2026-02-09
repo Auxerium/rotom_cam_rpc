@@ -1526,52 +1526,34 @@ def rpc_load_pokemon_list():
     try:
         # Load Pokemon names from pokemon_gen1_9.json
         json_path = resource_path(os.path.join("json", "pokemon_gen1_9.json"))
-        print(f"DEBUG: Looking for Pokemon JSON at: {json_path}")
-        print(f"DEBUG: File exists: {os.path.exists(json_path)}")
         
         pokemon_names = []
         if os.path.exists(json_path):
             with open(json_path, 'r', encoding='utf-8') as f:
                 pokemon_data = json.load(f)
-                print(f"DEBUG: Loaded JSON, type: {type(pokemon_data).__name__}")
                 
                 # Handle different JSON structures
                 all_pokemon = []
                 if isinstance(pokemon_data, dict):
                     # JSON is organized by generation: {"generation_1": [...], "generation_2": [...]}
-                    print(f"DEBUG: JSON is a dict with {len(pokemon_data)} keys: {list(pokemon_data.keys())}")
                     for gen_key, gen_pokemon in pokemon_data.items():
                         if isinstance(gen_pokemon, list):
-                            print(f"DEBUG: Generation '{gen_key}' has {len(gen_pokemon)} Pokemon")
                             all_pokemon.extend(gen_pokemon)
-                        else:
-                            print(f"DEBUG: Skipping '{gen_key}', not a list")
                 elif isinstance(pokemon_data, list):
                     # JSON is a flat list: [{...}, {...}]
-                    print(f"DEBUG: JSON is a list with {len(pokemon_data)} items")
                     all_pokemon = pokemon_data
                 else:
-                    print(f"DEBUG: Unexpected JSON type: {type(pokemon_data)}")
                     return []
-                
-                print(f"DEBUG: Total Pokemon collected: {len(all_pokemon)}")
                 
                 # Filter out non-dictionary items (strings, nulls, etc.)
                 valid_pokemon = [p for p in all_pokemon if isinstance(p, dict) and p.get('name')]
-                print(f"DEBUG: Found {len(valid_pokemon)} valid Pokemon objects (filtered out {len(all_pokemon) - len(valid_pokemon)} invalid entries)")
                 
                 # Sort by id and extract names only
                 sorted_pokemon = sorted(valid_pokemon, key=lambda x: x.get('id', 0))
                 pokemon_names = [p.get('name', '') for p in sorted_pokemon]
-                print(f"DEBUG: Extracted {len(pokemon_names)} Pokemon names")
-                if pokemon_names:
-                    print(f"DEBUG: First few Pokemon: {pokemon_names[:5]}")
-        else:
-            print(f"DEBUG: Pokemon JSON file not found at {json_path}")
         
         # Load icons directly from assets/pokemon_icons/ directory
         icons_dir = resource_path(os.path.join("assets", "pokemon_icons"))
-        print(f"DEBUG: Looking for Pokemon icons in: {icons_dir}")
         icon_map = {}
         
         if os.path.exists(icons_dir) and os.path.isdir(icons_dir):
@@ -1588,10 +1570,6 @@ def rpc_load_pokemon_list():
                     if os.path.exists(icon_path):
                         # Store relative path from root for load_pokemon_icon()
                         icon_map[pokemon_name.lower()] = os.path.join("assets", "pokemon_icons", icon_filename)
-            
-            print(f"DEBUG: Found {len(icon_map)} Pokemon icon files")
-        else:
-            print(f"DEBUG: Pokemon icons directory not found (icons won't display)")
         
         # Return list of tuples (name, id, icon_path) if icons available, else (name, id)
         if icon_map:
@@ -1601,10 +1579,8 @@ def rpc_load_pokemon_list():
                 pokemon_name = pokemon.get('name', '')
                 icon_path = icon_map.get(pokemon_name.lower(), '')
                 result.append((pokemon_name, pokemon_id, icon_path))
-            print(f"DEBUG: Returning {len(result)} Pokemon with IDs and icon paths")
             return result
         else:
-            print(f"DEBUG: No icons found, returning names and IDs only")
             return [(p.get('name', ''), p.get('id', 0)) for p in sorted_pokemon]
             
     except Exception as e:
@@ -1612,7 +1588,6 @@ def rpc_load_pokemon_list():
         import traceback
         traceback.print_exc()
     
-    print("DEBUG: Returning empty Pokemon list")
     return []  # Return empty list if file not found or error occurred
 
 
@@ -1769,7 +1744,6 @@ def rpc_open_options(profile, parent_grab=None):
 
     # Load Pokemon list for Target selector
     pokemon_list_raw = rpc_load_pokemon_list()
-    print(f"DEBUG: Pokemon list for selector contains {len(pokemon_list_raw)} items")
     
     # Format Pokemon names: replace "-" with " " and title case
     def format_pokemon_name(name):
@@ -1809,7 +1783,6 @@ def rpc_open_options(profile, parent_grab=None):
             image = image.resize((32, 32), Image.LANCZOS)
             return ImageTk.PhotoImage(image)
         except Exception as e:
-            print(f"DEBUG: Failed to load icon: {e}")
             return None
     
     def load_pokemon_sprite(pokemon_name, pokemon_id):
@@ -1827,10 +1800,8 @@ def rpc_open_options(profile, parent_grab=None):
                 # Keep original 128x128 size (no scaling)
                 return ImageTk.PhotoImage(image)
             else:
-                print(f"DEBUG: Sprite not found: {sprite_path}")
                 return None
         except Exception as e:
-            print(f"DEBUG: Failed to load sprite for {pokemon_name}: {e}")
             return None
     
     # Store both original and formatted names, icons, sprites, and IDs
@@ -1849,7 +1820,6 @@ def rpc_open_options(profile, parent_grab=None):
     win.current_game_generation = 9
     
     if has_icons:
-        print(f"DEBUG: Creating Pokemon data with IDs and icons...")
         for pokemon_name, pokemon_id, icon_url in pokemon_list_raw:
             # Load icon (small, for tree view)
             icon_image = load_pokemon_icon(icon_url)
@@ -1864,7 +1834,6 @@ def rpc_open_options(profile, parent_grab=None):
                 'id': pokemon_id
             })
     else:
-        print(f"DEBUG: Creating Pokemon data with IDs only...")
         for pokemon_name, pokemon_id in pokemon_list_raw:
             # Store Pokemon data WITHOUT loading sprite yet (lazy load later)
             win.pokemon_data.append({
@@ -2097,7 +2066,6 @@ def rpc_open_options(profile, parent_grab=None):
         
         # Get max generation from current game (stored when game is selected)
         max_generation = getattr(win, 'current_game_generation', 9)  # Default to all Pokemon
-        print(f"DEBUG: Filtering Pokemon for max generation: {max_generation}")
         
         # Filter Pokemon by generation first
         filtered_by_gen = []
@@ -2130,8 +2098,6 @@ def rpc_open_options(profile, parent_grab=None):
         
         # Show only the first 3 Pokemon (3x1 grid - horizontal)
         display_pokemon = win.filtered_pokemon[:3]
-        
-        print(f"DEBUG: Total filtered Pokemon: {len(win.filtered_pokemon)}, Displaying first {len(display_pokemon)} Pokemon")
         
         # Draw the first 3 Pokemon in a 3x1 grid (horizontal)
         cols = 3
@@ -2169,8 +2135,6 @@ def rpc_open_options(profile, parent_grab=None):
     pokemon_filter_entry.bind("<KeyRelease>", on_pokemon_filter_change)
     pokemon_canvas.bind("<Button-1>", on_pokemon_grid_click)
     
-    print(f"DEBUG: Grid initialized with {len(win.pokemon_data)} total Pokemon")
-
     # Helper function to select Pokemon by name
     def select_pokemon_by_name(name):
         """Select a Pokemon in the grid by name (case-insensitive), only if it's in the filtered list"""
@@ -2183,9 +2147,7 @@ def rpc_open_options(profile, parent_grab=None):
             if pokemon['original'].lower() == name_lower:
                 win.selected_pokemon_name = pokemon['original']
                 highlight_selected_pokemon()
-                print(f"DEBUG: Selected Pokemon: {pokemon['formatted']} (from {name})")
                 return
-        print(f"DEBUG: Pokemon '{name}' not found in filtered list (may be wrong generation)")
 
     suffix_to_label = {suffix: label for label, suffix in RPC_COUNTER_OPTIONS}
     label_to_suffix = {label: suffix for label, suffix in RPC_COUNTER_OPTIONS}
@@ -2246,8 +2208,6 @@ def rpc_open_options(profile, parent_grab=None):
             except (ValueError, TypeError):
                 win.current_game_generation = 9  # Default to all if invalid
             
-            print(f"DEBUG: Game generation from config: {win.current_game_generation}")
-            
             # Repopulate Pokemon grid based on game's generation FIRST
             # This filters Pokemon to only those available in this generation
             populate_pokemon_grid()
@@ -2281,8 +2241,6 @@ def rpc_open_options(profile, parent_grab=None):
         # No game selected, populate with default (all Pokemon)
         populate_pokemon_grid()
     
-    print(f"DEBUG: Pokemon grid populated with {len(win.filtered_pokemon)} items")
-
     # Helper function to get current pokemon selection from grid
     def get_current_pokemon():
         """Get the currently selected Pokemon from the grid (returns original name)"""
@@ -3256,9 +3214,6 @@ class ProfileTab:
             takefocus=0
         )
         auto_check.pack(anchor="w")
-
-        # Checkbox removed - functionality moved to icon button on main screen
-        # enable_alerts_check.config(command=update_alerts_enabled_state)
 
         def apply_changes():
             """Save all alert settings"""
@@ -5043,7 +4998,6 @@ class ProfileTab:
                     return ImageTk.PhotoImage(image)
                 return None
             except Exception as e:
-                print(f"DEBUG: Failed to load sprite for {pokemon_name}: {e}")
                 return None
         
         def get_game_generation(game_name):
@@ -5322,7 +5276,6 @@ class ProfileTab:
                 for game in game_data:
                     if game['id'] == selected_game_id:
                         current_game_generation = get_game_generation(game['name'])
-                        print(f"DEBUG: Game '{game['name']}' -> Generation {current_game_generation}")
                         populate_pokemon_grid(pokemon_filter_entry.get())
                         highlight_selected_pokemon()  # Highlight the selected Pokemon from config
                         update_apply_button_color()
