@@ -5566,6 +5566,15 @@ class ProfileTab:
             else:
                 filtered_pokemon = filtered_by_gen
             
+            # If there's a selected Pokemon, move it to the front of the list
+            current_target = selected_pokemon_name if selected_pokemon_name else ""
+            if current_target:
+                for i, pokemon in enumerate(filtered_pokemon):
+                    if pokemon['original'].lower() == current_target.lower():
+                        # Remove from current position and insert at front
+                        filtered_pokemon.insert(0, filtered_pokemon.pop(i))
+                        break
+            
             # Show only first 3 Pokemon
             display_pokemon = filtered_pokemon[:3]
             
@@ -5800,7 +5809,7 @@ class ProfileTab:
             selected_target = selected_pokemon_name
             if not selected_target and selected_game_id:
                 # Load current config to preserve existing target
-                config_path = os.path.join(self.rpc_config_dir, f"{selected_game_id}.txt")
+                config_path = os.path.join(os.path.dirname(__file__), "rpc_config", f"{selected_game_id}.txt")
                 cfg = rpc_read_config(config_path)
                 selected_target = cfg.get("target", "")
             
