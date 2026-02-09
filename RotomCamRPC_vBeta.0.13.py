@@ -25,6 +25,7 @@ import time
 import ctypes
 import threading
 import json
+import webbrowser
 import tkinter as tk
 import tkinter.font as tkfont
 from ctypes import wintypes
@@ -60,6 +61,7 @@ DARK_ACCENT = "#2d2d2d"
 DARK_BUTTON = "#3a3a3a"
 DARK_BORDER = "#444444"
 DARK_HOTKEY_WAIT_BG = "#4a4a4a"
+LINK_COLOR = "#4a90e2"  # Blue color for clickable links
 
 HOTKEY_WAIT_BG = DARK_HOTKEY_WAIT_BG
 
@@ -67,6 +69,12 @@ BUTTON_PADX = 12
 BUTTON_PADY = 0
 BUTTON_HEIGHT = 1
 COUNTER_BUTTON_HEIGHT = 1
+
+# Standard button sizing for consistent UI (420px wide buttons)
+STANDARD_BUTTON_WIDTH_PX = 420  # Target pixel width for standard buttons
+STANDARD_BUTTON_IPADX = 186     # Internal padding to achieve 420px width
+STANDARD_BUTTON_PADY = (2, 2)   # Vertical padding (2px top, 2px bottom)
+
 FONT_NAME = "Pokémon DP Pro Regular"
 FONT_FILENAME = "pokemon-dp-pro.ttf"
 FR_PRIVATE = 0x10
@@ -165,6 +173,7 @@ INTERACTIVE_DRAG_WIDGETS = (
     tk.Entry, ttk.Entry,
     tk.Text,
     tk.Listbox,
+    tk.Canvas,  # Added to prevent drag interference with Pokemon selection
     tk.Scale,
     ttk.Combobox,
     ttk.Treeview,
@@ -178,14 +187,22 @@ def is_interactive_widget(widget):
     return isinstance(widget, INTERACTIVE_DRAG_WIDGETS)
 
 def get_widget_under_cursor(event):
+    # First check if event.widget itself is interactive - most reliable
+    if hasattr(event.widget, 'winfo_class') and is_interactive_widget(event.widget):
+        return event.widget
+    
     # Handle case where event.widget might be a string (e.g., from Combobox)
     if not hasattr(event.widget, 'winfo_containing'):
         return event.widget
+    
+    # Fallback to winfo_containing for other cases
     widget = event.widget.winfo_containing(event.x_root, event.y_root)
     return widget or event.widget
 
 def is_interactive_click(event):
-    return is_interactive_widget(get_widget_under_cursor(event))
+    """Check if click event is on an interactive widget."""
+    widget = get_widget_under_cursor(event)
+    return is_interactive_widget(widget)
 
 
 def install_unfocus_on_click(root_window):
@@ -608,6 +625,7 @@ def open_hotkeys_inline(profile):
         return
     
     container = profile._show_sub_setting("Hotkeys")
+    profile._current_sub_setting = "hotkeys"  # Track current sub-setting
     
     hotkey_manager.suspend()
     
@@ -645,7 +663,7 @@ def open_hotkeys_inline(profile):
     
     def add_row(row, label_text, key):
         tk.Label(content_frame, text=label_text).grid(row=row, column=0, sticky="w", pady=4)
-        entry = tk.Entry(content_frame, width=20, state="readonly")
+        entry = tk.Entry(content_frame, width=4, state="readonly")  # Width set to fit 4 characters
         entry.grid(row=row, column=1, padx=8, pady=4, sticky="w")
         entry.configure(readonlybackground=DARK_ACCENT)
         set_readonly_text(entry, hotkey_manager.hotkeys.get(key, ""))
@@ -719,13 +737,13 @@ def open_hotkeys_inline(profile):
     profile_count_minus = profile.count_minus_hotkey if profile else ""
     
     tk.Label(content_frame, text="+ Count:").grid(row=7, column=0, sticky="w", pady=4)
-    count_plus_entry = tk.Entry(content_frame, width=20, state="readonly")
+    count_plus_entry = tk.Entry(content_frame, width=4, state="readonly")
     count_plus_entry.grid(row=7, column=1, padx=8, pady=4, sticky="w")
     count_plus_entry.configure(readonlybackground=DARK_ACCENT)
     set_readonly_text(count_plus_entry, profile_count_plus)
     
     tk.Label(content_frame, text="- Count:").grid(row=8, column=0, sticky="w", pady=4)
-    count_minus_entry = tk.Entry(content_frame, width=20, state="readonly")
+    count_minus_entry = tk.Entry(content_frame, width=4, state="readonly")
     count_minus_entry.grid(row=8, column=1, padx=8, pady=4, sticky="w")
     count_minus_entry.configure(readonlybackground=DARK_ACCENT)
     set_readonly_text(count_minus_entry, profile_count_minus)
@@ -820,7 +838,7 @@ def open_hotkeys_inline(profile):
     spacer = tk.Frame(container, bg=DARK_BG)
     spacer.pack(fill="both", expand=True)
     
-    # Back button at bottom
+    # Back button at bottom - 420px wide standard button
     tk.Button(
         container,
         text="Back",
@@ -828,9 +846,9 @@ def open_hotkeys_inline(profile):
         padx=BUTTON_PADX,
         pady=BUTTON_PADY,
         height=2
-    ).pack(fill="x", pady=(0, 6), padx=10, side="bottom")
+    ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
     
-    # Apply button above Back
+    # Apply button above Back - 420px wide standard button
     apply_button = tk.Button(
         container,
         text="Apply",
@@ -839,10 +857,13 @@ def open_hotkeys_inline(profile):
         pady=BUTTON_PADY,
         height=BUTTON_HEIGHT
     )
-    apply_button.pack(fill="x", pady=(0, 4), padx=10, side="bottom")
+    apply_button.pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
     
     # Initial button color
     update_apply_button_color()
+    
+    # Make sub-setting draggable after all widgets created
+    profile._finalize_sub_setting()
 
 
 # =========================
@@ -2640,6 +2661,7 @@ class ProfileTab:
         self._suppress_text_path_change = False
         self._settings_view_active = False
         self._settings_frame = None
+        self._current_sub_setting = None  # Track which sub-setting is currently open
 
         self.rpc = None
         self.rpc_thread = None
@@ -2926,18 +2948,145 @@ class ProfileTab:
         self._settings_frame.pack(padx=10, pady=6, fill="both", expand=True)
         self._settings_view_active = True
         ProfileTab._global_settings_open = True  # Mark settings as globally open
+        
+        # Disable other profile tabs
+        update_profile_tabs_state()
+
+        # Add profile name editor at top
+        tk.Label(
+            self._settings_frame,
+            text="Profile Name:",
+            bg=DARK_BG,
+            fg=DARK_FG,
+            font=(FONT_NAME, BASE_FONT_SIZE, "bold")
+        ).pack(pady=(0, 4))
+        
+        # Store initial profile name for change detection (stripped once)
+        initial_profile_name = self.profile_name_var.get().strip()
+        
+        self.profile_name_entry = tk.Entry(
+            self._settings_frame,
+            textvariable=self.profile_name_var,
+            font=(FONT_NAME, BASE_FONT_SIZE),
+            justify="center",
+            width=20
+        )
+        self.profile_name_entry.pack(pady=(0, 4))
+        
+        # Apply button for profile name
+        def check_profile_name_changes():
+            """Check if profile name has changed from initial value."""
+            current_name = self.profile_name_var.get().strip()
+            return current_name != initial_profile_name
+        
+        def update_profile_name_apply_button_color():
+            """Update Apply button color based on whether name has changed."""
+            try:
+                if check_profile_name_changes():
+                    profile_name_apply_btn.config(bg=START_ACTIVE_COLOR, activebackground=START_ACTIVE_COLOR)
+                else:
+                    profile_name_apply_btn.config(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
+            except tk.TclError:
+                # Button has been destroyed (settings closed), ignore
+                pass
+        
+        def apply_profile_name_changes():
+            """Apply profile name changes - validate and save."""
+            nonlocal initial_profile_name
+            current = self.profile_name_var.get().strip()
+            
+            # Check if empty
+            if not current:
+                self.profile_name_var.set(self.default_tab_name)
+                self.set_tab_title()
+                self.mark_dirty()
+                initial_profile_name = self.default_tab_name.strip()
+                update_profile_name_apply_button_color()
+                return
+            
+            # Check for duplicate names (excluding current profile)
+            all_profiles = globals().get('profiles', [])
+            current_lower = current.lower()
+            for other_profile in all_profiles:
+                if other_profile is self:
+                    continue
+                other_name = other_profile.profile_name_var.get().strip()
+                if other_name.lower() == current_lower:
+                    # Duplicate found - show error and revert
+                    show_custom_error(
+                        "duplicate_name",
+                        "Duplicate Profile Name",
+                        f"Profile name '{current}' is already in use by another profile.\nPlease choose a different name."
+                    )
+                    self.profile_name_var.set(initial_profile_name)
+                    update_profile_name_apply_button_color()
+                    return
+            
+            # Valid name - update and save
+            self.set_tab_title()
+            # Save immediately instead of waiting for autosave so name persists when navigating menus
+            self.save_settings_silent()
+            initial_profile_name = current
+            # Update the instance variable so it persists when navigating menus
+            self.profile_name = current
+            update_profile_name_apply_button_color()
+        
+        profile_name_apply_btn = tk.Button(
+            self._settings_frame,
+            text="Apply",
+            command=apply_profile_name_changes,
+            height=BUTTON_HEIGHT
+        )
+        profile_name_apply_btn.pack(pady=(0, 12), ipadx=10)  # 20px wider than before (10px per side)
+        
+        # Initialize button color first
+        update_profile_name_apply_button_color()
+        
+        # Bind trace to detect changes (note: trace is on instance var, will be cleaned up with instance)
+        # Added after initialization to avoid triggering during setup
+        self.profile_name_var.trace_add("write", lambda *args: update_profile_name_apply_button_color())
 
         def open_hotkeys_from_settings():
+            self._validate_and_fix_profile_name()
+            self._reset_profile_name_to_saved()  # Discard unapplied changes
+            self._clear_profile_name_focus()  # Clear focus from profile name entry
             open_hotkeys_inline(self)
 
         def open_configure_from_settings():
+            self._validate_and_fix_profile_name()
+            self._reset_profile_name_to_saved()  # Discard unapplied changes
+            self._clear_profile_name_focus()  # Clear focus from profile name entry
             self.open_configure_inline()
 
         def open_rpc_from_settings():
+            self._validate_and_fix_profile_name()
+            self._reset_profile_name_to_saved()  # Discard unapplied changes
+            self._clear_profile_name_focus()  # Clear focus from profile name entry
             self.open_rpc_inline()
 
         def open_alerts_from_settings():
+            self._validate_and_fix_profile_name()
+            self._reset_profile_name_to_saved()  # Discard unapplied changes
+            self._clear_profile_name_focus()  # Clear focus from profile name entry
             self.open_alert_settings_inline()
+
+        def open_reset_from_settings():
+            self._validate_and_fix_profile_name()
+            self._reset_profile_name_to_saved()  # Discard unapplied changes
+            self._clear_profile_name_focus()  # Clear focus from profile name entry
+            self.open_reset_profile_inline()
+
+        def open_report_bug_from_settings():
+            self._validate_and_fix_profile_name()
+            self._reset_profile_name_to_saved()  # Discard unapplied changes
+            self._clear_profile_name_focus()  # Clear focus from profile name entry
+            self.open_report_bug_inline()
+        
+        def open_credits_from_settings():
+            self._validate_and_fix_profile_name()
+            self._reset_profile_name_to_saved()  # Discard unapplied changes
+            self._clear_profile_name_focus()  # Clear focus from profile name entry
+            self.open_credits_inline()
 
         tk.Button(
             self._settings_frame,
@@ -2946,7 +3095,7 @@ class ProfileTab:
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
-        ).pack(fill="x", pady=(6, 4), padx=10)
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
         tk.Button(
             self._settings_frame,
@@ -2955,7 +3104,7 @@ class ProfileTab:
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
-        ).pack(fill="x", pady=4, padx=10)
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
         tk.Button(
             self._settings_frame,
@@ -2964,7 +3113,7 @@ class ProfileTab:
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
-        ).pack(fill="x", pady=4, padx=10)
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
         tk.Button(
             self._settings_frame,
@@ -2973,16 +3122,38 @@ class ProfileTab:
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
-        ).pack(fill="x", pady=4, padx=10)
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
         tk.Button(
             self._settings_frame,
             text="Reset Profile",
-            command=self.open_reset_profile_inline,
+            command=open_reset_from_settings,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
-        ).pack(fill="x", pady=4, padx=10)
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
+
+        # Blank line between Reset Profile and Report a Bug (5x bigger = 50px)
+        spacer = tk.Frame(self._settings_frame, bg=DARK_BG, height=50)
+        spacer.pack()
+
+        tk.Button(
+            self._settings_frame,
+            text="Report a Bug",
+            command=open_report_bug_from_settings,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
+            height=BUTTON_HEIGHT
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
+        
+        tk.Button(
+            self._settings_frame,
+            text="Credits",
+            command=open_credits_from_settings,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
+            height=BUTTON_HEIGHT
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
         def close_settings():
             self.close_settings_view()
@@ -2995,24 +3166,46 @@ class ProfileTab:
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             height=2
-        ).pack(fill="x", pady=(0, 6), padx=10, side="bottom")
+        ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
 
         # Add expanding spacer after Back button to fill remaining space
         spacer_settings = tk.Frame(self._settings_frame, bg=DARK_BG)
         spacer_settings.pack(fill="both", expand=True)
+        
+        # Make settings frame and all non-interactive children draggable (after all widgets created)
+        self._bind_drag_recursively(self._settings_frame)
 
     def close_settings_view(self):
         """Close the settings view and restore the profile page."""
         if not self._settings_view_active:
             return
 
+        # Reset profile name to saved value (discard any unapplied changes)
+        self._reset_profile_name_to_saved()
+        
+        # Clear focus from profile name entry
+        self._clear_profile_name_focus()
+
         # Destroy the settings frame
         if self._settings_frame:
             self._settings_frame.destroy()
             self._settings_frame = None
+        
+        # Destroy any sub-setting frame
+        if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame:
+            try:
+                self._sub_setting_frame.destroy()
+            except tk.TclError:
+                pass
+            self._sub_setting_frame = None
 
         self._settings_view_active = False
         ProfileTab._global_settings_open = False  # Mark settings as globally closed
+        ProfileTab._global_sub_setting_active = None  # Also clear any sub-setting flag
+        self._current_sub_setting = None  # Clear tracking
+        
+        # Re-enable all profile tabs
+        update_profile_tabs_state()
         
         # Restore the container with its original pack info
         if hasattr(self, '_original_container_pack_info'):
@@ -3030,11 +3223,15 @@ class ProfileTab:
         # Close any existing sub-setting frame first to prevent duplicates
         if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame:
             try:
-                if self._sub_setting_frame.winfo_exists():
-                    self._sub_setting_frame.destroy()
-            except:
+                self._sub_setting_frame.destroy()
+            except tk.TclError:
                 pass
             self._sub_setting_frame = None
+            # Force UI update to ensure old frame is removed
+            try:
+                self.frame.update_idletasks()
+            except tk.TclError:
+                pass
         
         if self._settings_frame and self._settings_frame.winfo_exists():
             self._settings_frame.pack_forget()
@@ -3044,15 +3241,24 @@ class ProfileTab:
         self._sub_setting_frame.pack(padx=10, pady=6, fill="both", expand=True)
         
         return self._sub_setting_frame
+    
+    def _finalize_sub_setting(self):
+        """Apply drag binding to sub-setting frame after all widgets are created."""
+        if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame:
+            self._bind_drag_recursively(self._sub_setting_frame)
 
     def _close_sub_setting(self):
         """Close sub-setting and return to settings menu."""
         if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame:
-            self._sub_setting_frame.destroy()
+            try:
+                self._sub_setting_frame.destroy()
+            except tk.TclError:
+                pass
             self._sub_setting_frame = None
         
         # Clear global sub-setting flag
         ProfileTab._global_sub_setting_active = None
+        self._current_sub_setting = None  # Clear tracking
         
         # Restore settings menu frame
         if self._settings_frame and self._settings_frame.winfo_exists():
@@ -3088,21 +3294,34 @@ class ProfileTab:
             # Check if a sub-setting should be open
             if ProfileTab._global_sub_setting_active:
                 sub_setting = ProfileTab._global_sub_setting_active
-                # Open the appropriate sub-setting for this profile
-                if sub_setting == "alerts":
-                    self.open_alert_settings_inline()  # Fixed method name
-                elif sub_setting == "auto":
-                    self.open_configure_inline()  # Fixed method name
-                elif sub_setting == "rpc":
-                    self.open_rpc_inline()
-                elif sub_setting == "hotkeys":
-                    open_hotkeys_inline(self)  # Fixed - it's a function, pass self
-                elif sub_setting == "reset":
-                    self.open_reset_profile_inline()
+                # Only open if different from what's currently open
+                current_sub = getattr(self, '_current_sub_setting', None)
+                if current_sub != sub_setting:
+                    # Open the appropriate sub-setting for this profile
+                    if sub_setting == "alerts":
+                        self.open_alert_settings_inline()
+                    elif sub_setting == "auto":
+                        self.open_configure_inline()
+                    elif sub_setting == "rpc":
+                        self.open_rpc_inline()
+                    elif sub_setting == "hotkeys":
+                        open_hotkeys_inline(self)
+                    elif sub_setting == "reset":
+                        self.open_reset_profile_inline()
             else:
                 # No sub-setting should be open - close any existing sub-setting
-                if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame and self._sub_setting_frame.winfo_exists():
-                    self._close_sub_setting()
+                # Note: We don't call _close_sub_setting() here to avoid redundantly setting
+                # _global_sub_setting_active = None (it's already None in this branch)
+                if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame:
+                    try:
+                        self._sub_setting_frame.destroy()
+                    except tk.TclError:
+                        pass
+                    self._sub_setting_frame = None
+                    self._current_sub_setting = None  # Clear tracking
+                    # Ensure main settings frame is visible
+                    if self._settings_frame and self._settings_frame.winfo_exists():
+                        self._settings_frame.pack(padx=10, pady=6, fill="both", expand=True)
         else:
             # Settings should be hidden
             if settings_frame_packed:
@@ -3345,6 +3564,7 @@ class ProfileTab:
         """Open alert settings as an inline view (not popup)."""
         ProfileTab._global_sub_setting_active = "alerts"  # Set global flag
         container = self._show_sub_setting("Configure Alerts")
+        self._current_sub_setting = "alerts"  # Track current sub-setting
         
         enable_alerts_var = self.audio_enabled_var
 
@@ -3499,7 +3719,7 @@ class ProfileTab:
         spacer = tk.Frame(container, bg=DARK_BG)
         spacer.pack(fill="both", expand=True)
 
-        # Back button at bottom
+        # Back button at bottom - 420px wide standard button
         tk.Button(
             container,
             text="Back",
@@ -3507,9 +3727,9 @@ class ProfileTab:
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             height=2
-        ).pack(fill="x", pady=(0, 6), padx=10, side="bottom")
+        ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
 
-        # Apply button above Back
+        # Apply button above Back - 420px wide standard button
         apply_button = tk.Button(
             container,
             text="Apply",
@@ -3518,10 +3738,13 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         )
-        apply_button.pack(fill="x", pady=(0, 4), padx=10, side="bottom")
+        apply_button.pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
 
         # Initial state setup
         update_apply_button_color()
+        
+        # Make sub-setting draggable after all widgets created
+        self._finalize_sub_setting()
 
     # ---------- Autosave helpers ----------
     def mark_dirty(self):
@@ -3722,12 +3945,81 @@ class ProfileTab:
         self.mark_dirty()
 
     def _on_profile_name_change(self, *_):
+        """Handle profile name changes on keystroke - only enforce max length."""
         current = self.profile_name_var.get().strip()
         if len(current) > PROFILE_NAME_MAX_LENGTH:
             current = current[:PROFILE_NAME_MAX_LENGTH]
             self.profile_name_var.set(current)
+        # Don't auto-update tab title or mark dirty on keystroke
+        # All validation and updates happen on focus out instead
+    
+    def _validate_and_fix_profile_name(self):
+        """Validate profile name and set to default if empty/whitespace.
+        
+        This should be called before opening sub-menus to ensure the profile
+        name is valid before rendering content that uses it.
+        """
+        current = self.profile_name_var.get().strip()
         if not current:
+            # Set to default if empty or whitespace-only
             self.profile_name_var.set(self.default_tab_name)
+            self.set_tab_title()
+            self.mark_dirty()
+    
+    def _reset_profile_name_to_saved(self):
+        """Reset profile name StringVar to saved config value, discarding unapplied changes."""
+        saved_profile_name = self.load_config_value(CONFIG_KEY_PROFILE_NAME, "")
+        if saved_profile_name:
+            self.profile_name_var.set(saved_profile_name[:PROFILE_NAME_MAX_LENGTH])
+        else:
+            self.profile_name_var.set(self.default_tab_name)
+    
+    def _clear_profile_name_focus(self):
+        """Clear focus from profile name entry field."""
+        try:
+            if hasattr(self, 'profile_name_entry') and self.profile_name_entry.winfo_exists():
+                self.profile_name_entry.selection_clear()
+                self.profile_name_entry.icursor(0)  # Reset cursor to start position
+                # Move focus to the settings frame itself
+                if self._settings_frame and self._settings_frame.winfo_exists():
+                    self._settings_frame.focus_set()
+        except tk.TclError:
+            # Widget destroyed, ignore
+            pass
+    
+    def _on_profile_name_focus_out(self, *_):
+        """Validate profile name when user clicks outside the field."""
+        current = self.profile_name_var.get().strip()
+        
+        # Check if empty (strip already handles whitespace-only)
+        if not current:
+            # Reset to default only when focus is lost with empty field
+            self.profile_name_var.set(self.default_tab_name)
+            self.set_tab_title()
+            self.mark_dirty()
+            return
+        
+        # Check for duplicate names (excluding current profile)
+        all_profiles = globals().get('profiles', [])
+        current_lower = current.lower()  # Convert once for efficiency
+        for other_profile in all_profiles:
+            if other_profile is self:
+                continue  # Skip self
+            other_name = other_profile.profile_name_var.get().strip()
+            if other_name.lower() == current_lower:
+                # Duplicate found - show error and revert
+                show_custom_error(
+                    "duplicate_name",
+                    "Duplicate Profile Name",
+                    f"Profile name '{current}' is already in use by another profile.\nPlease choose a different name."
+                )
+                # Revert to default name
+                self.profile_name_var.set(self.default_tab_name)
+                self.set_tab_title()
+                self.mark_dirty()
+                return
+        
+        # Valid name - update tab and save
         self.set_tab_title()
         self.mark_dirty()
 
@@ -3767,6 +4059,23 @@ class ProfileTab:
     def _bind_root_drag(self, widget):
         widget.bind("<ButtonPress-1>", self._on_root_drag_start)
         widget.bind("<B1-Motion>", self._on_root_drag)
+    
+    def _bind_drag_recursively(self, widget):
+        """Recursively bind drag events to widget and all non-interactive children."""
+        # Use the global constant to ensure consistency and include all interactive widgets
+        interactive_types = INTERACTIVE_DRAG_WIDGETS
+        
+        # Bind to the widget itself if it's not interactive
+        if not isinstance(widget, interactive_types):
+            self._bind_root_drag(widget)
+        
+        # Recursively bind to all children
+        try:
+            for child in widget.winfo_children():
+                self._bind_drag_recursively(child)
+        except AttributeError:
+            # Widget doesn't have children
+            pass
 
     def on_reset_profile(self):
         # Get current profile name for the dialog
@@ -3968,7 +4277,7 @@ class ProfileTab:
         frame = self.frame
 
         self.container = tk.Frame(frame, bg=DARK_BG)
-        self.container.pack(padx=6, pady=6, anchor="nw")
+        self.container.pack(pady=(6, 0), anchor="n")  # Only top padding, no bottom padding
         self._bind_root_drag(self.container)
 
         def make_row(pady=5):
@@ -3986,7 +4295,7 @@ class ProfileTab:
 
         row_title = make_row()
         self.entry_title = tk.Entry(row_title, width=40, textvariable=self.title_var)
-        self.entry_title.pack(side="left", padx=10)
+        self.entry_title.pack(side="left", padx=(10, 0))  # No right padding to attach to browse button
         self.btn_pick_window = tk.Button(
             row_title,
             text="...",
@@ -3996,7 +4305,7 @@ class ProfileTab:
             height=BUTTON_HEIGHT,
             font=(FONT_NAME, SMALL_BUTTON_FONT_SIZE)
         )
-        self.btn_pick_window.pack(side="left", padx=(4, 0))
+        self.btn_pick_window.pack(side="left", padx=(0, 0))
 
         spacer_capture_ref = tk.Frame(self.container, bg=DARK_BG, height=10)
         spacer_capture_ref.pack(pady=6)
@@ -4009,7 +4318,7 @@ class ProfileTab:
 
         row_image = make_row()
         self.entry_image_path = tk.Entry(row_image, width=40, textvariable=self.image_path_var)
-        self.entry_image_path.pack(side="left", padx=10)
+        self.entry_image_path.pack(side="left", padx=(10, 0))  # No right padding to attach to browse button
         self.btn_browse_image = tk.Button(
             row_image,
             text="...",
@@ -4019,7 +4328,7 @@ class ProfileTab:
             height=BUTTON_HEIGHT,
             font=(FONT_NAME, SMALL_BUTTON_FONT_SIZE)
         )
-        self.btn_browse_image.pack(side="left", padx=(4, 0))
+        self.btn_browse_image.pack(side="left", padx=(0, 0))
 
         row_capture_button = make_row(pady=5)
         self.btn_capture_image = tk.Button(
@@ -4044,7 +4353,7 @@ class ProfileTab:
 
         row_text = make_row()
         self.entry_text_path = tk.Entry(row_text, width=40, textvariable=self.text_path_var)
-        self.entry_text_path.pack(side="left", padx=10)
+        self.entry_text_path.pack(side="left", padx=(10, 0))  # No right padding to attach to browse button
         self.btn_browse_text = tk.Button(
             row_text,
             text="...",
@@ -4054,7 +4363,7 @@ class ProfileTab:
             height=BUTTON_HEIGHT,
             font=(FONT_NAME, SMALL_BUTTON_FONT_SIZE)
         )
-        self.btn_browse_text.pack(side="left", padx=(4, 0))
+        self.btn_browse_text.pack(side="left", padx=(0, 0))
 
         spacer_counter_increment = tk.Frame(self.container, bg=DARK_BG, height=10)
         spacer_counter_increment.pack(pady=6)
@@ -4070,7 +4379,7 @@ class ProfileTab:
             font=(FONT_NAME, BASE_FONT_SIZE, "bold"),
             command=lambda: self.on_manual_adjust(-1, source="manual")
         )
-        self.btn_decrement.pack(side="left", padx=(0, 0))
+        self.btn_decrement.pack(side="left", padx=(4, 0))
         self.lbl_current_count = tk.Label(
             row_counter_increment,
             text="0",
@@ -4094,8 +4403,9 @@ class ProfileTab:
 
         self.lbl_increment = tk.Label(row_counter_increment, text="Increment:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_increment.pack(side="left", padx=(0, 4))
-        self.entry_increment = tk.Entry(row_counter_increment, width=6, textvariable=self.increment_var, justify="center")
-        self.entry_increment.pack(side="left", padx=10)
+        self.entry_increment = tk.Entry(row_counter_increment, width=3, textvariable=self.increment_var, justify="center")
+        # 5px left padding to match spacing, 10px right padding for visual separation from next element
+        self.entry_increment.pack(side="left", padx=(5, 10))
         self.entry_increment.bind("<FocusOut>", self._on_increment_focus_out)
 
         spacer_increment_to_rpc = tk.Frame(self.container, bg=DARK_BG, height=0)
@@ -4223,37 +4533,27 @@ class ProfileTab:
         spacer_rpc_settings.pack(pady=5)
         self._bind_root_drag(spacer_rpc_settings)
 
-        row_config_buttons = make_row()
-        row_config_buttons.pack(fill="x")
-        row_config_buttons.grid_columnconfigure(0, weight=1)
-        row_config_buttons.grid_columnconfigure(1, weight=0)
-        row_config_buttons.configure(width=462)  # Increased to accommodate container padding (12px) + button padding (20px)
-        row_config_buttons.pack_propagate(False)
+        # Settings button (above start button) - 420px wide standard button
+        self.btn_settings = tk.Button(
+            self.container,
+            text="Settings",
+            command=self.open_settings_window,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
+            height=1
+        )
+        self.btn_settings.pack(pady=STANDARD_BUTTON_PADY, padx=10, ipadx=STANDARD_BUTTON_IPADX)
 
+        # Start button (below settings) - 420px wide standard button
         self.btn_start = tk.Button(
-            row_config_buttons,
+            self.container,
             text="Start",
             command=self.on_toggle_start,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             height=2
         )
-        self.btn_start.grid(row=0, column=0, sticky="we")
-
-        self.btn_settings = tk.Button(
-            row_config_buttons,
-            text="⚙",
-            command=self.open_settings_window,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
-            width=7,
-            height=2
-        )
-        self.btn_settings.grid(row=0, column=1, sticky="e")
-
-        spacer = tk.Frame(self.container, bg=DARK_BG, height=7)
-        spacer.pack(pady=7)
-        self._bind_root_drag(spacer)
+        self.btn_start.pack(pady=(2, 8), padx=10, ipadx=STANDARD_BUTTON_IPADX)  # 8px bottom padding for spacing
 
         self.cooldown_var = tk.IntVar(value=5)
         self.frequency_var = tk.DoubleVar(value=0.5)
@@ -4619,13 +4919,55 @@ class ProfileTab:
             )
             return
 
+        # If test window already exists for this profile, don't create another (keeps button orange)
+        if hasattr(self, 'test_window') and self.test_window and self.test_window.winfo_exists():
+            return
+        
+        # Change Test Image button to orange when opening
+        if hasattr(self, 'test_image_button'):
+            self.test_image_button.config(bg=START_ACTIVE_COLOR)
+        
         self.test_window = tk.Toplevel(self.frame)
         apply_window_style(self.test_window)
+        self.test_window.geometry("280x300")  # Reduced height by 20px
         self.test_window.resizable(False, False)
         self._position_popup_near_root(self.test_window)
 
-        label = tk.Label(self.test_window, text="Checking...", padx=20, pady=20)
-        label.pack()
+        # Add profile name label at the top
+        # Use getattr to safely get profile name with fallback
+        profile_name = getattr(self, 'profile_name', f"Profile {self.profile_index}")
+        profile_label = tk.Label(
+            self.test_window, 
+            text=f"{profile_name}",
+            font=(FONT_NAME, BASE_FONT_SIZE, "bold")
+        )
+        profile_label.pack(padx=20, pady=(10, 5))
+
+        # Load images for visible/not visible states
+        try:
+            visible_img = Image.open(os.path.join(os.path.dirname(__file__), "assets", "rotom", "image_test", "visible.png"))
+            visible_img = visible_img.resize((100, 100), Image.Resampling.LANCZOS)
+            visible_photo = ImageTk.PhotoImage(visible_img)
+            
+            not_visible_img = Image.open(os.path.join(os.path.dirname(__file__), "assets", "rotom", "image_test", "not_visible.png"))
+            not_visible_img = not_visible_img.resize((100, 100), Image.Resampling.LANCZOS)
+            not_visible_photo = ImageTk.PhotoImage(not_visible_img)
+        except Exception as e:
+            # Fallback if images can't be loaded
+            visible_photo = None
+            not_visible_photo = None
+
+        # Image label (will show visible or not_visible image)
+        image_label = tk.Label(self.test_window)
+        image_label.pack(pady=5)
+        
+        # Keep references to prevent garbage collection
+        image_label.visible_photo = visible_photo
+        image_label.not_visible_photo = not_visible_photo
+
+        # Status text label
+        status_label = tk.Label(self.test_window, text="Checking...")
+        status_label.pack(pady=5)
 
         is_active = {"running": True}
 
@@ -4633,6 +4975,9 @@ class ProfileTab:
             is_active["running"] = False
             self.test_window.destroy()
             self.test_window = None
+            # Restore Test Image button to normal color when closing
+            if hasattr(self, 'test_image_button'):
+                self.test_image_button.config(bg=DARK_BUTTON)
             self.frame.winfo_toplevel().focus_force()
 
         self.test_window.protocol("WM_DELETE_WINDOW", on_close)
@@ -4641,11 +4986,21 @@ class ProfileTab:
             if not is_active["running"]:
                 return
 
+            # Update profile name in case it changed (use getattr for safety)
+            profile_name = getattr(self, 'profile_name', f"Profile {self.profile_index}")
+            profile_label.config(text=f"{profile_name}")
+
             hwnd = find_window_by_title_exact(title)
             if not hwnd:
-                label.config(text="❌ Window not found.")
+                # Show not visible image
+                if not_visible_photo:
+                    image_label.config(image=not_visible_photo)
+                status_label.config(text="Not detected\nWindow not found")
             elif is_window_minimized(hwnd):
-                label.config(text="⚠️ Window is minimized.")
+                # Show not visible image
+                if not_visible_photo:
+                    image_label.config(image=not_visible_photo)
+                status_label.config(text="Not detected\nWindow is minimized")
             else:
                 try:
                     screenshot_img = grab_window_image(hwnd)
@@ -4653,12 +5008,39 @@ class ProfileTab:
                         screenshot_img, self.selected_image_path, threshold=float(self.threshold_var.get())
                     )
                     percent = max(0.0, min(1.0, confidence)) * 100
-                    status = "✅ Image detected!" if is_match else "❌ Image not detected."
-                    label.config(text=f"{status}\nConfidence: {percent:.1f}%")
+                    
+                    if is_match:
+                        # Show visible image
+                        if visible_photo:
+                            image_label.config(image=visible_photo)
+                        status_label.config(text=f"Image detected\nConfidence: {percent:.1f}%")
+                    else:
+                        # Show not visible image
+                        if not_visible_photo:
+                            image_label.config(image=not_visible_photo)
+                        status_label.config(text=f"Not detected\nConfidence: {percent:.1f}%")
                 except Exception as exc:
-                    label.config(text=f"⚠️ Error: {exc}")
+                    # If template image can't be loaded (e.g., profile reset), close window
+                    if "Failed to load template image" in str(exc):
+                        on_close()
+                        return
+                    # Show not visible image on error
+                    if not_visible_photo:
+                        image_label.config(image=not_visible_photo)
+                    status_label.config(text=f"Error\n{exc}")
 
             self.test_window.after(200, update_result)
+
+        # Add Close button at the bottom
+        close_button = tk.Button(
+            self.test_window,
+            text="Close",
+            command=on_close,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
+            height=BUTTON_HEIGHT
+        )
+        close_button.pack(pady=(10, 20))
 
         update_result()
 
@@ -4675,6 +5057,9 @@ class ProfileTab:
             self.stop_broadcast()
 
     def on_toggle_start(self):
+        # Validate and sanitize increment value before starting (caps at 99, like focus out)
+        self._on_increment_focus_out()
+        
         if not self.is_running:
             is_valid, _ = self.validate_required_inputs(show_popup=True)
             if not is_valid:
@@ -4829,6 +5214,7 @@ class ProfileTab:
             return
         
         container = self._show_sub_setting("Configure RPC")
+        self._current_sub_setting = "rpc"  # Track current sub-setting
         
         # Store initial values
         initial_game_id = self.rpc_game_id
@@ -5265,6 +5651,15 @@ class ProfileTab:
             else:
                 filtered_pokemon = filtered_by_gen
             
+            # If there's a selected Pokemon, move it to the front of the list
+            current_target = selected_pokemon_name if selected_pokemon_name else ""
+            if current_target:
+                for i, pokemon in enumerate(filtered_pokemon):
+                    if pokemon['original'].lower() == current_target.lower():
+                        # Remove from current position and insert at front
+                        filtered_pokemon.insert(0, filtered_pokemon.pop(i))
+                        break
+            
             # Show only first 3 Pokemon
             display_pokemon = filtered_pokemon[:3]
             
@@ -5272,7 +5667,7 @@ class ProfileTab:
             cell_width = 130
             cell_height = 130
             
-            current_target = self.rpc_target if hasattr(self, 'rpc_target') else ""
+            current_target = selected_pokemon_name if selected_pokemon_name else ""
             
             for i, pokemon in enumerate(display_pokemon):
                 row = i // cols
@@ -5300,24 +5695,49 @@ class ProfileTab:
             populate_pokemon_grid(pokemon_filter_entry.get())
         
         def on_game_selection_change(event):
-            """Update Pokemon generation filter and load target from config when game is selected"""
-            nonlocal current_game_generation, selected_pokemon_name
+            """Update Pokemon generation filter and load ALL config values when game is selected"""
+            nonlocal current_game_generation, selected_pokemon_name, initial_game_id, initial_target, initial_odds, initial_suffix
             selected_items = tree.selection()
             if selected_items:
                 selected_game_id = selected_items[0]
                 
-                # Load config file for selected game to get its target Pokemon
+                # Load config file for selected game to get all settings
                 config_path = os.path.join(RPC_CONFIG_FOLDER, f"{selected_game_id}.txt")
                 target_pokemon = ""
+                new_odds = 8192
+                new_suffix = "Encounters"
                 
                 try:
                     cfg = rpc_read_config(config_path)
                     target_pokemon = cfg.get("target", "")
+                    new_odds = cfg.get("odds", 8192)
+                    new_suffix = cfg.get("counter_suffix", "Encounters")
                 except Exception:
                     pass
                 
                 # Update selected Pokemon to match the config's target (or clear if none)
                 selected_pokemon_name = target_pokemon if target_pokemon else None
+                
+                # Update odds UI
+                odds_found = False
+                for display, value in odds_display_map.items():
+                    if value == new_odds:
+                        odds_var.set(display)
+                        odds_found = True
+                        break
+                if not odds_found:
+                    odds_var.set("Custom")
+                    custom_odds_var.set(new_odds)
+                
+                # Update suffix UI
+                suffix_label = suffix_to_label.get(new_suffix, "Default / Other")
+                suffix_var.set(suffix_label)
+                
+                # Update initial values to new game's config (so Apply button turns gray)
+                initial_game_id = selected_game_id
+                initial_target = target_pokemon
+                initial_odds = new_odds
+                initial_suffix = new_suffix
                 
                 # Find game name and update generation
                 for game in game_data:
@@ -5400,7 +5820,7 @@ class ProfileTab:
             textvariable=odds_var,
             values=odds_options,
             state="readonly",
-            width=18,
+            width=8,
             style="Rpc.TCombobox"
         )
         odds_combo.grid(row=9, column=1, padx=10, pady=(0, 6), sticky="w")
@@ -5408,7 +5828,7 @@ class ProfileTab:
         # Custom odds entry (only shown when Custom selected)
         tk.Label(content_frame, text="Custom Odds:").grid(row=10, column=0, padx=10, pady=(0, 6), sticky="w")
         custom_odds_var = tk.IntVar(value=self.rpc_odds if current_odds_display is None else 8192)
-        custom_odds_entry = tk.Entry(content_frame, textvariable=custom_odds_var, width=20)
+        custom_odds_entry = tk.Entry(content_frame, textvariable=custom_odds_var, width=8)
         custom_odds_entry.grid(row=10, column=1, padx=10, pady=(0, 6), sticky="w")
         
         def on_odds_change(*args):
@@ -5462,10 +5882,27 @@ class ProfileTab:
         suffix_var.trace_add("write", lambda *args: update_apply_button_color())
         
         def apply_changes():
+            nonlocal initial_game_id, initial_target, initial_odds, initial_suffix
+            
             selected_items = tree.selection()
             selected_game_id = selected_items[0] if selected_items else ""
             
+            if not selected_game_id:
+                return  # Can't save without a game selected
+            
+            # Preserve existing target if user didn't select a new Pokemon
             selected_target = selected_pokemon_name
+            if not selected_target and selected_game_id:
+                # Load current config to preserve existing target
+                config_path = os.path.join(os.path.dirname(__file__), "rpc_config", f"{selected_game_id}.txt")
+                cfg = rpc_read_config(config_path)
+                selected_target = cfg.get("target", "")
+            
+            # Validate that a target Pokemon is selected
+            if not selected_target:
+                messagebox.showerror("RPC Configuration Error", 
+                                    "No target selected, please select a target Pokemon.")
+                return
             
             selected_odds_display = odds_var.get()
             if selected_odds_display == "Custom":
@@ -5486,23 +5923,44 @@ class ProfileTab:
             
             selected_suffix = label_to_suffix.get(suffix_var.get(), "Encounters")
             
+            # Update instance variables
             self.rpc_game_id = selected_game_id
             self.rpc_target = selected_target
             self.rpc_odds = selected_odds
             self.rpc_counter_suffix = selected_suffix
             
+            # Update main config (for instance variables persistence)
             self.update_config_value(CONFIG_KEY_RPC_GAME, self.rpc_game_id)
             self.update_config_value(CONFIG_KEY_RPC_TARGET, self.rpc_target)
             self.update_config_value(CONFIG_KEY_RPC_ODDS, str(self.rpc_odds))
             self.update_config_value(CONFIG_KEY_RPC_SUFFIX, self.rpc_counter_suffix)
             
-            self.mark_dirty()
-            self._close_sub_setting()
+            # Save main config immediately
+            self.save_settings_silent()
+            
+            # ALSO save to the game-specific RPC config file
+            config_path = os.path.join(os.path.dirname(__file__), "rpc_config", f"{selected_game_id}.txt")
+            cfg = rpc_read_config(config_path)
+            cfg["target"] = selected_target
+            cfg["odds"] = selected_odds
+            cfg["counter_suffix"] = selected_suffix
+            rpc_write_config(config_path, cfg)
+            
+            # Update initial values to match saved values so Apply button returns to gray
+            initial_game_id = selected_game_id
+            initial_target = selected_target
+            initial_odds = selected_odds
+            initial_suffix = selected_suffix
+            
+            # Refresh Apply button color (should be gray now since no changes)
+            update_apply_button_color()
+            
+            # Don't auto-close - user must click Back button
         
         # ===== BUTTONS AT BOTTOM (FIXED, NOT SCROLLING) =====
         # Create button frame at bottom (outside scrollable area)
         button_frame = tk.Frame(container, bg=DARK_BG)
-        button_frame.pack(side="bottom", fill="x", padx=10, pady=0)
+        button_frame.pack(side="bottom", fill="x", pady=0)
         
         # Apply button (packed first, appears at top of button_frame)
         apply_button = tk.Button(
@@ -5513,7 +5971,7 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         )
-        apply_button.pack(fill="x", pady=(0, 4), padx=10)
+        apply_button.pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
         
         # Back button below Apply
         tk.Button(
@@ -5523,21 +5981,25 @@ class ProfileTab:
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             height=2
-        ).pack(fill="x", pady=(0, 6), padx=10)
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
         
         # Initial button color
         update_apply_button_color()
+        
+        # Make sub-setting draggable after all widgets created
+        self._finalize_sub_setting()
 
     def open_reset_profile_inline(self):
         """Open reset profile confirmation inline (replaces settings menu)"""
         ProfileTab._global_sub_setting_active = "reset"  # Set global flag
         # Hide settings menu, show reset confirmation view
         container = self._show_sub_setting()
+        self._current_sub_setting = "reset"  # Track current sub-setting
         
         profile_name = self.profile_name_var.get() or self.default_tab_name
         
         # Create simple content frame (no scrollbar needed for concise text)
-        content_frame = tk.Frame(container, bg=DARK_BG, padx=20, pady=20)
+        content_frame = tk.Frame(container, bg=DARK_BG, pady=20)  # Removed padx to allow full 420px button width
         content_frame.pack(fill="both", expand=True)
         
         # Load reset icon
@@ -5593,7 +6055,7 @@ class ProfileTab:
         
         # Button frame at bottom (fixed)
         button_frame = tk.Frame(container, bg=DARK_BG)
-        button_frame.pack(side="bottom", fill="x", padx=10, pady=0)
+        button_frame.pack(side="bottom", fill="x", pady=0)  # Removed padx to allow full 420px button width
         
         def confirm_reset():
             # Extra validation - must match profile name
@@ -5695,22 +6157,22 @@ class ProfileTab:
                     state="disabled"
                 )
         
-        # Confirm Reset button (starts disabled)
+        # Confirm Reset button (starts disabled) - 420px wide standard button
         confirm_btn = tk.Button(
             button_frame,
             text="Confirm Reset",
             command=confirm_reset,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
             bg=DARK_BUTTON,
             fg=DARK_FG,
             activebackground=DARK_BUTTON,
             activeforeground=DARK_FG,
-            padx=BUTTON_PADX,
-            pady=BUTTON_PADY,
-            height=2,
+            height=BUTTON_HEIGHT,
             font=(FONT_NAME, BASE_FONT_SIZE, "bold"),
             state="disabled"  # Start disabled
         )
-        confirm_btn.pack(fill="x", pady=(6, 0), padx=10)
+        confirm_btn.pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
         
         # Bind validation to entry changes
         entry_var.trace_add("write", lambda *args: validate_entry())
@@ -5718,15 +6180,199 @@ class ProfileTab:
         # Initialize validation state
         validate_entry()
         
-        # Cancel button
+        # Back button (was Cancel) - 420px wide standard button
         tk.Button(
             button_frame,
-            text="Cancel",
+            text="Back",
             command=cancel_reset,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             height=2
-        ).pack(fill="x", pady=(6, 6), padx=10)
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
+        
+        # Make sub-setting draggable after all widgets created
+        self._finalize_sub_setting()
+
+    def open_report_bug_inline(self):
+        """Open the Report a Bug inline view with Discord link."""
+        self._show_sub_setting()
+        
+        # Version information at top (gray, smaller font)
+        version_label = tk.Label(
+            self._sub_setting_frame,
+            text="Current Version: Release v1.0.0",
+            bg=DARK_BG,
+            fg="#888888",
+            font=(FONT_NAME, BASE_FONT_SIZE - 1),
+            justify="center"
+        )
+        version_label.pack(pady=(10, 20))
+        
+        # First paragraph - instructional text (centered, wrapped)
+        text_label1 = tk.Label(
+            self._sub_setting_frame,
+            text="If you have found an issue or bug that needs reporting, please join the Rotom Repository Discord and let me know.",
+            bg=DARK_BG,
+            fg=DARK_FG,
+            font=(FONT_NAME, BASE_FONT_SIZE),
+            justify="center",
+            wraplength=400  # Wrap text to prevent cutoff at window edge
+        )
+        text_label1.pack(pady=(20, 10))
+        
+        # Second paragraph - special badge text (centered, wrapped)
+        text_label2 = tk.Label(
+            self._sub_setting_frame,
+            text="If this is not a known bug or issue I'll give you a special badge!",
+            bg=DARK_BG,
+            fg=DARK_FG,
+            font=(FONT_NAME, BASE_FONT_SIZE),
+            justify="center",
+            wraplength=400  # Wrap text to prevent cutoff at window edge
+        )
+        text_label2.pack(pady=(10, 10))
+        
+        # Discord link (clickable, centered, styled - no underline)
+        discord_url = "https://discord.gg/fQJNabqqzE"
+        link_label = tk.Label(
+            self._sub_setting_frame,
+            text=discord_url,
+            bg=DARK_BG,
+            fg=LINK_COLOR,  # Blue color for link
+            font=(FONT_NAME, BASE_FONT_SIZE),  # No underline
+            cursor="hand2",
+            justify="center",
+            wraplength=400  # Wrap text to prevent cutoff at window edge
+        )
+        link_label.pack(pady=(10, 5))
+        
+        # Make link clickable
+        def open_discord_link(event):
+            webbrowser.open("https://discord.gg/fQJNabqqzE")
+        
+        link_label.bind("<Button-1>", open_discord_link)
+        
+        # Help text for manual Discord join (gray, smaller font)
+        help_text = tk.Label(
+            self._sub_setting_frame,
+            text='(If the link doesn\'t work, on Discord click "Add Server" > "Join a Server" and just type in the invite code "fQJNabqqzE")',
+            bg=DARK_BG,
+            fg="#888888",
+            font=(FONT_NAME, BASE_FONT_SIZE - 2),
+            justify="center",
+            wraplength=400
+        )
+        help_text.pack(pady=(5, 20))
+        
+        # Back button at bottom - 420px wide standard button
+        tk.Button(
+            self._sub_setting_frame,
+            text="Back",
+            command=self._close_sub_setting,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
+            height=2
+        ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
+        
+        # Add flexible bottom spacer for drag area at bottom of window
+        bottom_spacer = tk.Frame(self._sub_setting_frame, bg=DARK_BG)
+        bottom_spacer.pack(side="bottom", fill="both", expand=True)
+        
+        # Make sub-setting draggable after all widgets created
+        self._finalize_sub_setting()
+    
+    def open_credits_inline(self):
+        """Open the Credits inline view with attribution and Discord link."""
+        self._show_sub_setting()
+        
+        # First paragraph - Credits (centered, wrapped)
+        text_label1 = tk.Label(
+            self._sub_setting_frame,
+            text="Art / Programming - Aux/XIII (au.xiii)\nAll sprites used were sourced from PokeAPI.",
+            bg=DARK_BG,
+            fg=DARK_FG,
+            font=(FONT_NAME, BASE_FONT_SIZE),
+            justify="center",
+            wraplength=400  # Wrap text to prevent cutoff at window edge
+        )
+        text_label1.pack(pady=(20, 10))
+        
+        # Second paragraph - Program motivation (centered, wrapped)
+        text_label2 = tk.Label(
+            self._sub_setting_frame,
+            text="I made this program for the shiny hunting community, as a fellow hunter I had some issues with the previous counting program I was using and wanted to make a more user-friendly version.",
+            bg=DARK_BG,
+            fg=DARK_FG,
+            font=(FONT_NAME, BASE_FONT_SIZE),
+            justify="center",
+            wraplength=400  # Wrap text to prevent cutoff at window edge
+        )
+        text_label2.pack(pady=(10, 10))
+        
+        # Third paragraph - Thank you message (centered, wrapped)
+        text_label3 = tk.Label(
+            self._sub_setting_frame,
+            text="Thank you for using my app and I hope it's helped with your hunts! If you have any suggestions for future updates please feel free to message on the Rotom Repository Discord, I'm already working on more projects to give back to this community.",
+            bg=DARK_BG,
+            fg=DARK_FG,
+            font=(FONT_NAME, BASE_FONT_SIZE),
+            justify="center",
+            wraplength=400  # Wrap text to prevent cutoff at window edge
+        )
+        text_label3.pack(pady=(10, 10))
+        
+        # Discord link (clickable, centered, styled - no underline)
+        discord_url = "https://discord.gg/fQJNabqqzE"
+        link_label = tk.Label(
+            self._sub_setting_frame,
+            text=discord_url,
+            bg=DARK_BG,
+            fg=LINK_COLOR,  # Blue color for link
+            font=(FONT_NAME, BASE_FONT_SIZE),  # No underline
+            cursor="hand2",
+            justify="center",
+            wraplength=400  # Wrap text to prevent cutoff at window edge
+        )
+        link_label.pack(pady=(10, 5))
+        
+        # Make link clickable
+        def open_discord_link(event):
+            webbrowser.open("https://discord.gg/fQJNabqqzE")
+        
+        link_label.bind("<Button-1>", open_discord_link)
+        
+        # Help text for manual Discord join (gray, smaller font)
+        help_text = tk.Label(
+            self._sub_setting_frame,
+            text='(If the link doesn\'t work, on Discord click "Add Server" > "Join a Server" and just type in the invite code "fQJNabqqzE")',
+            bg=DARK_BG,
+            fg="#888888",
+            font=(FONT_NAME, BASE_FONT_SIZE - 2),
+            justify="center",
+            wraplength=400
+        )
+        help_text.pack(pady=(5, 20))
+        
+        # Back button at bottom - 420px wide standard button with height=2
+        button_frame = tk.Frame(self._sub_setting_frame, bg=DARK_BG)
+        button_frame.pack(side="bottom", fill="x", pady=0)
+        
+        tk.Button(
+            button_frame,
+            text="Back",
+            command=self._close_sub_setting,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
+            height=2  # Taller like other back buttons
+        ).pack(side="bottom", pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
+        
+        # Add flexible bottom spacer for drag area at bottom of window
+        bottom_spacer = tk.Frame(self._sub_setting_frame, bg=DARK_BG)
+        bottom_spacer.pack(side="bottom", fill="both", expand=True)
+        
+        # Make sub-setting draggable after all widgets created
+        self._finalize_sub_setting()
+
 
 
     def start_broadcast_async(self, game_id, target, odds):
@@ -6013,6 +6659,13 @@ class ProfileTab:
             height=BUTTON_HEIGHT
         )
         test_button.grid(row=6, column=0, padx=12, pady=(8, 12))
+        
+        # Save reference to button so we can change its color when test window is open
+        self.test_image_button = test_button
+        
+        # If test window is already open, set button to orange (persists through menu changes)
+        if hasattr(self, 'test_window') and self.test_window and self.test_window.winfo_exists():
+            self.test_image_button.config(bg=START_ACTIVE_COLOR)
 
         button_row = tk.Frame(self.configure_window, bg=DARK_BG)
         button_row.grid(row=7, column=0, padx=12, pady=(0, 12))
@@ -6049,6 +6702,7 @@ class ProfileTab:
         """Open configure (auto) settings as an inline view (not popup)."""
         ProfileTab._global_sub_setting_active = "auto"  # Set global flag
         container = self._show_sub_setting("Configure Auto")
+        self._current_sub_setting = "auto"  # Track current sub-setting
         
         # Store initial values for change detection
         initial_cooldown = self.cooldown_var.get()
@@ -6115,6 +6769,13 @@ class ProfileTab:
             height=BUTTON_HEIGHT
         )
         test_button.pack(pady=8)
+        
+        # Save reference to button so we can change its color when test window is open
+        self.test_image_button = test_button
+        
+        # If test window is already open, set button to orange (persists through menu changes)
+        if hasattr(self, 'test_window') and self.test_window and self.test_window.winfo_exists():
+            self.test_image_button.config(bg=START_ACTIVE_COLOR)
 
         def apply_changes():
             self.cooldown_var.set(temp_cooldown_var.get())
@@ -6126,7 +6787,7 @@ class ProfileTab:
         spacer = tk.Frame(container, bg=DARK_BG)
         spacer.pack(fill="both", expand=True)
 
-        # Back button at bottom
+        # Back button at bottom - 420px wide standard button
         tk.Button(
             container,
             text="Back",
@@ -6134,9 +6795,9 @@ class ProfileTab:
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             height=2
-        ).pack(fill="x", pady=(0, 6), padx=10, side="bottom")
+        ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
 
-        # Apply button above Back
+        # Apply button above Back - 420px wide standard button
         apply_button = tk.Button(
             container,
             text="Apply",
@@ -6145,10 +6806,13 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         )
-        apply_button.pack(fill="x", pady=(0, 4), padx=10, side="bottom")
+        apply_button.pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
 
         # Initial button color
         update_apply_button_color()
+        
+        # Make sub-setting draggable after all widgets created
+        self._finalize_sub_setting()
 
     # ---------- Load settings ----------
     def load_from_config(self):
@@ -6254,7 +6918,7 @@ TAB_BADGE_ACTIVE = build_tab_badge(size=12, color=START_ACTIVE_COLOR, filled=Tru
 TAB_BADGE_INACTIVE = build_tab_badge(size=12, color="#6b6b6b", filled=False)
 
 notebook = ttk.Notebook(root, width=462)  # Increased to accommodate container padding (12px) + button padding (20px)
-notebook.pack(anchor="nw", fill="both", expand=True)
+notebook.pack(anchor="nw", fill="x")  # Fill horizontally only, don't expand vertically to keep Start button at bottom
 
 profiles = []
 for i in range(1, 4):
@@ -6262,6 +6926,24 @@ for i in range(1, 4):
     notebook.add(tab.frame, text=f"Profile {i}")
     tab.load_from_config()
     profiles.append(tab)
+
+# Function to enable/disable profile tabs based on settings state
+def update_profile_tabs_state():
+    """Enable or disable profile tabs based on whether settings are open."""
+    try:
+        current_index = notebook.index(notebook.select())
+    except Exception:
+        current_index = 0
+    
+    if ProfileTab._global_settings_open:
+        # Settings are open - disable other tabs
+        for i in range(len(profiles)):
+            state = "normal" if i == current_index else "disabled"
+            notebook.tab(i, state=state)
+    else:
+        # Settings are closed - enable all tabs
+        for i in range(len(profiles)):
+            notebook.tab(i, state="normal")
 
 # Add tab change handler to sync settings menu state across profiles
 def on_tab_changed(event):
@@ -6278,9 +6960,9 @@ def on_tab_changed(event):
 # Removed - merged into on_profile_tab_change below
 
 root.update_idletasks()
-root.geometry("482x760")  # Increased to accommodate container padding (12px) + button padding (20px)
-root.minsize(482, 760)
-root.maxsize(482, 760)
+root.geometry("462x802")  #  WINDOW SIZE (reduced by 8px from 810)
+root.minsize(462, 810)
+root.maxsize(462, 810)
 root.resizable(False, False)
 
 
@@ -6404,9 +7086,9 @@ def on_rename_profile(_event=None):
 def on_profile_tab_change(_event=None):
     """Handle tab changes - sync settings and refresh hotkeys"""
     try:
-        # Sync settings menu state
         current_index = notebook.index(notebook.select())
         if 0 <= current_index < len(profiles):
+            # Sync settings menu state
             profiles[current_index]._sync_settings_state()
     except Exception:
         pass
@@ -6416,7 +7098,8 @@ def on_profile_tab_change(_event=None):
         hotkey_manager.refresh_profile_hotkeys()
 
 
-notebook.bind("<Double-Button-1>", on_rename_profile)
+# Profile name editing has been moved to the settings menu
+# notebook.bind("<Double-Button-1>", on_rename_profile)
 notebook.bind("<<NotebookTabChanged>>", on_profile_tab_change)
 
 hotkeys, global_enabled = load_hotkeys_config()
