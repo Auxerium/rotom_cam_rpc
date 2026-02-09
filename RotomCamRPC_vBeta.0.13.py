@@ -803,6 +803,7 @@ def open_hotkeys_inline(profile):
             apply_button.config(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
     
     def apply_changes():
+        nonlocal initial_hotkeys, initial_global_enabled, initial_count_plus, initial_count_minus
         new_hotkeys = {}
         for key, entry in entries.items():
             new_hotkeys[key] = normalize_hotkey_display(entry.get().strip())
@@ -819,7 +820,11 @@ def open_hotkeys_inline(profile):
         hotkey_manager.resume()
         hotkey_manager.register_local_hotkeys()
         hotkey_manager.refresh_profile_hotkeys()
-        profile._close_sub_setting()
+        initial_hotkeys = {key: entry.get() for key, entry in entries.items()}
+        initial_global_enabled = global_var.get()
+        initial_count_plus = count_plus_entry.get()
+        initial_count_minus = count_minus_entry.get()
+        update_apply_button_color()
     
     def on_close():
         hotkey_manager.resume()
@@ -3705,6 +3710,7 @@ class ProfileTab:
         auto_check.pack(anchor="w")
 
         def apply_changes():
+            nonlocal initial_enabled, initial_sound_file, initial_manual, initial_hotkey, initial_auto
             is_enabled = enable_alerts_var.get()
             self.audio_enabled = is_enabled
             self.update_config_value(CONFIG_KEY_ALERT_ENABLED, "1" if is_enabled else "0")
@@ -3720,7 +3726,12 @@ class ProfileTab:
             self.update_config_value(CONFIG_KEY_ALERT_PLAY_AUTO, "1" if self.alert_play_auto else "0")
             
             self.mark_dirty()
-            self._close_sub_setting()
+            initial_enabled = enable_alerts_var.get()
+            initial_sound_file = self.alert_sound_file
+            initial_manual = manual_var.get()
+            initial_hotkey = hotkey_var.get()
+            initial_auto = auto_var.get()
+            update_apply_button_color()
 
         def on_select_with_tracking(_event=None):
             on_select(_event)
@@ -6789,10 +6800,14 @@ class ProfileTab:
             self._update_test_image_button_color(START_ACTIVE_COLOR)
 
         def apply_changes():
+            nonlocal initial_cooldown, initial_frequency, initial_threshold
             self.cooldown_var.set(temp_cooldown_var.get())
             self.frequency_var.set(temp_frequency_var.get())
             self.threshold_var.set(temp_threshold_var.get())
-            self._close_sub_setting()
+            initial_cooldown = temp_cooldown_var.get()
+            initial_frequency = temp_frequency_var.get()
+            initial_threshold = temp_threshold_var.get()
+            update_apply_button_color()
 
         # Spacer to push buttons to bottom
         spacer = tk.Frame(container, bg=DARK_BG)
