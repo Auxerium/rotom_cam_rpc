@@ -4919,13 +4919,17 @@ class ProfileTab:
             )
             return
 
+        # If test window already exists for this profile, don't create another (keeps button orange)
+        if hasattr(self, 'test_window') and self.test_window and self.test_window.winfo_exists():
+            return
+        
         # Change Test Image button to orange when opening
         if hasattr(self, 'test_image_button'):
             self.test_image_button.config(bg=BUTTON_ACTIVE_BG)
         
         self.test_window = tk.Toplevel(self.frame)
         apply_window_style(self.test_window)
-        self.test_window.geometry("280x320")  # Increased height to fit image and Close button
+        self.test_window.geometry("280x300")  # Reduced height by 20px
         self.test_window.resizable(False, False)
         self._position_popup_near_root(self.test_window)
 
@@ -4934,7 +4938,7 @@ class ProfileTab:
         profile_name = getattr(self, 'profile_name', f"Profile {self.profile_index}")
         profile_label = tk.Label(
             self.test_window, 
-            text=f"Profile: {profile_name}",
+            text=f"{profile_name}",
             font=(FONT_NAME, BASE_FONT_SIZE, "bold")
         )
         profile_label.pack(padx=20, pady=(10, 5))
@@ -4984,7 +4988,7 @@ class ProfileTab:
 
             # Update profile name in case it changed (use getattr for safety)
             profile_name = getattr(self, 'profile_name', f"Profile {self.profile_index}")
-            profile_label.config(text=f"Profile: {profile_name}")
+            profile_label.config(text=f"{profile_name}")
 
             hwnd = find_window_by_title_exact(title)
             if not hwnd:
@@ -5016,6 +5020,10 @@ class ProfileTab:
                             image_label.config(image=not_visible_photo)
                         status_label.config(text=f"Not detected\nConfidence: {percent:.1f}%")
                 except Exception as exc:
+                    # If template image can't be loaded (e.g., profile reset), close window
+                    if "Failed to load template image" in str(exc):
+                        on_close()
+                        return
                     # Show not visible image on error
                     if not_visible_photo:
                         image_label.config(image=not_visible_photo)
