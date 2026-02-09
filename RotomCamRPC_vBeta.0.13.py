@@ -4500,11 +4500,7 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=2
         )
-        self.btn_start.pack(pady=(2, 0), padx=10, ipadx=STANDARD_BUTTON_IPADX)  # No bottom padding
-
-        spacer = tk.Frame(self.container, bg=DARK_BG, height=7)
-        spacer.pack(pady=7)
-        self._bind_root_drag(spacer)
+        self.btn_start.pack(pady=(2, 0), padx=10, ipadx=STANDARD_BUTTON_IPADX)  # No bottom padding - Start button is last element
 
         self.cooldown_var = tk.IntVar(value=5)
         self.frequency_var = tk.DoubleVar(value=0.5)
