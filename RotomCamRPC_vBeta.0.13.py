@@ -193,27 +193,9 @@ def get_widget_under_cursor(event):
     return widget or event.widget
 
 def is_interactive_click(event):
-    """Check if click event is on an interactive widget or its descendants."""
+    """Check if click event is on an interactive widget."""
     widget = get_widget_under_cursor(event)
-    
-    # Check the widget itself
-    if is_interactive_widget(widget):
-        return True
-    
-    # Also check if any parent in the widget tree is interactive
-    # This handles clicking on child widgets within a Listbox (like scrollbars)
-    parent = widget
-    try:
-        for _ in range(10):  # Limit depth to prevent infinite loops
-            parent = parent.master
-            if parent is None:
-                break
-            if is_interactive_widget(parent):
-                return True
-    except (AttributeError, tk.TclError):
-        pass
-    
-    return False
+    return is_interactive_widget(widget)
 
 
 def install_unfocus_on_click(root_window):
