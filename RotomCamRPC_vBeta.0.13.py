@@ -4925,9 +4925,11 @@ class ProfileTab:
         self._position_popup_near_root(self.test_window)
 
         # Add profile name label at the top
+        # Use getattr to safely get profile name with fallback
+        profile_name = getattr(self, 'profile_name', f"Profile {self.profile_index + 1}")
         profile_label = tk.Label(
             self.test_window, 
-            text=f"Profile: {self.profile_name}",
+            text=f"Profile: {profile_name}",
             padx=20, 
             pady=(20, 5),
             font=(FONT_NAME, BASE_FONT_SIZE, "bold")
@@ -4951,8 +4953,9 @@ class ProfileTab:
             if not is_active["running"]:
                 return
 
-            # Update profile name in case it changed
-            profile_label.config(text=f"Profile: {self.profile_name}")
+            # Update profile name in case it changed (use getattr for safety)
+            profile_name = getattr(self, 'profile_name', f"Profile {self.profile_index + 1}")
+            profile_label.config(text=f"Profile: {profile_name}")
 
             hwnd = find_window_by_title_exact(title)
             if not hwnd:
