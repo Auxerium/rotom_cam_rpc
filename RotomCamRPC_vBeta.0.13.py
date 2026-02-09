@@ -5598,24 +5598,49 @@ class ProfileTab:
             populate_pokemon_grid(pokemon_filter_entry.get())
         
         def on_game_selection_change(event):
-            """Update Pokemon generation filter and load target from config when game is selected"""
-            nonlocal current_game_generation, selected_pokemon_name
+            """Update Pokemon generation filter and load ALL config values when game is selected"""
+            nonlocal current_game_generation, selected_pokemon_name, initial_game_id, initial_target, initial_odds, initial_suffix
             selected_items = tree.selection()
             if selected_items:
                 selected_game_id = selected_items[0]
                 
-                # Load config file for selected game to get its target Pokemon
+                # Load config file for selected game to get all settings
                 config_path = os.path.join(RPC_CONFIG_FOLDER, f"{selected_game_id}.txt")
                 target_pokemon = ""
+                new_odds = 8192
+                new_suffix = "Encounters"
                 
                 try:
                     cfg = rpc_read_config(config_path)
                     target_pokemon = cfg.get("target", "")
+                    new_odds = cfg.get("odds", 8192)
+                    new_suffix = cfg.get("counter_suffix", "Encounters")
                 except Exception:
                     pass
                 
                 # Update selected Pokemon to match the config's target (or clear if none)
                 selected_pokemon_name = target_pokemon if target_pokemon else None
+                
+                # Update odds UI
+                odds_found = False
+                for display, value in odds_display_map.items():
+                    if value == new_odds:
+                        odds_var.set(display)
+                        odds_found = True
+                        break
+                if not odds_found:
+                    odds_var.set("Custom")
+                    custom_odds_var.set(new_odds)
+                
+                # Update suffix UI
+                suffix_label = suffix_to_label.get(new_suffix, "Default / Other")
+                suffix_var.set(suffix_label)
+                
+                # Update initial values to new game's config (so Apply button turns gray)
+                initial_game_id = selected_game_id
+                initial_target = target_pokemon
+                initial_odds = new_odds
+                initial_suffix = new_suffix
                 
                 # Find game name and update generation
                 for game in game_data:
