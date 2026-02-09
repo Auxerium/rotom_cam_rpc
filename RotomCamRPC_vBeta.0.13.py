@@ -6019,7 +6019,8 @@ class ProfileTab:
             bg=DARK_BG,
             fg=DARK_FG,
             font=(FONT_NAME, BASE_FONT_SIZE),
-            justify="center"
+            justify="center",
+            wraplength=400  # Wrap text to prevent cutoff at window edge
         )
         text_label.pack(pady=(20, 10))
         
@@ -6032,7 +6033,8 @@ class ProfileTab:
             fg=LINK_COLOR,  # Blue color for link
             font=(FONT_NAME, BASE_FONT_SIZE, "underline"),
             cursor="hand2",
-            justify="center"
+            justify="center",
+            wraplength=400  # Wrap text to prevent cutoff at window edge
         )
         link_label.pack(pady=(0, 20))
         
