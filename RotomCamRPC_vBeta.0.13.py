@@ -4975,6 +4975,9 @@ class ProfileTab:
             self.stop_broadcast()
 
     def on_toggle_start(self):
+        # Validate and sanitize increment value before starting (caps at 99, like focus out)
+        self._on_increment_focus_out()
+        
         if not self.is_running:
             is_valid, _ = self.validate_required_inputs(show_popup=True)
             if not is_valid:
