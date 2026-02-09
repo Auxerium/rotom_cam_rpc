@@ -193,7 +193,27 @@ def get_widget_under_cursor(event):
     return widget or event.widget
 
 def is_interactive_click(event):
-    return is_interactive_widget(get_widget_under_cursor(event))
+    """Check if click event is on an interactive widget or its descendants."""
+    widget = get_widget_under_cursor(event)
+    
+    # Check the widget itself
+    if is_interactive_widget(widget):
+        return True
+    
+    # Also check if any parent in the widget tree is interactive
+    # This handles clicking on child widgets within a Listbox (like scrollbars)
+    parent = widget
+    try:
+        for _ in range(10):  # Limit depth to prevent infinite loops
+            parent = parent.master
+            if parent is None:
+                break
+            if is_interactive_widget(parent):
+                return True
+    except (AttributeError, tk.TclError):
+        pass
+    
+    return False
 
 
 def install_unfocus_on_click(root_window):
@@ -6031,6 +6051,17 @@ class ProfileTab:
         """Open the Report a Bug inline view with Discord link."""
         self._show_sub_setting()
         
+        # Version information at top (gray, smaller font)
+        version_label = tk.Label(
+            self._sub_setting_frame,
+            text="Current Version: Release v1.0.0",
+            bg=DARK_BG,
+            fg="#888888",
+            font=(FONT_NAME, BASE_FONT_SIZE - 1),
+            justify="center"
+        )
+        version_label.pack(pady=(10, 20))
+        
         # First paragraph - instructional text (centered, wrapped)
         text_label1 = tk.Label(
             self._sub_setting_frame,
@@ -6086,17 +6117,6 @@ class ProfileTab:
             wraplength=400
         )
         help_text.pack(pady=(5, 20))
-        
-        # Version information (gray, smaller font)
-        version_label = tk.Label(
-            self._sub_setting_frame,
-            text="Current Version: Release v1.0.0",
-            bg=DARK_BG,
-            fg="#888888",
-            font=(FONT_NAME, BASE_FONT_SIZE - 1),
-            justify="center"
-        )
-        version_label.pack(pady=(20, 5))
         
         # Back button at bottom - 420px wide standard button
         tk.Button(
