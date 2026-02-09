@@ -5804,6 +5804,12 @@ class ProfileTab:
                 cfg = rpc_read_config(config_path)
                 selected_target = cfg.get("target", "")
             
+            # Validate that a target Pokemon is selected
+            if not selected_target:
+                messagebox.showerror("RPC Configuration Error", 
+                                    "No target selected, please select a target Pokemon.")
+                return
+            
             selected_odds_display = odds_var.get()
             if selected_odds_display == "Custom":
                 # Validate custom odds input
