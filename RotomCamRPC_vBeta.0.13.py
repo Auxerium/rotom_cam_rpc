@@ -4925,7 +4925,7 @@ class ProfileTab:
         
         self.test_window = tk.Toplevel(self.frame)
         apply_window_style(self.test_window)
-        self.test_window.geometry("280x280")  # Increased height to fit 100x100 image
+        self.test_window.geometry("280x320")  # Increased height to fit image and Close button
         self.test_window.resizable(False, False)
         self._position_popup_near_root(self.test_window)
 
@@ -5022,6 +5022,17 @@ class ProfileTab:
                     status_label.config(text=f"Error\n{exc}")
 
             self.test_window.after(200, update_result)
+
+        # Add Close button at the bottom
+        close_button = tk.Button(
+            self.test_window,
+            text="Close",
+            command=on_close,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
+            height=BUTTON_HEIGHT
+        )
+        close_button.pack(pady=(10, 20))
 
         update_result()
 
