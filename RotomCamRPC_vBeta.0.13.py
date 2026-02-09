@@ -2935,9 +2935,6 @@ class ProfileTab:
         self._settings_view_active = True
         ProfileTab._global_settings_open = True  # Mark settings as globally open
         
-        # Make settings frame and all non-interactive children draggable
-        self._bind_drag_recursively(self._settings_frame)
-        
         # Disable other profile tabs
         update_profile_tabs_state()
 
@@ -3123,6 +3120,9 @@ class ProfileTab:
         # Add expanding spacer after Back button to fill remaining space
         spacer_settings = tk.Frame(self._settings_frame, bg=DARK_BG)
         spacer_settings.pack(fill="both", expand=True)
+        
+        # Make settings frame and all non-interactive children draggable (after all widgets created)
+        self._bind_drag_recursively(self._settings_frame)
 
     def close_settings_view(self):
         """Close the settings view and restore the profile page."""
@@ -3189,10 +3189,12 @@ class ProfileTab:
         self._sub_setting_frame = tk.Frame(self.frame, bg=DARK_BG)
         self._sub_setting_frame.pack(padx=10, pady=6, fill="both", expand=True)
         
-        # Make sub-setting frame and all non-interactive children draggable
-        self._bind_drag_recursively(self._sub_setting_frame)
-        
         return self._sub_setting_frame
+    
+    def _finalize_sub_setting(self):
+        """Apply drag binding to sub-setting frame after all widgets are created."""
+        if hasattr(self, '_sub_setting_frame') and self._sub_setting_frame:
+            self._bind_drag_recursively(self._sub_setting_frame)
 
     def _close_sub_setting(self):
         """Close sub-setting and return to settings menu."""
@@ -3689,6 +3691,9 @@ class ProfileTab:
 
         # Initial state setup
         update_apply_button_color()
+        
+        # Make sub-setting draggable after all widgets created
+        self._finalize_sub_setting()
 
     # ---------- Autosave helpers ----------
     def mark_dirty(self):
@@ -4500,7 +4505,7 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=2
         )
-        self.btn_start.pack(pady=(2, 0), padx=10, ipadx=STANDARD_BUTTON_IPADX)  # No bottom padding - Start button is last element
+        self.btn_start.pack(pady=(2, 5), padx=10, ipadx=STANDARD_BUTTON_IPADX)  # 5px bottom padding for spacing
 
         self.cooldown_var = tk.IntVar(value=5)
         self.frequency_var = tk.DoubleVar(value=0.5)
