@@ -4919,9 +4919,13 @@ class ProfileTab:
             )
             return
 
+        # Change Test Image button to orange when opening
+        if hasattr(self, 'test_image_button'):
+            self.test_image_button.config(bg=BUTTON_ACTIVE_BG)
+        
         self.test_window = tk.Toplevel(self.frame)
         apply_window_style(self.test_window)
-        self.test_window.geometry("280x160")
+        self.test_window.geometry("280x280")  # Increased height to fit 100x100 image
         self.test_window.resizable(False, False)
         self._position_popup_near_root(self.test_window)
 
@@ -4933,10 +4937,33 @@ class ProfileTab:
             text=f"Profile: {profile_name}",
             font=(FONT_NAME, BASE_FONT_SIZE, "bold")
         )
-        profile_label.pack(padx=20, pady=(20, 5))
+        profile_label.pack(padx=20, pady=(10, 5))
 
-        label = tk.Label(self.test_window, text="Checking...")
-        label.pack(padx=20, pady=(5, 20))
+        # Load images for visible/not visible states
+        try:
+            visible_img = Image.open(os.path.join(os.path.dirname(__file__), "assets", "rotom", "image_test", "visible.png"))
+            visible_img = visible_img.resize((100, 100), Image.Resampling.LANCZOS)
+            visible_photo = ImageTk.PhotoImage(visible_img)
+            
+            not_visible_img = Image.open(os.path.join(os.path.dirname(__file__), "assets", "rotom", "image_test", "not_visible.png"))
+            not_visible_img = not_visible_img.resize((100, 100), Image.Resampling.LANCZOS)
+            not_visible_photo = ImageTk.PhotoImage(not_visible_img)
+        except Exception as e:
+            # Fallback if images can't be loaded
+            visible_photo = None
+            not_visible_photo = None
+
+        # Image label (will show visible or not_visible image)
+        image_label = tk.Label(self.test_window)
+        image_label.pack(pady=5)
+        
+        # Keep references to prevent garbage collection
+        image_label.visible_photo = visible_photo
+        image_label.not_visible_photo = not_visible_photo
+
+        # Status text label
+        status_label = tk.Label(self.test_window, text="Checking...")
+        status_label.pack(pady=5)
 
         is_active = {"running": True}
 
@@ -4944,6 +4971,9 @@ class ProfileTab:
             is_active["running"] = False
             self.test_window.destroy()
             self.test_window = None
+            # Restore Test Image button to normal color when closing
+            if hasattr(self, 'test_image_button'):
+                self.test_image_button.config(bg=BUTTON_BG)
             self.frame.winfo_toplevel().focus_force()
 
         self.test_window.protocol("WM_DELETE_WINDOW", on_close)
@@ -4958,9 +4988,15 @@ class ProfileTab:
 
             hwnd = find_window_by_title_exact(title)
             if not hwnd:
-                label.config(text="❌ Window not found.")
+                # Show not visible image
+                if not_visible_photo:
+                    image_label.config(image=not_visible_photo)
+                status_label.config(text="Not detected\nWindow not found")
             elif is_window_minimized(hwnd):
-                label.config(text="⚠️ Window is minimized.")
+                # Show not visible image
+                if not_visible_photo:
+                    image_label.config(image=not_visible_photo)
+                status_label.config(text="Not detected\nWindow is minimized")
             else:
                 try:
                     screenshot_img = grab_window_image(hwnd)
@@ -4968,10 +5004,22 @@ class ProfileTab:
                         screenshot_img, self.selected_image_path, threshold=float(self.threshold_var.get())
                     )
                     percent = max(0.0, min(1.0, confidence)) * 100
-                    status = "✅ Image detected!" if is_match else "❌ Image not detected."
-                    label.config(text=f"{status}\nConfidence: {percent:.1f}%")
+                    
+                    if is_match:
+                        # Show visible image
+                        if visible_photo:
+                            image_label.config(image=visible_photo)
+                        status_label.config(text=f"Image detected\nConfidence: {percent:.1f}%")
+                    else:
+                        # Show not visible image
+                        if not_visible_photo:
+                            image_label.config(image=not_visible_photo)
+                        status_label.config(text=f"Not detected\nConfidence: {percent:.1f}%")
                 except Exception as exc:
-                    label.config(text=f"⚠️ Error: {exc}")
+                    # Show not visible image on error
+                    if not_visible_photo:
+                        image_label.config(image=not_visible_photo)
+                    status_label.config(text=f"Error\n{exc}")
 
             self.test_window.after(200, update_result)
 
@@ -6592,6 +6640,9 @@ class ProfileTab:
             height=BUTTON_HEIGHT
         )
         test_button.grid(row=6, column=0, padx=12, pady=(8, 12))
+        
+        # Save reference to button so we can change its color when test window is open
+        self.test_image_button = test_button
 
         button_row = tk.Frame(self.configure_window, bg=DARK_BG)
         button_row.grid(row=7, column=0, padx=12, pady=(0, 12))
