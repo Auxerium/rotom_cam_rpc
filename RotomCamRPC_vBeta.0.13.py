@@ -4930,14 +4930,12 @@ class ProfileTab:
         profile_label = tk.Label(
             self.test_window, 
             text=f"Profile: {profile_name}",
-            padx=20, 
-            pady=(20, 5),
             font=(FONT_NAME, BASE_FONT_SIZE, "bold")
         )
-        profile_label.pack()
+        profile_label.pack(padx=20, pady=(20, 5))
 
-        label = tk.Label(self.test_window, text="Checking...", padx=20, pady=(5, 20))
-        label.pack()
+        label = tk.Label(self.test_window, text="Checking...")
+        label.pack(padx=20, pady=(5, 20))
 
         is_active = {"running": True}
 
