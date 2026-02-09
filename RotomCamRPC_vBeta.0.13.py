@@ -850,6 +850,9 @@ def open_hotkeys_inline(profile):
     
     # Initial button color
     update_apply_button_color()
+    
+    # Make sub-setting draggable after all widgets created
+    profile._finalize_sub_setting()
 
 
 # =========================
@@ -5780,6 +5783,9 @@ class ProfileTab:
         
         # Initial button color
         update_apply_button_color()
+        
+        # Make sub-setting draggable after all widgets created
+        self._finalize_sub_setting()
 
     def open_reset_profile_inline(self):
         """Open reset profile confirmation inline (replaces settings menu)"""
@@ -5981,6 +5987,9 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=2
         ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
+        
+        # Make sub-setting draggable after all widgets created
+        self._finalize_sub_setting()
 
 
 
@@ -6405,6 +6414,9 @@ class ProfileTab:
 
         # Initial button color
         update_apply_button_color()
+        
+        # Make sub-setting draggable after all widgets created
+        self._finalize_sub_setting()
 
     # ---------- Load settings ----------
     def load_from_config(self):
