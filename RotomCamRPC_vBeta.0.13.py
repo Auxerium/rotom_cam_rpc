@@ -3024,7 +3024,8 @@ class ProfileTab:
             
             # Valid name - update and save
             self.set_tab_title()
-            self.mark_dirty()
+            # Save immediately instead of waiting for autosave so name persists when navigating menus
+            self.save_settings_silent()
             initial_profile_name = current
             # Update the instance variable so it persists when navigating menus
             self.profile_name = current
