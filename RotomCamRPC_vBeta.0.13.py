@@ -663,7 +663,7 @@ def open_hotkeys_inline(profile):
     
     def add_row(row, label_text, key):
         tk.Label(content_frame, text=label_text).grid(row=row, column=0, sticky="w", pady=4)
-        entry = tk.Entry(content_frame, width=4, state="readonly")  # Width set to fit 4 characters
+        entry = tk.Entry(content_frame, width=12, state="readonly")
         entry.grid(row=row, column=1, padx=8, pady=4, sticky="w")
         entry.configure(readonlybackground=DARK_ACCENT)
         set_readonly_text(entry, hotkey_manager.hotkeys.get(key, ""))
@@ -737,13 +737,13 @@ def open_hotkeys_inline(profile):
     profile_count_minus = profile.count_minus_hotkey if profile else ""
     
     tk.Label(content_frame, text="+ Count:").grid(row=7, column=0, sticky="w", pady=4)
-    count_plus_entry = tk.Entry(content_frame, width=4, state="readonly")
+    count_plus_entry = tk.Entry(content_frame, width=12, state="readonly")
     count_plus_entry.grid(row=7, column=1, padx=8, pady=4, sticky="w")
     count_plus_entry.configure(readonlybackground=DARK_ACCENT)
     set_readonly_text(count_plus_entry, profile_count_plus)
     
     tk.Label(content_frame, text="- Count:").grid(row=8, column=0, sticky="w", pady=4)
-    count_minus_entry = tk.Entry(content_frame, width=4, state="readonly")
+    count_minus_entry = tk.Entry(content_frame, width=12, state="readonly")
     count_minus_entry.grid(row=8, column=1, padx=8, pady=4, sticky="w")
     count_minus_entry.configure(readonlybackground=DARK_ACCENT)
     set_readonly_text(count_minus_entry, profile_count_minus)
@@ -6268,7 +6268,7 @@ class ProfileTab:
         
         # Make link clickable
         def open_discord_link(event):
-            webbrowser.open("https://discord.gg/fQJNabqqzE")
+            webbrowser.open_new(discord_url)
         
         link_label.bind("<Button-1>", open_discord_link)
         
@@ -6357,7 +6357,7 @@ class ProfileTab:
         
         # Make link clickable
         def open_discord_link(event):
-            webbrowser.open("https://discord.gg/fQJNabqqzE")
+            webbrowser.open_new(discord_url)
         
         link_label.bind("<Button-1>", open_discord_link)
         
