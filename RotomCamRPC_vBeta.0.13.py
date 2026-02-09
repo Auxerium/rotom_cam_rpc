@@ -728,13 +728,13 @@ def open_hotkeys_inline(profile):
     profile_count_minus = profile.count_minus_hotkey if profile else ""
     
     tk.Label(content_frame, text="+ Count:").grid(row=7, column=0, sticky="w", pady=4)
-    count_plus_entry = tk.Entry(content_frame, width=20, state="readonly")
+    count_plus_entry = tk.Entry(content_frame, width=4, state="readonly")
     count_plus_entry.grid(row=7, column=1, padx=8, pady=4, sticky="w")
     count_plus_entry.configure(readonlybackground=DARK_ACCENT)
     set_readonly_text(count_plus_entry, profile_count_plus)
     
     tk.Label(content_frame, text="- Count:").grid(row=8, column=0, sticky="w", pady=4)
-    count_minus_entry = tk.Entry(content_frame, width=20, state="readonly")
+    count_minus_entry = tk.Entry(content_frame, width=4, state="readonly")
     count_minus_entry.grid(row=8, column=1, padx=8, pady=4, sticky="w")
     count_minus_entry.configure(readonlybackground=DARK_ACCENT)
     set_readonly_text(count_minus_entry, profile_count_minus)
@@ -3121,8 +3121,8 @@ class ProfileTab:
             height=BUTTON_HEIGHT
         ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
 
-        # Blank line between Reset Profile and Report a Bug
-        spacer = tk.Frame(self._settings_frame, bg=DARK_BG, height=10)
+        # Blank line between Reset Profile and Report a Bug (5x bigger = 50px)
+        spacer = tk.Frame(self._settings_frame, bg=DARK_BG, height=50)
         spacer.pack()
 
         tk.Button(
@@ -6086,6 +6086,17 @@ class ProfileTab:
             wraplength=400
         )
         help_text.pack(pady=(5, 20))
+        
+        # Version information (gray, smaller font)
+        version_label = tk.Label(
+            self._sub_setting_frame,
+            text="Current Version: Release v1.0.0",
+            bg=DARK_BG,
+            fg="#888888",
+            font=(FONT_NAME, BASE_FONT_SIZE - 1),
+            justify="center"
+        )
+        version_label.pack(pady=(20, 5))
         
         # Back button at bottom - 420px wide standard button
         tk.Button(
