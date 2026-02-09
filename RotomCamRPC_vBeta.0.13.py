@@ -5839,7 +5839,7 @@ class ProfileTab:
             self.save_settings_silent()
             
             # ALSO save to the game-specific RPC config file
-            config_path = os.path.join(self.rpc_config_dir, f"{selected_game_id}.txt")
+            config_path = os.path.join(os.path.dirname(__file__), "rpc_config", f"{selected_game_id}.txt")
             cfg = rpc_read_config(config_path)
             cfg["target"] = selected_target
             cfg["odds"] = selected_odds
