@@ -3026,6 +3026,8 @@ class ProfileTab:
             self.set_tab_title()
             self.mark_dirty()
             initial_profile_name = current
+            # Update the instance variable so it persists when navigating menus
+            self.profile_name = current
             update_profile_name_apply_button_color()
         
         profile_name_apply_btn = tk.Button(
@@ -5826,6 +5828,16 @@ class ProfileTab:
             self.update_config_value(CONFIG_KEY_RPC_SUFFIX, self.rpc_counter_suffix)
             
             self.mark_dirty()
+            
+            # Update initial values to match saved values so Apply button returns to gray
+            initial_game_id = selected_game_id
+            initial_target = selected_target
+            initial_odds = selected_odds
+            initial_suffix = selected_suffix
+            
+            # Refresh Apply button color (should be gray now since no changes)
+            update_apply_button_color()
+            
             # Don't auto-close - user must click Back button
         
         # ===== BUTTONS AT BOTTOM (FIXED, NOT SCROLLING) =====
