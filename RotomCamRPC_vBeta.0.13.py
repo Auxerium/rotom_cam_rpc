@@ -3025,7 +3025,7 @@ class ProfileTab:
             command=apply_profile_name_changes,
             height=BUTTON_HEIGHT
         )
-        profile_name_apply_btn.pack(pady=(0, 12), ipadx=0)
+        profile_name_apply_btn.pack(pady=(0, 12), ipadx=10)  # 20px wider than before (10px per side)
         
         # Initialize button color first
         update_profile_name_apply_button_color()
@@ -3069,6 +3069,12 @@ class ProfileTab:
             self._reset_profile_name_to_saved()  # Discard unapplied changes
             self._clear_profile_name_focus()  # Clear focus from profile name entry
             self.open_report_bug_inline()
+        
+        def open_credits_from_settings():
+            self._validate_and_fix_profile_name()
+            self._reset_profile_name_to_saved()  # Discard unapplied changes
+            self._clear_profile_name_focus()  # Clear focus from profile name entry
+            self.open_credits_inline()
 
         tk.Button(
             self._settings_frame,
@@ -3119,6 +3125,15 @@ class ProfileTab:
             self._settings_frame,
             text="Report a Bug",
             command=open_report_bug_from_settings,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
+            height=BUTTON_HEIGHT
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
+        
+        tk.Button(
+            self._settings_frame,
+            text="Credits",
+            command=open_credits_from_settings,
             padx=BUTTON_PADX,
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
@@ -6052,7 +6067,7 @@ class ProfileTab:
         
         # Make link clickable
         def open_discord_link(event):
-            webbrowser.open(discord_url)
+            webbrowser.open("https://discord.gg/fQJNabqqzE")
         
         link_label.bind("<Button-1>", open_discord_link)
         
@@ -6065,6 +6080,83 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=2
         ).pack(pady=STANDARD_BUTTON_PADY, side="bottom", ipadx=STANDARD_BUTTON_IPADX)
+        
+        # Add flexible bottom spacer for drag area at bottom of window
+        bottom_spacer = tk.Frame(self._sub_setting_frame, bg=DARK_BG)
+        bottom_spacer.pack(side="bottom", fill="both", expand=True)
+        
+        # Make sub-setting draggable after all widgets created
+        self._finalize_sub_setting()
+    
+    def open_credits_inline(self):
+        """Open the Credits inline view with attribution and Discord link."""
+        self._show_sub_setting()
+        
+        # First paragraph - Credits (centered, wrapped)
+        text_label1 = tk.Label(
+            self._sub_setting_frame,
+            text="Art / Programming - Aux/XIII (au.xiii)\nAll sprites used were sourced from PokeAPI.",
+            bg=DARK_BG,
+            fg=DARK_FG,
+            font=(FONT_NAME, BASE_FONT_SIZE),
+            justify="center",
+            wraplength=400  # Wrap text to prevent cutoff at window edge
+        )
+        text_label1.pack(pady=(20, 10))
+        
+        # Second paragraph - Program motivation (centered, wrapped)
+        text_label2 = tk.Label(
+            self._sub_setting_frame,
+            text="I made this program for the shiny hunting community, as a fellow hunter I had some issues with the previous counting program I was using and wanted to make a more user-friendly version.",
+            bg=DARK_BG,
+            fg=DARK_FG,
+            font=(FONT_NAME, BASE_FONT_SIZE),
+            justify="center",
+            wraplength=400  # Wrap text to prevent cutoff at window edge
+        )
+        text_label2.pack(pady=(10, 10))
+        
+        # Third paragraph - Thank you message (centered, wrapped)
+        text_label3 = tk.Label(
+            self._sub_setting_frame,
+            text="Thank you for using my app and I hope it's helped with your hunts! If you have any suggestions for future updates please feel free to message on the Rotom Repository Discord, I'm already working on more projects to give back to this community.",
+            bg=DARK_BG,
+            fg=DARK_FG,
+            font=(FONT_NAME, BASE_FONT_SIZE),
+            justify="center",
+            wraplength=400  # Wrap text to prevent cutoff at window edge
+        )
+        text_label3.pack(pady=(10, 10))
+        
+        # Discord link (clickable, centered, styled - no underline)
+        discord_url = "https://discord.gg/fQJNabqqzE"
+        link_label = tk.Label(
+            self._sub_setting_frame,
+            text=discord_url,
+            bg=DARK_BG,
+            fg=LINK_COLOR,  # Blue color for link
+            font=(FONT_NAME, BASE_FONT_SIZE),  # No underline
+            cursor="hand2",
+            justify="center",
+            wraplength=400  # Wrap text to prevent cutoff at window edge
+        )
+        link_label.pack(pady=(10, 20))
+        
+        # Make link clickable
+        def open_discord_link(event):
+            webbrowser.open("https://discord.gg/fQJNabqqzE")
+        
+        link_label.bind("<Button-1>", open_discord_link)
+        
+        # Back button at bottom - 420px wide standard button
+        tk.Button(
+            self._sub_setting_frame,
+            text="Back",
+            command=self._close_sub_setting,
+            padx=BUTTON_PADX,
+            pady=BUTTON_PADY,
+            height=BUTTON_HEIGHT
+        ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
         
         # Add flexible bottom spacer for drag area at bottom of window
         bottom_spacer = tk.Frame(self._sub_setting_frame, bg=DARK_BG)
