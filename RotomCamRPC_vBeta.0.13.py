@@ -6641,6 +6641,7 @@ class ProfileTab:
             # Close the window
             self.configure_window.destroy()
             self.configure_window = None
+            self.test_image_button = None
             self._exit_modal()
             if parent_grab and parent_grab.winfo_exists():
                 set_window_disabled(parent_grab, False)
@@ -6651,6 +6652,7 @@ class ProfileTab:
         def on_close():
             self.configure_window.destroy()
             self.configure_window = None
+            self.test_image_button = None
             self._exit_modal()
             if parent_grab and parent_grab.winfo_exists():
                 set_window_disabled(parent_grab, False)
