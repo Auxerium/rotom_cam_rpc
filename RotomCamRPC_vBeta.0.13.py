@@ -4925,7 +4925,7 @@ class ProfileTab:
         
         # Change Test Image button to orange when opening
         if hasattr(self, 'test_image_button'):
-            self.test_image_button.config(bg=BUTTON_ACTIVE_BG)
+            self.test_image_button.config(bg=ACTIVE_START_BUTTON_BG)
         
         self.test_window = tk.Toplevel(self.frame)
         apply_window_style(self.test_window)
