@@ -187,9 +187,15 @@ def is_interactive_widget(widget):
     return isinstance(widget, INTERACTIVE_DRAG_WIDGETS)
 
 def get_widget_under_cursor(event):
+    # First check if event.widget itself is interactive - most reliable
+    if hasattr(event.widget, 'winfo_class') and is_interactive_widget(event.widget):
+        return event.widget
+    
     # Handle case where event.widget might be a string (e.g., from Combobox)
     if not hasattr(event.widget, 'winfo_containing'):
         return event.widget
+    
+    # Fallback to winfo_containing for other cases
     widget = event.widget.winfo_containing(event.x_root, event.y_root)
     return widget or event.widget
 
