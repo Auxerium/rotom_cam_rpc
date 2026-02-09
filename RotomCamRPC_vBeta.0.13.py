@@ -5788,8 +5788,13 @@ class ProfileTab:
         suffix_var.trace_add("write", lambda *args: update_apply_button_color())
         
         def apply_changes():
+            nonlocal initial_game_id, initial_target, initial_odds, initial_suffix
+            
             selected_items = tree.selection()
             selected_game_id = selected_items[0] if selected_items else ""
+            
+            if not selected_game_id:
+                return  # Can't save without a game selected
             
             # Preserve existing target if user didn't select a new Pokemon
             selected_target = selected_pokemon_name
@@ -5818,17 +5823,28 @@ class ProfileTab:
             
             selected_suffix = label_to_suffix.get(suffix_var.get(), "Encounters")
             
+            # Update instance variables
             self.rpc_game_id = selected_game_id
             self.rpc_target = selected_target
             self.rpc_odds = selected_odds
             self.rpc_counter_suffix = selected_suffix
             
+            # Update main config (for instance variables persistence)
             self.update_config_value(CONFIG_KEY_RPC_GAME, self.rpc_game_id)
             self.update_config_value(CONFIG_KEY_RPC_TARGET, self.rpc_target)
             self.update_config_value(CONFIG_KEY_RPC_ODDS, str(self.rpc_odds))
             self.update_config_value(CONFIG_KEY_RPC_SUFFIX, self.rpc_counter_suffix)
             
-            self.mark_dirty()
+            # Save main config immediately
+            self.save_settings_silent()
+            
+            # ALSO save to the game-specific RPC config file
+            config_path = os.path.join(self.rpc_config_dir, f"{selected_game_id}.txt")
+            cfg = rpc_read_config(config_path)
+            cfg["target"] = selected_target
+            cfg["odds"] = selected_odds
+            cfg["counter_suffix"] = selected_suffix
+            rpc_write_config(config_path, cfg)
             
             # Update initial values to match saved values so Apply button returns to gray
             initial_game_id = selected_game_id
