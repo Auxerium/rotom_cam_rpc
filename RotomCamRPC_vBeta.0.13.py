@@ -4977,7 +4977,7 @@ class ProfileTab:
             self.test_window = None
             # Restore Test Image button to normal color when closing
             if hasattr(self, 'test_image_button'):
-                self.test_image_button.config(bg=BUTTON_BG)
+                self.test_image_button.config(bg=DARK_BUTTON)
             self.frame.winfo_toplevel().focus_force()
 
         self.test_window.protocol("WM_DELETE_WINDOW", on_close)
