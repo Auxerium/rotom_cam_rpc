@@ -6765,6 +6765,9 @@ class ProfileTab:
             height=BUTTON_HEIGHT
         )
         test_button.pack(pady=8)
+        
+        # Save reference to button so we can change its color when test window is open
+        self.test_image_button = test_button
 
         def apply_changes():
             self.cooldown_var.set(temp_cooldown_var.get())
