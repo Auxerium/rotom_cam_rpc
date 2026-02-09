@@ -5570,7 +5570,7 @@ class ProfileTab:
             cell_width = 130
             cell_height = 130
             
-            current_target = self.rpc_target if hasattr(self, 'rpc_target') else ""
+            current_target = selected_pokemon_name if selected_pokemon_name else ""
             
             for i, pokemon in enumerate(display_pokemon):
                 row = i // cols
