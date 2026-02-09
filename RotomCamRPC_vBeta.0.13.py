@@ -4059,12 +4059,8 @@ class ProfileTab:
     
     def _bind_drag_recursively(self, widget):
         """Recursively bind drag events to widget and all non-interactive children."""
-        # Define interactive widget types that should NOT have drag binding
-        interactive_types = (tk.Entry, tk.Text, tk.Button, tk.Checkbutton, 
-                           tk.Radiobutton, tk.Scale, tk.Scrollbar, tk.Listbox,
-                           tk.Canvas,  # Added to prevent drag interference with Pokemon selection
-                           tk.Spinbox, ttk.Combobox, ttk.Entry, ttk.Button,
-                           ttk.Checkbutton, ttk.Radiobutton, ttk.Scale, ttk.Spinbox)
+        # Use the global constant to ensure consistency and include all interactive widgets
+        interactive_types = INTERACTIVE_DRAG_WIDGETS
         
         # Bind to the widget itself if it's not interactive
         if not isinstance(widget, interactive_types):
