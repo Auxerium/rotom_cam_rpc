@@ -1021,7 +1021,8 @@ def add_tooltip(widget, text):
         tw = tk.Toplevel(widget)
         tw.wm_overrideredirect(True)
         tw.attributes("-topmost", True)
-        container = tk.Frame(tw, bg=DARK_ACCENT, relief="solid", bd=1)
+        tw.configure(bg=DARK_ACCENT)
+        container = tk.Frame(tw, bg=DARK_ACCENT, relief="flat", bd=0)
         container.pack(padx=10, pady=0)
         if TOOLTIP_ICON:
             icon_label = tk.Label(container, image=TOOLTIP_ICON, bg=DARK_ACCENT)
