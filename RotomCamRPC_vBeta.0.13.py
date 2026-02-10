@@ -2771,6 +2771,8 @@ class ProfileTab:
         self._settings_view_active = False
         self._settings_frame = None
         self._current_sub_setting = None  # Track which sub-setting is currently open
+        self._alert_icon_selected = None
+        self._alert_icon_unselected = None
 
         self.rpc = None
         self.rpc_thread = None
@@ -3499,12 +3501,27 @@ class ProfileTab:
         list_frame = tk.Frame(container, bg=DARK_BG)
         list_frame.pack(fill="both", expand=True)
 
-        listbox = tk.Listbox(list_frame, width=32, height=4)
-        listbox.pack(side="left", fill="both", expand=True)
+        if self._alert_icon_selected is None:
+            try:
+                self._alert_icon_selected = ImageTk.PhotoImage(
+                    Image.open(resource_path(os.path.join("assets", "ui", "audio_selected.png"))).resize((32, 32), Image.LANCZOS)
+                )
+            except Exception:
+                self._alert_icon_selected = None
+        if self._alert_icon_unselected is None:
+            try:
+                self._alert_icon_unselected = ImageTk.PhotoImage(
+                    Image.open(resource_path(os.path.join("assets", "ui", "audio_not_selected.png"))).resize((32, 32), Image.LANCZOS)
+                )
+            except Exception:
+                self._alert_icon_unselected = None
 
-        scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=listbox.yview)
+        tree = ttk.Treeview(list_frame, show="tree", selectmode="browse", height=4)
+        tree.pack(side="left", fill="both", expand=True)
+
+        scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=tree.yview)
         scrollbar.pack(side="right", fill="y")
-        listbox.config(yscrollcommand=scrollbar.set)
+        tree.configure(yscrollcommand=scrollbar.set)
 
         audio_files = []
         if os.path.isdir(ALERTS_AUDIO_FOLDER):
@@ -3514,45 +3531,59 @@ class ProfileTab:
         audio_files.sort(key=str.lower)
 
         display_to_file = {}
+        item_ids = {}
         if not audio_files:
-            listbox.insert(tk.END, "(No .wav files found)")
-            listbox.config(state="disabled")
+            tree.insert("", "end", text="(No .wav files found)")
+            tree.state(["disabled"])
         else:
             for filename in audio_files:
                 display_name = os.path.splitext(filename)[0]
                 display_to_file[display_name] = filename
-                listbox.insert(tk.END, display_name)
+                item_ids[display_name] = tree.insert(
+                    "", "end", text=display_name, image=self._alert_icon_unselected
+                )
+
+        def update_icons(selected_display):
+            if not item_ids:
+                return
+            for name, item_id in item_ids.items():
+                icon = self._alert_icon_selected if name == selected_display else self._alert_icon_unselected
+                if icon:
+                    tree.item(item_id, image=icon)
 
         def on_select(_event=None):
-            # Allow preview regardless of alerts enabled state
-            if listbox.curselection() is None or not audio_files:
+            if not audio_files:
                 return
-            index = listbox.curselection()
-            if not index:
+            selection = tree.selection()
+            if not selection:
                 return
-            selected_display = listbox.get(index[0])
-            if selected_display == "(No .wav files found)":
+            item_id = selection[0]
+            # Find display name from item_ids
+            selected_display = None
+            for name, iid in item_ids.items():
+                if iid == item_id:
+                    selected_display = name
+                    break
+            if not selected_display:
                 return
-
             selected = display_to_file.get(selected_display, "")
             if not selected:
                 return
-
-            # Only update the internal sound file, don't save to config yet
             self.alert_sound_file = selected
-            # Play preview sound
+            update_icons(selected_display)
             self._play_alert_sound(os.path.join(ALERTS_AUDIO_FOLDER, selected), use_cooldown=False)
 
-        listbox.bind("<<ListboxSelect>>", on_select)
+        tree.bind("<<TreeviewSelect>>", on_select)
 
         if self.alert_sound_file in audio_files:
             display_name = os.path.splitext(self.alert_sound_file)[0]
-            try:
-                index = list(display_to_file.keys()).index(display_name)
-                listbox.selection_set(index)
-                listbox.see(index)
-            except ValueError:
-                pass
+            if display_name in item_ids:
+                try:
+                    tree.selection_set(item_ids[display_name])
+                    tree.see(item_ids[display_name])
+                    update_icons(display_name)
+                except Exception:
+                    pass
 
         tk.Label(container, text="Play Alert For:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).pack(
             anchor="w", pady=(8, 4)
@@ -7142,9 +7173,9 @@ def on_tab_changed(event):
 # Removed - merged into on_profile_tab_change below
 
 root.update_idletasks()
-root.geometry("462x803")  #  WINDOW SIZE (reduced by 7px from 810)
-root.minsize(462, 803)
-root.maxsize(462, 803)
+root.geometry("462x802")  #  WINDOW SIZE (reduced by 8px from 810)
+root.minsize(462, 802)
+root.maxsize(462, 802)
 root.resizable(False, False)
 
 
