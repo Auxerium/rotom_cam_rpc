@@ -139,7 +139,7 @@ def apply_dark_theme(root):
     style.configure("TLabel", background=DARK_BG, foreground=DARK_FG)
     style.configure(
         "TNotebook",
-        background=DARK_BUTTON,
+        background=DARK_BG,
         bordercolor=DARK_BUTTON,
         lightcolor=DARK_BUTTON,
         darkcolor=DARK_BUTTON,
@@ -153,7 +153,7 @@ def apply_dark_theme(root):
         background=DARK_ACCENT,
         foreground=DARK_FG,
         font=(FONT_NAME, TAB_FONT_SIZE),
-        borderwidth=0,
+        borderwidth=1,
         bordercolor=DARK_BUTTON,
         lightcolor=DARK_BUTTON,
         darkcolor=DARK_BUTTON,
