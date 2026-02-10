@@ -242,6 +242,7 @@ SCRIPT_FOLDER = os.path.dirname(os.path.abspath(__file__))
 RPC_CONFIG_FOLDER = os.path.join(SCRIPT_FOLDER, "rpc_config")
 REFERENCES_FOLDER = os.path.join(SCRIPT_FOLDER, "references")
 HOTKEYS_CONFIG_PATH = os.path.join(SCRIPT_FOLDER, "hotkeys_config.txt")
+UI_CONFIG_PATH = os.path.join(SCRIPT_FOLDER, "ui_config.txt")
 ALERTS_AUDIO_FOLDER = os.path.join(SCRIPT_FOLDER, "assets", "audio")
 ICON_PATH = os.path.join(SCRIPT_FOLDER, "assets", "rotom", "main", "main_icon.ico")
 FONT_PATH = resource_path(os.path.join("fonts", FONT_FILENAME))
@@ -283,6 +284,8 @@ DEFAULT_HOTKEYS = {
 ACTIVE_BROADCAST_PROFILE = None
 hotkey_manager = None
 RUN_BADGE_IMG = None
+TOOLTIP_ENABLED = True
+TOOLTIP_ENABLED_KEY = "tooltips_enabled:"
 
 
 # =========================
@@ -918,10 +921,47 @@ def play_ui_sound(sound_path):
         pass  # Silently fail if sound can't play
 
 
+def load_tooltip_enabled():
+    if not os.path.exists(UI_CONFIG_PATH):
+        return True
+    try:
+        with open(UI_CONFIG_PATH, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.lower().startswith(TOOLTIP_ENABLED_KEY):
+                    return line.split(":", 1)[1].strip() == "1"
+    except Exception:
+        return True
+    return True
+
+
+def save_tooltip_enabled(enabled):
+    try:
+        lines = []
+        if os.path.exists(UI_CONFIG_PATH):
+            with open(UI_CONFIG_PATH, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+        wrote = False
+        for i, line in enumerate(lines):
+            if line.lower().startswith(TOOLTIP_ENABLED_KEY):
+                lines[i] = f"{TOOLTIP_ENABLED_KEY} {'1' if enabled else '0'}\n"
+                wrote = True
+                break
+        if not wrote:
+            lines.append(f"{TOOLTIP_ENABLED_KEY} {'1' if enabled else '0'}\n")
+        with open(UI_CONFIG_PATH, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+    except Exception:
+        pass
+
+
 def add_tooltip(widget, text):
+    if widget is None:
+        return
     tip = {"win": None}
 
     def show(_event=None):
+        if not TOOLTIP_ENABLED:
+            return
         if tip["win"]:
             return
         try:
@@ -935,7 +975,8 @@ def add_tooltip(widget, text):
         tw.geometry(f"+{x}+{y}")
         tk.Label(
             tw, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="left",
-            relief="solid", bd=1, font=(FONT_NAME, BASE_FONT_SIZE - 1)
+            relief="solid", bd=1, font=(FONT_NAME, BASE_FONT_SIZE - 1),
+            wraplength=300
         ).pack(ipadx=6, ipady=3)
         tip["win"] = tw
 
@@ -3206,6 +3247,25 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
+
+        tooltip_var = tk.BooleanVar(value=TOOLTIP_ENABLED)
+
+        def on_toggle_tooltips():
+            global TOOLTIP_ENABLED
+            TOOLTIP_ENABLED = tooltip_var.get()
+            save_tooltip_enabled(TOOLTIP_ENABLED)
+
+        tk.Checkbutton(
+            self._settings_frame,
+            text="Enable Tooltips",
+            variable=tooltip_var,
+            command=on_toggle_tooltips,
+            bg=DARK_BG,
+            fg=DARK_FG,
+            activebackground=DARK_BG,
+            activeforeground=DARK_FG,
+            selectcolor=DARK_BG
+        ).pack(pady=(0, STANDARD_BUTTON_PADY))
 
         def close_settings():
             self.close_settings_view()
@@ -6999,6 +7059,7 @@ class ProfileTab:
 # MAIN UI
 # =========================
 register_font(FONT_PATH)
+TOOLTIP_ENABLED = load_tooltip_enabled()
 
 root = tk.Tk()
 apply_window_style(root)
