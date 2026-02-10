@@ -3919,9 +3919,14 @@ class ProfileTab:
                 apply_button.config(bg=START_ACTIVE_COLOR, activebackground=START_ACTIVE_COLOR)
             else:
                 apply_button.config(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
+            # Change slider grip to orange when unsaved
+            active_style = "AutoScale.Active.Horizontal.TScale"
+            idle_style = "AutoScale.Horizontal.TScale"
+            style_name = active_style if changed else idle_style
             try:
-                set_slider_handle_color(changed)
-            except NameError:
+                for slider in (cooldown_slider, frequency_slider, threshold_slider):
+                    slider.configure(style=style_name)
+            except Exception:
                 pass
 
         checkbox_frame = tk.Frame(container, bg=DARK_BG)
@@ -7058,17 +7063,31 @@ class ProfileTab:
         )
         threshold_slider.pack(fill="x", pady=(0, 8))
 
-        default_slider_bg = cooldown_slider.cget("background")
-        default_slider_active = cooldown_slider.cget("activebackground")
-
-        def set_slider_handle_color(changed):
-            bg_color = START_ACTIVE_COLOR if changed else default_slider_bg
-            active_color = START_ACTIVE_COLOR if changed else default_slider_active
-            for slider in (cooldown_slider, frequency_slider, threshold_slider):
-                slider.configure(
-                    background=bg_color,
-                    activebackground=active_color
-                )
+        scale_style = ttk.Style(container)
+        scale_style.configure(
+            "AutoScale.Horizontal.TScale",
+            troughcolor=DARK_ACCENT,
+            background=DARK_ACCENT
+        )
+        scale_style.configure(
+            "AutoScale.Active.Horizontal.TScale",
+            troughcolor=DARK_ACCENT,
+            background=DARK_ACCENT,
+            sliderrelief="flat",
+            arrowsize=0
+        )
+        scale_style.map(
+            "AutoScale.Active.Horizontal.TScale",
+            background=[("active", START_ACTIVE_COLOR), ("!active", START_ACTIVE_COLOR)],
+            sliderrelief=[("active", "flat")]
+        )
+        for slider in (cooldown_slider, frequency_slider, threshold_slider):
+            slider.configure(
+                background=DARK_ACCENT,
+                activebackground=DARK_ACCENT,
+                highlightthickness=0,
+                troughcolor=DARK_ACCENT
+            )
 
         test_button = tk.Button(
             content_frame,
