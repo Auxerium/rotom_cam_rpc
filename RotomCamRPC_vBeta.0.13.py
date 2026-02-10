@@ -188,8 +188,8 @@ def apply_dark_theme(root):
     )
     style.map(
         "AlertSound.Treeview",
-        background=[("selected", START_ACTIVE_COLOR)],
-        foreground=[("selected", DARK_FG)]
+        background=[("selected", START_ACTIVE_COLOR), ("active", START_ACTIVE_COLOR)],
+        foreground=[("selected", DARK_FG), ("active", DARK_FG)]
     )
     style.configure(
         "TScrollbar",
@@ -3515,15 +3515,15 @@ class ProfileTab:
 
         if self._alert_icon_selected is None:
             try:
-                self._alert_icon_selected = ImageTk.PhotoImage(
-                    Image.open(resource_path(os.path.join("assets", "ui", "audio_selected.png"))).resize((32, 32), Image.LANCZOS)
+                self._alert_icon_selected = tk.PhotoImage(
+                    file=resource_path(os.path.join("assets", "ui", "audio_selected.png"))
                 )
             except Exception:
                 self._alert_icon_selected = None
         if self._alert_icon_unselected is None:
             try:
-                self._alert_icon_unselected = ImageTk.PhotoImage(
-                    Image.open(resource_path(os.path.join("assets", "ui", "audio_not_selected.png"))).resize((32, 32), Image.LANCZOS)
+                self._alert_icon_unselected = tk.PhotoImage(
+                    file=resource_path(os.path.join("assets", "ui", "audio_not_selected.png"))
                 )
             except Exception:
                 self._alert_icon_unselected = None
