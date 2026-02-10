@@ -185,7 +185,7 @@ def apply_dark_theme(root):
         background=DARK_ACCENT,
         fieldbackground=DARK_ACCENT,
         foreground=DARK_FG,
-        font=(FONT_NAME, BASE_FONT_SIZE),
+        font=(FONT_NAME, BASE_FONT_SIZE + 1),
         selectbackground=START_ACTIVE_COLOR,
         selectforeground=DARK_FG
     )
@@ -3550,15 +3550,15 @@ class ProfileTab:
 
         display_to_file = {}
         item_ids = {}
-        tree.tag_configure("alert", background=DARK_ACCENT, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE))
-        tree.tag_configure("alert-selected", background=START_ACTIVE_COLOR, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE))
+        tree.tag_configure("alert", background=DARK_ACCENT, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE + 1))
+        tree.tag_configure("alert-selected", background=START_ACTIVE_COLOR, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE + 1))
         suppress_initial_play = True
         def clear_initial_suppress():
             nonlocal suppress_initial_play
             suppress_initial_play = False
         padding_prefix = ""
         try:
-            space_width = tkfont.Font(family=FONT_NAME, size=BASE_FONT_SIZE).measure(" ")
+            space_width = tkfont.Font(family=FONT_NAME, size=BASE_FONT_SIZE + 1).measure(" ")
             spaces = max(1, round(10 / max(space_width, 1)))
             padding_prefix = " " * spaces
         except Exception:
@@ -3813,15 +3813,15 @@ class ProfileTab:
 
         display_to_file = {}
         item_ids = {}
-        tree.tag_configure("alert", background=DARK_ACCENT, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE))
-        tree.tag_configure("alert-selected", background=START_ACTIVE_COLOR, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE))
+        tree.tag_configure("alert", background=DARK_ACCENT, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE + 1))
+        tree.tag_configure("alert-selected", background=START_ACTIVE_COLOR, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE + 1))
         suppress_initial_play = True
         def clear_initial_suppress():
             nonlocal suppress_initial_play
             suppress_initial_play = False
         padding_prefix = ""
         try:
-            space_width = tkfont.Font(family=FONT_NAME, size=BASE_FONT_SIZE).measure(" ")
+            space_width = tkfont.Font(family=FONT_NAME, size=BASE_FONT_SIZE + 1).measure(" ")
             spaces = max(1, round(10 / max(space_width, 1)))
             padding_prefix = " " * spaces
         except Exception:
@@ -3914,10 +3914,15 @@ class ProfileTab:
             return False
 
         def update_apply_button_color():
-            if check_for_changes():
+            changed = check_for_changes()
+            if changed:
                 apply_button.config(bg=START_ACTIVE_COLOR, activebackground=START_ACTIVE_COLOR)
             else:
                 apply_button.config(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
+            try:
+                set_slider_handle_color(changed)
+            except NameError:
+                pass
 
         checkbox_frame = tk.Frame(container, bg=DARK_BG)
         checkbox_frame.pack(anchor="w", padx=12)
@@ -7052,6 +7057,18 @@ class ProfileTab:
             variable=temp_threshold_var, command=lambda v: update_apply_button_color()
         )
         threshold_slider.pack(fill="x", pady=(0, 8))
+
+        default_slider_bg = cooldown_slider.cget("background")
+        default_slider_active = cooldown_slider.cget("activebackground")
+
+        def set_slider_handle_color(changed):
+            bg_color = START_ACTIVE_COLOR if changed else default_slider_bg
+            active_color = START_ACTIVE_COLOR if changed else default_slider_active
+            for slider in (cooldown_slider, frequency_slider, threshold_slider):
+                slider.configure(
+                    background=bg_color,
+                    activebackground=active_color
+                )
 
         test_button = tk.Button(
             content_frame,
