@@ -1022,7 +1022,7 @@ def add_tooltip(widget, text):
         tw.wm_overrideredirect(True)
         tw.attributes("-topmost", True)
         container = tk.Frame(tw, bg=DARK_ACCENT, relief="solid", bd=1)
-        container.pack()
+        container.pack(padx=10, pady=0)
         if TOOLTIP_ICON:
             icon_label = tk.Label(container, image=TOOLTIP_ICON, bg=DARK_ACCENT)
             icon_label.grid(row=0, column=0, padx=(6, 4), pady=4, sticky="ns")
