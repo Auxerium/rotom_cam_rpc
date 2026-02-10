@@ -1022,64 +1022,18 @@ def add_tooltip(widget, text):
         tw.wm_overrideredirect(True)
         tw.attributes("-topmost", True)
         tw.configure(bg=DARK_ACCENT)
-        try:
-            canvas = tk.Canvas(tw, bg=DARK_ACCENT, highlightthickness=0, bd=0)
-            canvas.pack(padx=10, pady=0)
-
-            content = tk.Frame(canvas, bg=DARK_ACCENT)
-            if TOOLTIP_ICON:
-                icon_label = tk.Label(content, image=TOOLTIP_ICON, bg=DARK_ACCENT)
-                icon_label.grid(row=0, column=0, padx=(6, 4), pady=4, sticky="ns")
-            text_label = tk.Label(
-                content, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="center",
-                font=(FONT_NAME, BASE_FONT_SIZE - 1), wraplength=300
-            )
-            text_label.grid(row=0, column=1, padx=(4, 6), pady=4, sticky="w")
-            content.grid_rowconfigure(0, weight=1)
-            content.grid_columnconfigure(1, weight=1)
-
-            pad = 8
-            radius = 8
-
-            def draw_rounded():
-                content.update_idletasks()
-                w = content.winfo_width()
-                h = content.winfo_height()
-                width = w + pad * 2
-                height = h + pad * 2
-                canvas.config(width=width, height=height)
-                canvas.delete("bg")
-                x0, y0, x1, y1 = 0, 0, width, height
-                points = [
-                    x0 + radius, y0,
-                    x1 - radius, y0,
-                    x1, y0,
-                    x1, y0 + radius,
-                    x1, y1 - radius,
-                    x1, y1,
-                    x1 - radius, y1,
-                    x0 + radius, y1,
-                    x0, y1,
-                    x0, y1 - radius,
-                    x0, y0 + radius,
-                    x0, y0
-                ]
-                canvas.create_polygon(points, smooth=True, splinesteps=20, fill=DARK_ACCENT, outline="", tags="bg")
-                canvas.tag_lower("bg")
-
-            canvas.create_window(pad, pad, window=content, anchor="nw")
-            draw_rounded()
-        except Exception:
-            # Fallback simple tooltip if drawing fails
-            fallback = tk.Frame(tw, bg=DARK_ACCENT)
-            fallback.pack(padx=10, pady=6)
-            if TOOLTIP_ICON:
-                tk.Label(fallback, image=TOOLTIP_ICON, bg=DARK_ACCENT).grid(row=0, column=0, padx=(6, 4), pady=4, sticky="ns")
-            tk.Label(
-                fallback, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="center",
-                font=(FONT_NAME, BASE_FONT_SIZE - 1), wraplength=300
-            ).grid(row=0, column=1, padx=(4, 6), pady=4, sticky="w")
-
+        container = tk.Frame(tw, bg=DARK_ACCENT, relief="flat", bd=0)
+        container.pack(padx=10, pady=0)
+        if TOOLTIP_ICON:
+            icon_label = tk.Label(container, image=TOOLTIP_ICON, bg=DARK_ACCENT)
+            icon_label.grid(row=0, column=0, padx=(6, 4), pady=4, sticky="ns")
+        text_label = tk.Label(
+            container, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="center",
+            font=(FONT_NAME, BASE_FONT_SIZE - 1), wraplength=300
+        )
+        text_label.grid(row=0, column=1, padx=(4, 6), pady=4, sticky="w")
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(1, weight=1)
         tw.update_idletasks()
         tooltip_w = tw.winfo_width()
         centered_x = x - (tooltip_w // 2)
@@ -1841,7 +1795,7 @@ def rpc_open_options(profile, parent_grab=None):
     # Add Game section with label
     game_label = tk.Label(win, text="Game:")
     game_label.grid(row=0, column=0, padx=10, pady=(10, 0), sticky="w")
-    add_tooltip(game_label, "This is the game which will be displayed on your Discord Rich Presence.")
+    add_tooltip(game_label, "This is the game which I will display on your Discord Rich Presence.")
     
     # Game tree frame (match Pokemon grid width of 420px)
     tree_frame = tk.Frame(win, width=420)
@@ -2088,7 +2042,7 @@ def rpc_open_options(profile, parent_grab=None):
     # Create Pokemon selector (Canvas grid showing 3×1 = 3 items at once)
     target_label = tk.Label(win, text="Target:")
     target_label.grid(row=4, column=0, padx=10, pady=(0, 0), sticky="w")
-    add_tooltip(target_label, "This is the target which will be displayed on your Discord Rich Presence.")
+    add_tooltip(target_label, "This is the target which I will display on your Discord Rich Presence.")
     
     # Configure column weight to expand
     win.grid_columnconfigure(1, weight=1)
@@ -2407,7 +2361,7 @@ def rpc_open_options(profile, parent_grab=None):
     
     method_label = tk.Label(win, text="Method:")
     method_label.grid(row=8, column=0, padx=10, pady=(0, 6), sticky="w")
-    add_tooltip(method_label, "This will alter the suffix of your Discord Rich Presence, to match the type of encounter method you have selected")
+    add_tooltip(method_label, "I'll alter the suffix of your Discord Rich Presence, to match the type of encounter method you have selected")
     counter_type_var = tk.StringVar(value=selected_label)
     counter_type_menu = ttk.Combobox(
         win,
@@ -2421,7 +2375,7 @@ def rpc_open_options(profile, parent_grab=None):
 
     odds_label = tk.Label(win, text="Odds:")
     odds_label.grid(row=9, column=0, padx=10, pady=(0, 6), sticky="w")
-    add_tooltip(odds_label, "This is used for calculating 'Confidence' in your Discord Rich Presence.")
+    add_tooltip(odds_label, "I'll use this for calculating 'Confidence' in your Discord Rich Presence.")
     odds_entry = tk.Entry(win, width=5)
     odds_entry.grid(row=9, column=1, padx=10, pady=(0, 6), sticky="w")
     
@@ -3584,7 +3538,7 @@ class ProfileTab:
 
         alert_label = tk.Label(container, text="Select Alert Sound:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         alert_label.pack(anchor="w", pady=(0, 6))
-        add_tooltip(alert_label, "When alerts are enabled, Rotom will play this sound when the counter increments.")
+        add_tooltip(alert_label, "When alerts are enabled, I'll play this sound when the counter increments.")
 
         list_frame = tk.Frame(container, bg=DARK_BG)
         list_frame.pack(fill="both", expand=True)
@@ -3847,7 +3801,7 @@ class ProfileTab:
 
         alert_label = tk.Label(container, text="Select Alert Sound:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         alert_label.pack(anchor="w", pady=(0, 6), padx=12)
-        add_tooltip(alert_label, "When alerts are enabled, Rotom will play this sound when the counter increments.")
+        add_tooltip(alert_label, "When alerts are enabled, I'll play this sound when the counter increments.")
 
         list_frame = tk.Frame(container, bg=DARK_BG)
         list_frame.pack(fill="both", expand=True, padx=12)
@@ -4629,7 +4583,7 @@ class ProfileTab:
 
         self.label_title = tk.Label(row_title_label, text="Capture Window:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.label_title.pack(anchor="center", padx=10)
-        add_tooltip(self.label_title, "When auto is enabled, Rotom will use this window to scan for the provided reference frame.")
+        add_tooltip(self.label_title, "When auto is enabled, I'll use this window to search for the reference frame.")
 
         row_title = make_row()
         self.entry_title = tk.Entry(row_title, width=40, textvariable=self.title_var)
@@ -4653,7 +4607,7 @@ class ProfileTab:
         row_image_label = make_row(pady=0)
         self.lbl_image = tk.Label(row_image_label, text="Reference Frame:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_image.pack(side="left", padx=10)
-        add_tooltip(self.lbl_image, "When auto is enabled, Rotom will scan for this reference frame in the provided window.")
+        add_tooltip(self.lbl_image, "When auto is enabled, I'll search for this frame in the capture window.")
 
         row_image = make_row()
         self.entry_image_path = tk.Entry(row_image, width=40, textvariable=self.image_path_var)
@@ -4689,7 +4643,7 @@ class ProfileTab:
         row_text_label = make_row(pady=0)
         self.lbl_text = tk.Label(row_text_label, text="Counter File:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_text.pack(side="left", padx=10)
-        add_tooltip(self.lbl_text, "This file will be used for Rotom to update your count, whenever it is incremented.")
+        add_tooltip(self.lbl_text, "I'll use this file to track your current count, and update it whenever the count is incremented.")
 
         row_text = make_row()
         self.entry_text_path = tk.Entry(row_text, width=40, textvariable=self.text_path_var)
@@ -4743,7 +4697,7 @@ class ProfileTab:
 
         self.lbl_increment = tk.Label(row_counter_increment, text="Increment:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_increment.pack(side="left", padx=(0, 4))
-        add_tooltip(self.lbl_increment, "Rotom will increase or decrease the current count by this number, each time there is a change.")
+        add_tooltip(self.lbl_increment, "I'll increase or decrease the current count by this number, each time the counter is incremented or decremented.")
         self.entry_increment = tk.Entry(row_counter_increment, width=3, textvariable=self.increment_var, justify="center")
         # 5px left padding to match spacing, 10px right padding for visual separation from next element
         self.entry_increment.pack(side="left", padx=(5, 10))
@@ -4789,16 +4743,16 @@ class ProfileTab:
         # Create text labels below icons
         self.lbl_audio_text = tk.Label(row_rpc_enable, text="Alerts", bg=DARK_BG, fg=DARK_FG)
         self.lbl_audio_text.grid(row=1, column=0, padx=10, sticky="n")
-        add_tooltip(self.lbl_audio_text, "When enabled, Rotom will give you audio alerts when the counter is incremented.")
+        add_tooltip(self.lbl_audio_text, "When enabled, I'll give you audio alerts when the counter is incremented.")
         
         self.lbl_count_text = tk.Label(row_rpc_enable, text="Auto", bg=DARK_BG, fg=DARK_FG)
         self.lbl_count_text.grid(row=1, column=1, padx=10, sticky="n")
-        add_tooltip(self.lbl_count_text, "When enabled, Rotom will scan a window automatically for a reference frame and increment the counter when it is detected.")
+        add_tooltip(self.lbl_count_text, "When enabled, I'll search the capture window automatically for the reference frame and increment the counter when I detect it.")
 
         self.rpc_enabled_var = tk.BooleanVar(value=False)
         self.lbl_rpc_text = tk.Label(row_rpc_enable, text="RPC", bg=DARK_BG, fg=DARK_FG)
         self.lbl_rpc_text.grid(row=1, column=2, padx=10, sticky="n")
-        add_tooltip(self.lbl_rpc_text, "When enabled, Rotom will broadcast your current hunt details to Discord Rich Presence.")
+        add_tooltip(self.lbl_rpc_text, "When enabled,  I'll broadcast your current hunt details to Discord Rich Presence.")
 
         # Update icon appearance based on state
         def update_auto_icon_appearance(*args):
@@ -4997,7 +4951,7 @@ class ProfileTab:
                 show_custom_error(
                     "count_error",
                     "Error ID 68915449: Missing File",
-                    "No image file selected. Auto mode requires Rotom to have a reference image."
+                    "No image file selected. Auto mode requires Rotom to have a reference frame."
                 )
             return False, None
 
@@ -5251,7 +5205,7 @@ class ProfileTab:
             show_custom_error(
                 "count_error",
                 "Error ID 68915449: Missing File",
-                "No image file selected. Auto mode requires Rotom to have a reference image."
+                "No image file selected. Auto mode requires Rotom to have a reference frame."
             )
             return
 
@@ -6104,7 +6058,7 @@ class ProfileTab:
         # ===== SUFFIX/METHOD SELECTION =====
         method_label = tk.Label(content_frame, text="Method:")
         method_label.grid(row=8, column=0, padx=10, pady=(0, 6), sticky="w")
-        add_tooltip(method_label, "This will alter the suffix of your Discord Rich Presence, to match the type of encounter method you have selected")
+        add_tooltip(method_label, "This will alter the suffix of your Discord Rich Presence, to match the type of encounter method you have selected.")
         
         # Create label/suffix mappings
         suffix_to_label = {suffix: label for label, suffix in RPC_COUNTER_OPTIONS}
@@ -6969,7 +6923,7 @@ class ProfileTab:
 
         lbl_cooldown = tk.Label(self.configure_window, text="Cooldown (seconds):")
         lbl_cooldown.grid(row=0, column=0, sticky="w", padx=12, pady=6)
-        add_tooltip(lbl_cooldown, "When auto is enabled and Rotom detects the reference image, it will wait this long before it starts searching again.")
+        add_tooltip(lbl_cooldown, "When auto is enabled and I detect the reference frame in the capture window, I will wait this long before I start searching again.")
 
         cooldown_slider = tk.Scale(
             self.configure_window, from_=1, to=10, resolution=1, orient="horizontal", 
@@ -6979,7 +6933,7 @@ class ProfileTab:
 
         lbl_frequency = tk.Label(self.configure_window, text="Frequency (seconds):")
         lbl_frequency.grid(row=2, column=0, sticky="w", padx=12, pady=6)
-        add_tooltip(lbl_frequency, "When auto is enabled, Rotom will search the window for the reference image this frequently.")
+        add_tooltip(lbl_frequency, "When auto is enabled, I'll search the capture window for the reference frame this frequently.")
 
         frequency_slider = tk.Scale(
             self.configure_window, from_=0.1, to=5.0, resolution=0.1, orient="horizontal", 
@@ -6989,7 +6943,7 @@ class ProfileTab:
 
         lbl_threshold = tk.Label(self.configure_window, text="Match Threshold (%):")
         lbl_threshold.grid(row=4, column=0, sticky="w", padx=12, pady=6)
-        add_tooltip(lbl_threshold, "When auto is enabled and Rotom is searching the window, this is percentage of the reference image that should match with the window's image before Rotom increments the counter.")
+        add_tooltip(lbl_threshold, "When auto is enabled and I am searching the capture window, this is how confident I need to be that it matches the reference frame, before I increment the counter.")
 
         threshold_slider = tk.Scale(
             self.configure_window, from_=0.5, to=1.0, resolution=0.01, orient="horizontal", 
@@ -7199,7 +7153,7 @@ class ProfileTab:
 
         lbl_cooldown = tk.Label(content_frame, text="Cooldown (seconds):", bg=DARK_BG)
         lbl_cooldown.pack(anchor="w", pady=(0, 2))
-        add_tooltip(lbl_cooldown, "When auto is enabled and Rotom detects the reference image, it will wait this long before it starts searching again.")
+        add_tooltip(lbl_cooldown, "When auto is enabled and I detect the reference frame in the capture window, I will wait this long before I start searching again.")
 
         cooldown_slider = tk.Scale(
             content_frame, from_=1, to=10, resolution=1, orient="horizontal",
@@ -7209,7 +7163,7 @@ class ProfileTab:
 
         lbl_frequency = tk.Label(content_frame, text="Frequency (seconds):", bg=DARK_BG)
         lbl_frequency.pack(anchor="w", pady=(0, 2))
-        add_tooltip(lbl_frequency, "When auto is enabled, Rotom will search the window for the reference image this frequently.")
+        add_tooltip(lbl_frequency, "When auto is enabled, I will search the capture window for the reference frame this frequently.")
 
         frequency_slider = tk.Scale(
             content_frame, from_=0.1, to=5.0, resolution=0.1, orient="horizontal",
@@ -7219,7 +7173,7 @@ class ProfileTab:
 
         lbl_threshold = tk.Label(content_frame, text="Match Threshold (%):", bg=DARK_BG)
         lbl_threshold.pack(anchor="w", pady=(0, 2))
-        add_tooltip(lbl_threshold, "When auto is enabled and Rotom is searching the window, this is percentage of the reference image that should match with the window's image before Rotom increments the counter.")
+        add_tooltip(lbl_threshold, "When auto is enabled and I am searching the capture window, this is how confident I should be that I see the reference frame, before I increment the counter.")
 
         threshold_slider = tk.Scale(
             content_frame, from_=0.5, to=1.0, resolution=0.01, orient="horizontal",
