@@ -164,10 +164,10 @@ def apply_dark_theme(root):
         "TNotebook.Tab",
         background=[("selected", DARK_BG)],
         foreground=[("selected", DARK_FG)],
-        bordercolor=[("selected", "#000000")],
-        lightcolor=[("selected", "#000000")],
-        darkcolor=[("selected", "#000000")],
-        focuscolor=[("selected", "#000000")],
+        bordercolor=[("selected", DARK_BUTTON)],
+        lightcolor=[("selected", DARK_BUTTON)],
+        darkcolor=[("selected", DARK_BUTTON)],
+        focuscolor=[("selected", DARK_BUTTON)],
         padding=[("selected", [10, 4, 15, 4])]
     )
     style.configure("TButton", background=DARK_BUTTON, foreground=DARK_FG)
@@ -987,6 +987,7 @@ def add_tooltip(widget, text):
             widget.update_idletasks()
             w = widget.winfo_width()
             h = widget.winfo_height()
+            # Center tooltip horizontally relative to widget
             x = widget.winfo_rootx() + max(0, (w // 2))
             y = widget.winfo_rooty() + h + 6
         except Exception:
@@ -994,12 +995,17 @@ def add_tooltip(widget, text):
         tw = tk.Toplevel(widget)
         tw.wm_overrideredirect(True)
         tw.attributes("-topmost", True)
-        tw.geometry(f"+{x}+{y}")
-        tk.Label(
+        # Adjust x after window width is known to center exactly
+        label = tk.Label(
             tw, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="center",
             relief="solid", bd=1, font=(FONT_NAME, BASE_FONT_SIZE - 1),
             wraplength=300
-        ).pack(ipadx=6, ipady=3)
+        )
+        label.pack(ipadx=6, ipady=3)
+        tw.update_idletasks()
+        tooltip_w = tw.winfo_width()
+        centered_x = x - (tooltip_w // 2)
+        tw.geometry(f"+{centered_x}+{y}")
         tip["win"] = tw
 
     def hide(_event=None):
