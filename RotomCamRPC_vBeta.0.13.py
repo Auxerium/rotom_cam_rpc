@@ -3548,6 +3548,9 @@ class ProfileTab:
 
         display_to_file = {}
         item_ids = {}
+        tree.tag_configure("alert", background=DARK_ACCENT, foreground=DARK_FG)
+        tree.tag_configure("alert-selected", background=START_ACTIVE_COLOR, foreground=DARK_FG)
+
         if not audio_files:
             tree.insert("", "end", text="(No .wav files found)")
             tree.state(["disabled"])
@@ -3556,7 +3559,7 @@ class ProfileTab:
                 display_name = os.path.splitext(filename)[0]
                 display_to_file[display_name] = filename
                 item_ids[display_name] = tree.insert(
-                    "", "end", text=display_name, image=self._alert_icon_unselected
+                    "", "end", text=display_name, image=self._alert_icon_unselected, tags=("alert",)
                 )
 
         def update_icons(selected_display):
@@ -3564,8 +3567,8 @@ class ProfileTab:
                 return
             for name, item_id in item_ids.items():
                 icon = self._alert_icon_selected if name == selected_display else self._alert_icon_unselected
-                if icon:
-                    tree.item(item_id, image=icon)
+                tree.item(item_id, image=icon or "")
+                tree.item(item_id, tags=("alert-selected",) if name == selected_display else ("alert",))
 
         def on_select(_event=None):
             if not audio_files:
