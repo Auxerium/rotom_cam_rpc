@@ -3919,7 +3919,6 @@ class ProfileTab:
                 apply_button.config(bg=START_ACTIVE_COLOR, activebackground=START_ACTIVE_COLOR)
             else:
                 apply_button.config(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
-            refresh_slider_colors()
 
         checkbox_frame = tk.Frame(container, bg=DARK_BG)
         checkbox_frame.pack(anchor="w", padx=12)
