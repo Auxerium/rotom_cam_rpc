@@ -7027,7 +7027,7 @@ class ProfileTab:
         content_frame = tk.Frame(container, bg=DARK_BG)
         content_frame.pack(fill="both", expand=True, padx=12, pady=6)
 
-        lbl_cooldown = tk.Label(content_frame, text="Cooldown (seconds):")
+        lbl_cooldown = tk.Label(content_frame, text="Cooldown (seconds):", bg=DARK_BG)
         lbl_cooldown.pack(anchor="w", pady=(0, 2))
 
         cooldown_slider = tk.Scale(
@@ -7036,7 +7036,7 @@ class ProfileTab:
         )
         cooldown_slider.pack(fill="x", pady=(0, 8))
 
-        lbl_frequency = tk.Label(content_frame, text="Frequency (seconds):")
+        lbl_frequency = tk.Label(content_frame, text="Frequency (seconds):", bg=DARK_BG)
         lbl_frequency.pack(anchor="w", pady=(0, 2))
 
         frequency_slider = tk.Scale(
@@ -7045,7 +7045,7 @@ class ProfileTab:
         )
         frequency_slider.pack(fill="x", pady=(0, 8))
 
-        lbl_threshold = tk.Label(content_frame, text="Match Threshold (%):")
+        lbl_threshold = tk.Label(content_frame, text="Match Threshold (%):", bg=DARK_BG)
         lbl_threshold.pack(anchor="w", pady=(0, 2))
 
         threshold_slider = tk.Scale(
@@ -7056,24 +7056,24 @@ class ProfileTab:
 
         slider_defaults = {
             cooldown_slider: (
-                DARK_BUTTON,
+                DARK_BG,
                 DARK_BUTTON
             ),
             frequency_slider: (
-                DARK_BUTTON,
+                DARK_BG,
                 DARK_BUTTON
             ),
             threshold_slider: (
-                DARK_BUTTON,
+                DARK_BG,
                 DARK_BUTTON
             ),
         }
 
         for slider in (cooldown_slider, frequency_slider, threshold_slider):
             slider.configure(
-                background=DARK_BUTTON,
+                background=DARK_BG,
                 activebackground=DARK_BUTTON,
-                troughcolor=DARK_BORDER,
+                troughcolor=DARK_ACCENT,
                 highlightthickness=0,
                 sliderrelief="ridge",
                 sliderlength=16,
