@@ -191,7 +191,8 @@ def apply_dark_theme(root):
     style.map(
         "AlertSound.Treeview",
         background=[("selected", START_ACTIVE_COLOR)],
-        foreground=[("selected", DARK_FG)]
+        foreground=[("selected", DARK_FG)],
+        fieldbackground=[("selected", START_ACTIVE_COLOR)]
     )
     style.configure(
         "TScrollbar",
