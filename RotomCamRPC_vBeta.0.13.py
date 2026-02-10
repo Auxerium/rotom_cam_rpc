@@ -7078,6 +7078,8 @@ class ProfileTab:
             base_layout = scale_style.layout("Horizontal.TScale")
             scale_style.layout("AutoPill.TScale", base_layout)
             scale_style.layout("AutoPillActive.TScale", base_layout)
+            scale_style.layout("Horizontal.AutoPill.TScale", base_layout)
+            scale_style.layout("Horizontal.AutoPillActive.TScale", base_layout)
         except Exception:
             pass
 
