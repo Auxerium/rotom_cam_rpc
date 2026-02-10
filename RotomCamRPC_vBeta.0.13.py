@@ -179,6 +179,7 @@ def apply_dark_theme(root):
         foreground=DARK_FG
     )
     style.configure("Treeview.Heading", background=DARK_BUTTON, foreground=DARK_FG)
+    style.configure("AlertSound.Treeview", rowheight=36)
     style.configure(
         "TScrollbar",
         background=DARK_BUTTON,
@@ -3516,7 +3517,7 @@ class ProfileTab:
             except Exception:
                 self._alert_icon_unselected = None
 
-        tree = ttk.Treeview(list_frame, show="tree", selectmode="browse", height=4)
+        tree = ttk.Treeview(list_frame, show="tree", selectmode="browse", height=4, style="AlertSound.Treeview")
         tree.pack(side="left", fill="both", expand=True)
 
         scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=tree.yview)
