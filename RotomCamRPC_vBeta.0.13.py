@@ -185,6 +185,7 @@ def apply_dark_theme(root):
         background=DARK_ACCENT,
         fieldbackground=DARK_ACCENT,
         foreground=DARK_FG,
+        font=(FONT_NAME, BASE_FONT_SIZE),
         selectbackground=START_ACTIVE_COLOR,
         selectforeground=DARK_FG
     )
@@ -3549,12 +3550,19 @@ class ProfileTab:
 
         display_to_file = {}
         item_ids = {}
-        tree.tag_configure("alert", background=DARK_ACCENT, foreground=DARK_FG)
-        tree.tag_configure("alert-selected", background=START_ACTIVE_COLOR, foreground=DARK_FG)
+        tree.tag_configure("alert", background=DARK_ACCENT, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE))
+        tree.tag_configure("alert-selected", background=START_ACTIVE_COLOR, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE))
         suppress_initial_play = True
         def clear_initial_suppress():
             nonlocal suppress_initial_play
             suppress_initial_play = False
+        padding_prefix = ""
+        try:
+            space_width = tkfont.Font(family=FONT_NAME, size=BASE_FONT_SIZE).measure(" ")
+            spaces = max(1, round(10 / max(space_width, 1)))
+            padding_prefix = " " * spaces
+        except Exception:
+            padding_prefix = "  "
 
         if not audio_files:
             tree.insert("", "end", text="(No .wav files found)")
@@ -3564,7 +3572,7 @@ class ProfileTab:
                 display_name = os.path.splitext(filename)[0]
                 display_to_file[display_name] = filename
                 item_ids[display_name] = tree.insert(
-                    "", "end", text=display_name, image=self._alert_icon_unselected, tags=("alert",)
+                    "", "end", text=f"{padding_prefix}{display_name}", image=self._alert_icon_unselected, tags=("alert",)
                 )
 
         def update_icons(selected_display):
@@ -3805,12 +3813,19 @@ class ProfileTab:
 
         display_to_file = {}
         item_ids = {}
-        tree.tag_configure("alert", background=DARK_ACCENT, foreground=DARK_FG)
-        tree.tag_configure("alert-selected", background=START_ACTIVE_COLOR, foreground=DARK_FG)
+        tree.tag_configure("alert", background=DARK_ACCENT, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE))
+        tree.tag_configure("alert-selected", background=START_ACTIVE_COLOR, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE))
         suppress_initial_play = True
         def clear_initial_suppress():
             nonlocal suppress_initial_play
             suppress_initial_play = False
+        padding_prefix = ""
+        try:
+            space_width = tkfont.Font(family=FONT_NAME, size=BASE_FONT_SIZE).measure(" ")
+            spaces = max(1, round(10 / max(space_width, 1)))
+            padding_prefix = " " * spaces
+        except Exception:
+            padding_prefix = "  "
 
         if not audio_files:
             tree.insert("", "end", text="(No .wav files found)")
@@ -3820,7 +3835,7 @@ class ProfileTab:
                 display_name = os.path.splitext(filename)[0]
                 display_to_file[display_name] = filename
                 item_ids[display_name] = tree.insert(
-                    "", "end", text=display_name, image=self._alert_icon_unselected, tags=("alert",)
+                    "", "end", text=f"{padding_prefix}{display_name}", image=self._alert_icon_unselected, tags=("alert",)
                 )
 
         def update_icons(selected_display):
