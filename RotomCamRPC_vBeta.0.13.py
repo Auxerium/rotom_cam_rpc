@@ -150,7 +150,7 @@ def apply_dark_theme(root):
     style.layout("TNotebook", [("Notebook.client", {"sticky": "nswe"})])
     style.configure(
         "TNotebook.Tab",
-        background=DARK_ACCENT,
+        background="#1a1a1a",
         foreground=DARK_FG,
         font=(FONT_NAME, TAB_FONT_SIZE),
         borderwidth=1,
@@ -162,7 +162,7 @@ def apply_dark_theme(root):
     )
     style.map(
         "TNotebook.Tab",
-        background=[("selected", DARK_BUTTON)],
+        background=[("selected", DARK_BG)],
         foreground=[("selected", DARK_FG)],
         padding=[("selected", [10, 4, 15, 4])]
     )
