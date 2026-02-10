@@ -974,7 +974,7 @@ def add_tooltip(widget, text):
         tw.attributes("-topmost", True)
         tw.geometry(f"+{x}+{y}")
         tk.Label(
-            tw, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="left",
+            tw, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="center",
             relief="solid", bd=1, font=(FONT_NAME, BASE_FONT_SIZE - 1),
             wraplength=300
         ).pack(ipadx=6, ipady=3)
@@ -3265,7 +3265,7 @@ class ProfileTab:
             activebackground=DARK_BG,
             activeforeground=DARK_FG,
             selectcolor=DARK_BG
-        ).pack(pady=(0, STANDARD_BUTTON_PADY))
+        ).pack(pady=STANDARD_BUTTON_PADY)
 
         def close_settings():
             self.close_settings_view()
