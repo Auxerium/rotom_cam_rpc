@@ -3551,6 +3551,10 @@ class ProfileTab:
         item_ids = {}
         tree.tag_configure("alert", background=DARK_ACCENT, foreground=DARK_FG)
         tree.tag_configure("alert-selected", background=START_ACTIVE_COLOR, foreground=DARK_FG)
+        suppress_initial_play = True
+        def clear_initial_suppress():
+            nonlocal suppress_initial_play
+            suppress_initial_play = False
 
         if not audio_files:
             tree.insert("", "end", text="(No .wav files found)")
@@ -3572,6 +3576,7 @@ class ProfileTab:
                 tree.item(item_id, tags=("alert-selected",) if name == selected_display else ("alert",))
 
         def on_select(_event=None):
+            nonlocal suppress_initial_play
             if not audio_files:
                 return
             selection = tree.selection()
@@ -3591,9 +3596,9 @@ class ProfileTab:
                 return
             self.alert_sound_file = selected
             update_icons(selected_display)
+            if suppress_initial_play:
+                return
             self._play_alert_sound(os.path.join(ALERTS_AUDIO_FOLDER, selected), use_cooldown=False)
-
-        tree.bind("<<TreeviewSelect>>", on_select)
 
         if self.alert_sound_file in audio_files:
             display_name = os.path.splitext(self.alert_sound_file)[0]
@@ -3604,6 +3609,7 @@ class ProfileTab:
                     update_icons(display_name)
                 except Exception:
                     pass
+        tree.after_idle(clear_initial_suppress)
 
         tk.Label(container, text="Play Alert For:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).pack(
             anchor="w", pady=(8, 4)
@@ -3737,12 +3743,12 @@ class ProfileTab:
             height=BUTTON_HEIGHT
         ).grid(row=0, column=1, padx=(4, 0), sticky="w")
 
-        # Update listbox selection to track changes
+        # Update selection to track changes
         def on_select_with_tracking(_event=None):
             on_select(_event)
             update_apply_button_color()
         
-        listbox.bind("<<ListboxSelect>>", on_select_with_tracking)
+        tree.bind("<<TreeviewSelect>>", on_select_with_tracking)
 
         # Initial state setup (after button creation)
         update_apply_button_color()
@@ -3801,6 +3807,10 @@ class ProfileTab:
         item_ids = {}
         tree.tag_configure("alert", background=DARK_ACCENT, foreground=DARK_FG)
         tree.tag_configure("alert-selected", background=START_ACTIVE_COLOR, foreground=DARK_FG)
+        suppress_initial_play = True
+        def clear_initial_suppress():
+            nonlocal suppress_initial_play
+            suppress_initial_play = False
 
         if not audio_files:
             tree.insert("", "end", text="(No .wav files found)")
@@ -3822,6 +3832,7 @@ class ProfileTab:
                 tree.item(item_id, tags=("alert-selected",) if name == selected_display else ("alert",))
 
         def on_select(_event=None):
+            nonlocal suppress_initial_play
             if not audio_files:
                 return
             selection = tree.selection()
@@ -3842,6 +3853,8 @@ class ProfileTab:
 
             self.alert_sound_file = selected
             update_icons(selected_display)
+            if suppress_initial_play:
+                return
             self._play_alert_sound(os.path.join(ALERTS_AUDIO_FOLDER, selected), use_cooldown=False)
 
         if self.alert_sound_file in audio_files:
@@ -3853,6 +3866,7 @@ class ProfileTab:
                     update_icons(display_name)
                 except Exception:
                     pass
+        tree.after_idle(clear_initial_suppress)
 
         tk.Label(container, text="", bg=DARK_BG).pack(anchor="w", padx=12, pady=(2, 2))
 
