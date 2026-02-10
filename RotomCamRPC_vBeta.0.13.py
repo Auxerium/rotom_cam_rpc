@@ -468,9 +468,9 @@ def open_hotkeys_window(parent_grab=None, profile=None):
     profile_name = profile.profile_name_var.get().strip() if profile else ""
     profile_label = profile_name or (profile.default_tab_name if profile else "Profile")
 
-    tk.Label(container, text="Global:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).grid(
-        row=0, column=0, columnspan=2, sticky="w", pady=(0, 4)
-    )
+    global_label = tk.Label(container, text="Global:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
+    global_label.grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 4))
+    add_tooltip(global_label, "Global hotkeys apply across all profiles.")
     tk.Label(
         container,
         text="(Press escape to unbind hotkeys)",
@@ -499,9 +499,9 @@ def open_hotkeys_window(parent_grab=None, profile=None):
             fg="#d46a6a"
         ).grid(row=5, column=0, columnspan=2, sticky="w")
 
-    tk.Label(container, text=f"{profile_label}:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).grid(
-        row=6, column=0, columnspan=2, sticky="w", pady=(8, 4)
-    )
+    profile_label_widget = tk.Label(container, text=f"{profile_label}:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
+    profile_label_widget.grid(row=6, column=0, columnspan=2, sticky="w", pady=(8, 4))
+    add_tooltip(profile_label_widget, "Profile hotkeys apply only to the selected profile.")
 
     profile_count_plus = profile.count_plus_hotkey if profile else ""
     profile_count_minus = profile.count_minus_hotkey if profile else ""
@@ -736,9 +736,9 @@ def open_hotkeys_inline(profile):
     profile_name = profile.profile_name_var.get().strip() if profile else ""
     profile_label = profile_name or (profile.default_tab_name if profile else "Profile")
     
-    tk.Label(content_frame, text="Global:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).grid(
-        row=0, column=0, columnspan=2, sticky="w", pady=(0, 4)
-    )
+    global_label = tk.Label(content_frame, text="Global:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
+    global_label.grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 4))
+    add_tooltip(global_label, "Global hotkeys apply across all profiles.")
     tk.Label(
         content_frame,
         text="(Press escape to unbind hotkeys)",
@@ -770,9 +770,9 @@ def open_hotkeys_inline(profile):
     # Spacer between global and profile hotkeys
     tk.Label(content_frame, text="", bg=DARK_BG).grid(row=6, column=0, columnspan=2, pady=(0, 2))
     
-    tk.Label(content_frame, text=f"{profile_label}:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).grid(
-        row=7, column=0, columnspan=2, sticky="w", pady=(8, 4)
-    )
+    profile_label_widget = tk.Label(content_frame, text=f"{profile_label}:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
+    profile_label_widget.grid(row=7, column=0, columnspan=2, sticky="w", pady=(8, 4))
+    add_tooltip(profile_label_widget, "Profile hotkeys apply only to the selected profile.")
     
     profile_count_plus = profile.count_plus_hotkey if profile else ""
     profile_count_minus = profile.count_minus_hotkey if profile else ""
@@ -1777,7 +1777,9 @@ def rpc_open_options(profile, parent_grab=None):
         set_window_disabled(parent_grab, True)
 
     # Add Game section with label
-    tk.Label(win, text="Game:").grid(row=0, column=0, padx=10, pady=(10, 0), sticky="w")
+    game_label = tk.Label(win, text="Game:")
+    game_label.grid(row=0, column=0, padx=10, pady=(10, 0), sticky="w")
+    add_tooltip(game_label, "This is the game which will be displayed on your Discord Rich Presence.")
     
     # Game tree frame (match Pokemon grid width of 420px)
     tree_frame = tk.Frame(win, width=420)
@@ -2022,7 +2024,9 @@ def rpc_open_options(profile, parent_grab=None):
 
     
     # Create Pokemon selector (Canvas grid showing 3×1 = 3 items at once)
-    tk.Label(win, text="Target:").grid(row=4, column=0, padx=10, pady=(0, 0), sticky="w")
+    target_label = tk.Label(win, text="Target:")
+    target_label.grid(row=4, column=0, padx=10, pady=(0, 0), sticky="w")
+    add_tooltip(target_label, "This is the target which will be displayed on your Discord Rich Presence.")
     
     # Configure column weight to expand
     win.grid_columnconfigure(1, weight=1)
@@ -2339,7 +2343,9 @@ def rpc_open_options(profile, parent_grab=None):
 
     # Empty row for spacing after Pokemon filter (row 7)
     
-    tk.Label(win, text="Method:").grid(row=8, column=0, padx=10, pady=(0, 6), sticky="w")
+    method_label = tk.Label(win, text="Method:")
+    method_label.grid(row=8, column=0, padx=10, pady=(0, 6), sticky="w")
+    add_tooltip(method_label, "This will alter the suffix of your Discord Rich Presence, to match the type of encounter method you have selected")
     counter_type_var = tk.StringVar(value=selected_label)
     counter_type_menu = ttk.Combobox(
         win,
@@ -2351,7 +2357,9 @@ def rpc_open_options(profile, parent_grab=None):
     )
     counter_type_menu.grid(row=8, column=1, padx=10, pady=(0, 6), sticky="w")
 
-    tk.Label(win, text="Odds:").grid(row=9, column=0, padx=10, pady=(0, 6), sticky="w")
+    odds_label = tk.Label(win, text="Odds:")
+    odds_label.grid(row=9, column=0, padx=10, pady=(0, 6), sticky="w")
+    add_tooltip(odds_label, "This is used for calculating 'Confidence' in your Discord Rich Presence.")
     odds_entry = tk.Entry(win, width=5)
     odds_entry.grid(row=9, column=1, padx=10, pady=(0, 6), sticky="w")
     
@@ -3301,7 +3309,7 @@ class ProfileTab:
             TOOLTIP_ENABLED = tooltip_var.get()
             save_tooltip_enabled(TOOLTIP_ENABLED)
 
-        tk.Checkbutton(
+        tooltip_check = tk.Checkbutton(
             self._settings_frame,
             text="Enable Tooltips",
             variable=tooltip_var,
@@ -3311,7 +3319,9 @@ class ProfileTab:
             activebackground=DARK_BG,
             activeforeground=DARK_FG,
             selectcolor=DARK_BG
-        ).pack(pady=STANDARD_BUTTON_PADY)
+        )
+        tooltip_check.pack(pady=STANDARD_BUTTON_PADY)
+        add_tooltip(tooltip_check, "If I'm getting annoying, click here and I'll stop giving you extra information when you hover things!")
 
         def close_settings():
             self.close_settings_view()
@@ -3510,9 +3520,9 @@ class ProfileTab:
 
         enable_alerts_var = self.audio_enabled_var
 
-        tk.Label(container, text="Select Alert Sound:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).pack(
-            anchor="w", pady=(0, 6)
-        )
+        alert_label = tk.Label(container, text="Select Alert Sound:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
+        alert_label.pack(anchor="w", pady=(0, 6))
+        add_tooltip(alert_label, "When alerts are enabled, Rotom will play this sound when the counter increments.")
 
         list_frame = tk.Frame(container, bg=DARK_BG)
         list_frame.pack(fill="both", expand=True)
@@ -3773,9 +3783,9 @@ class ProfileTab:
         
         enable_alerts_var = self.audio_enabled_var
 
-        tk.Label(container, text="Select Alert Sound:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).pack(
-            anchor="w", pady=(0, 6), padx=12
-        )
+        alert_label = tk.Label(container, text="Select Alert Sound:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
+        alert_label.pack(anchor="w", pady=(0, 6), padx=12)
+        add_tooltip(alert_label, "When alerts are enabled, Rotom will play this sound when the counter increments.")
 
         list_frame = tk.Frame(container, bg=DARK_BG)
         list_frame.pack(fill="both", expand=True, padx=12)
@@ -5529,7 +5539,9 @@ class ProfileTab:
         content_frame.grid_columnconfigure(1, weight=1)
         
         # ===== GAME SELECTION (Treeview with icons) =====
-        tk.Label(content_frame, text="Game:").grid(row=0, column=0, padx=10, pady=(10, 0), sticky="w")
+        game_label = tk.Label(content_frame, text="Game:")
+        game_label.grid(row=0, column=0, padx=10, pady=(10, 0), sticky="w")
+        add_tooltip(game_label, "This is the game which will be displayed on your Discord Rich Presence.")
         
         # Game tree frame
         tree_frame = tk.Frame(content_frame, width=420)
@@ -5646,7 +5658,9 @@ class ProfileTab:
                 pass
         
         # ===== POKEMON SELECTION (Canvas grid with sprites) =====
-        tk.Label(content_frame, text="Target:").grid(row=4, column=0, padx=10, pady=(0, 0), sticky="w")
+        target_label = tk.Label(content_frame, text="Target:")
+        target_label.grid(row=4, column=0, padx=10, pady=(0, 0), sticky="w")
+        add_tooltip(target_label, "This is the target which will be displayed on your Discord Rich Presence.")
         
         # Frame for pokemon canvas
         pokemon_container = tk.Frame(content_frame, bg=DARK_BG)
@@ -6026,7 +6040,9 @@ class ProfileTab:
         populate_pokemon_grid()
         
         # ===== SUFFIX/METHOD SELECTION =====
-        tk.Label(content_frame, text="Method:").grid(row=8, column=0, padx=10, pady=(0, 6), sticky="w")
+        method_label = tk.Label(content_frame, text="Method:")
+        method_label.grid(row=8, column=0, padx=10, pady=(0, 6), sticky="w")
+        add_tooltip(method_label, "This will alter the suffix of your Discord Rich Presence, to match the type of encounter method you have selected")
         
         # Create label/suffix mappings
         suffix_to_label = {suffix: label for label, suffix in RPC_COUNTER_OPTIONS}
@@ -6062,7 +6078,9 @@ class ProfileTab:
         suffix_combo.grid(row=8, column=1, padx=10, pady=(0, 6), sticky="w")
         
         # ===== ODDS SELECTION =====
-        tk.Label(content_frame, text="Odds:").grid(row=9, column=0, padx=10, pady=(0, 6), sticky="w")
+        odds_label = tk.Label(content_frame, text="Odds:")
+        odds_label.grid(row=9, column=0, padx=10, pady=(0, 6), sticky="w")
+        add_tooltip(odds_label, "This is used for calculating 'Confidence' in your Discord Rich Presence.")
         
         odds_options = ["1/512", "1/1024", "1/4096", "1/8192", "Custom"]
         odds_display_map = {
@@ -6889,6 +6907,7 @@ class ProfileTab:
 
         lbl_cooldown = tk.Label(self.configure_window, text="Cooldown (seconds):")
         lbl_cooldown.grid(row=0, column=0, sticky="w", padx=12, pady=6)
+        add_tooltip(lbl_cooldown, "When auto is enabled and Rotom detects the reference image, it will wait this long before it starts searching again.")
 
         cooldown_slider = tk.Scale(
             self.configure_window, from_=1, to=10, resolution=1, orient="horizontal", 
@@ -6898,6 +6917,7 @@ class ProfileTab:
 
         lbl_frequency = tk.Label(self.configure_window, text="Frequency (seconds):")
         lbl_frequency.grid(row=2, column=0, sticky="w", padx=12, pady=6)
+        add_tooltip(lbl_frequency, "When auto is enabled, Rotom will search the window for the reference image this frequently.")
 
         frequency_slider = tk.Scale(
             self.configure_window, from_=0.1, to=5.0, resolution=0.1, orient="horizontal", 
@@ -6907,6 +6927,7 @@ class ProfileTab:
 
         lbl_threshold = tk.Label(self.configure_window, text="Match Threshold (%):")
         lbl_threshold.grid(row=4, column=0, sticky="w", padx=12, pady=6)
+        add_tooltip(lbl_threshold, "When auto is enabled and Rotom is searching the window, this is percentage of the reference image that should match with the window's image before Rotom increments the counter.")
 
         threshold_slider = tk.Scale(
             self.configure_window, from_=0.5, to=1.0, resolution=0.01, orient="horizontal", 
@@ -7114,6 +7135,7 @@ class ProfileTab:
 
         lbl_cooldown = tk.Label(content_frame, text="Cooldown (seconds):", bg=DARK_BG)
         lbl_cooldown.pack(anchor="w", pady=(0, 2))
+        add_tooltip(lbl_cooldown, "When auto is enabled and Rotom detects the reference image, it will wait this long before it starts searching again.")
 
         cooldown_slider = tk.Scale(
             content_frame, from_=1, to=10, resolution=1, orient="horizontal",
@@ -7123,6 +7145,7 @@ class ProfileTab:
 
         lbl_frequency = tk.Label(content_frame, text="Frequency (seconds):", bg=DARK_BG)
         lbl_frequency.pack(anchor="w", pady=(0, 2))
+        add_tooltip(lbl_frequency, "When auto is enabled, Rotom will search the window for the reference image this frequently.")
 
         frequency_slider = tk.Scale(
             content_frame, from_=0.1, to=5.0, resolution=0.1, orient="horizontal",
@@ -7132,6 +7155,7 @@ class ProfileTab:
 
         lbl_threshold = tk.Label(content_frame, text="Match Threshold (%):", bg=DARK_BG)
         lbl_threshold.pack(anchor="w", pady=(0, 2))
+        add_tooltip(lbl_threshold, "When auto is enabled and Rotom is searching the window, this is percentage of the reference image that should match with the window's image before Rotom increments the counter.")
 
         threshold_slider = tk.Scale(
             content_frame, from_=0.5, to=1.0, resolution=0.01, orient="horizontal",
