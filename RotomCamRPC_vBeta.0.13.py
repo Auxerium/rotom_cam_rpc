@@ -6892,7 +6892,7 @@ class ProfileTab:
 
         cooldown_slider = tk.Scale(
             self.configure_window, from_=1, to=10, resolution=1, orient="horizontal", 
-            variable=temp_cooldown_var, command=lambda v: update_apply_button_color()
+            variable=temp_cooldown_var, command=lambda v: on_slider_change()
         )
         cooldown_slider.grid(row=1, column=0, padx=12, pady=4, sticky="we")
 
@@ -6901,7 +6901,7 @@ class ProfileTab:
 
         frequency_slider = tk.Scale(
             self.configure_window, from_=0.1, to=5.0, resolution=0.1, orient="horizontal", 
-            variable=temp_frequency_var, command=lambda v: update_apply_button_color()
+            variable=temp_frequency_var, command=lambda v: on_slider_change()
         )
         frequency_slider.grid(row=3, column=0, padx=12, pady=4, sticky="we")
 
@@ -6910,9 +6910,58 @@ class ProfileTab:
 
         threshold_slider = tk.Scale(
             self.configure_window, from_=0.5, to=1.0, resolution=0.01, orient="horizontal", 
-            variable=temp_threshold_var, command=lambda v: update_apply_button_color()
+            variable=temp_threshold_var, command=lambda v: on_slider_change()
         )
         threshold_slider.grid(row=5, column=0, padx=12, pady=4, sticky="we")
+
+        slider_defaults = {
+            cooldown_slider: (
+                DARK_BG,
+                DARK_BUTTON
+            ),
+            frequency_slider: (
+                DARK_BG,
+                DARK_BUTTON
+            ),
+            threshold_slider: (
+                DARK_BG,
+                DARK_BUTTON
+            ),
+        }
+
+        for slider in (cooldown_slider, frequency_slider, threshold_slider):
+            slider.configure(
+                background=DARK_BG,
+                activebackground=DARK_BUTTON,
+                troughcolor=DARK_ACCENT,
+                highlightthickness=0,
+                sliderrelief="ridge",
+                sliderlength=16,
+                borderwidth=1
+            )
+
+        def refresh_slider_colors():
+            slider_states = [
+                (cooldown_slider, temp_cooldown_var.get(), initial_cooldown),
+                (frequency_slider, temp_frequency_var.get(), initial_frequency),
+                (threshold_slider, temp_threshold_var.get(), initial_threshold),
+            ]
+            for slider, current, initial in slider_states:
+                default_bg, default_active = slider_defaults.get(slider, (DARK_BG, DARK_BUTTON))
+                is_changed = current != initial
+                slider.configure(
+                    background=START_ACTIVE_COLOR if is_changed else default_bg,
+                    activebackground=START_ACTIVE_COLOR if is_changed else default_active,
+                    troughcolor=DARK_ACCENT,
+                    highlightthickness=0,
+                    sliderrelief="ridge",
+                    sliderlength=16,
+                    borderwidth=1
+                )
+
+        def on_slider_change(_value=None):
+            update_apply_button_color()
+            refresh_slider_colors()
 
         def apply_changes():
             """Apply the changes to the actual variables and save"""
@@ -7032,7 +7081,7 @@ class ProfileTab:
 
         cooldown_slider = tk.Scale(
             content_frame, from_=1, to=10, resolution=1, orient="horizontal",
-            variable=temp_cooldown_var, command=lambda v: update_apply_button_color()
+            variable=temp_cooldown_var, command=lambda v: on_slider_change()
         )
         cooldown_slider.pack(fill="x", pady=(0, 8))
 
@@ -7041,7 +7090,7 @@ class ProfileTab:
 
         frequency_slider = tk.Scale(
             content_frame, from_=0.1, to=5.0, resolution=0.1, orient="horizontal",
-            variable=temp_frequency_var, command=lambda v: update_apply_button_color()
+            variable=temp_frequency_var, command=lambda v: on_slider_change()
         )
         frequency_slider.pack(fill="x", pady=(0, 8))
 
@@ -7050,7 +7099,7 @@ class ProfileTab:
 
         threshold_slider = tk.Scale(
             content_frame, from_=0.5, to=1.0, resolution=0.01, orient="horizontal",
-            variable=temp_threshold_var, command=lambda v: update_apply_button_color()
+            variable=temp_threshold_var, command=lambda v: on_slider_change()
         )
         threshold_slider.pack(fill="x", pady=(0, 8))
 
@@ -7098,6 +7147,10 @@ class ProfileTab:
                     sliderlength=16,
                     borderwidth=1
                 )
+
+        def on_slider_change(_value=None):
+            update_apply_button_color()
+            refresh_slider_colors()
 
         test_button = tk.Button(
             content_frame,
