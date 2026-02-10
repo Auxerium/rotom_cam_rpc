@@ -137,7 +137,7 @@ def apply_dark_theme(root):
     style.theme_use("clam")
     style.configure("TFrame", background=DARK_BG)
     style.configure("TLabel", background=DARK_BG, foreground=DARK_FG)
-    style.configure("TNotebook", background=DARK_BG, bordercolor=DARK_BG, borderwidth=0)
+    style.configure("TNotebook", background=DARK_BG, bordercolor=DARK_BG, borderwidth=0, padding=0)
     style.layout("TNotebook", [("Notebook.client", {"sticky": "nswe"})])
     style.configure(
         "TNotebook.Tab",
@@ -7118,9 +7118,9 @@ def on_tab_changed(event):
 # Removed - merged into on_profile_tab_change below
 
 root.update_idletasks()
-root.geometry("462x802")  #  WINDOW SIZE (reduced by 8px from 810)
-root.minsize(462, 810)
-root.maxsize(462, 810)
+root.geometry("462x805")  #  WINDOW SIZE (reduced by 5px from 810)
+root.minsize(462, 805)
+root.maxsize(462, 805)
 root.resizable(False, False)
 
 
