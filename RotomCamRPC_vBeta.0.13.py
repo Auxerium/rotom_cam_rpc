@@ -143,7 +143,7 @@ def apply_dark_theme(root):
         bordercolor=DARK_BUTTON,
         lightcolor=DARK_BUTTON,
         darkcolor=DARK_BUTTON,
-        borderwidth=0,
+        borderwidth=1,
         padding=0,
         tabmargins=(0, 0, 0, 0)
     )
@@ -158,7 +158,7 @@ def apply_dark_theme(root):
         lightcolor=DARK_BUTTON,
         darkcolor=DARK_BUTTON,
         focuscolor=DARK_BUTTON,
-        padding=[10, 4]
+        padding=[10, 4, 15, 4]
     )
     style.map(
         "TNotebook.Tab",
