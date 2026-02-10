@@ -918,6 +918,37 @@ def play_ui_sound(sound_path):
         pass  # Silently fail if sound can't play
 
 
+def add_tooltip(widget, text):
+    tip = {"win": None}
+
+    def show(_event=None):
+        if tip["win"]:
+            return
+        try:
+            x = widget.winfo_rootx() + 10
+            y = widget.winfo_rooty() + widget.winfo_height() + 4
+        except Exception:
+            return
+        tw = tk.Toplevel(widget)
+        tw.wm_overrideredirect(True)
+        tw.attributes("-topmost", True)
+        tw.geometry(f"+{x}+{y}")
+        tk.Label(
+            tw, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="left",
+            relief="solid", bd=1, font=(FONT_NAME, BASE_FONT_SIZE - 1)
+        ).pack(ipadx=6, ipady=3)
+        tip["win"] = tw
+
+    def hide(_event=None):
+        if tip["win"]:
+            tip["win"].destroy()
+        tip["win"] = None
+
+    widget.bind("<Enter>", show, add="+")
+    widget.bind("<Leave>", hide, add="+")
+    widget.bind("<FocusOut>", hide, add="+")
+
+
 def show_custom_error(kind, title, message, parent=None):
     # Play error sound
     play_ui_sound(UI_SOUND_ERROR_PATH)
@@ -4321,6 +4352,7 @@ class ProfileTab:
 
         self.label_title = tk.Label(row_title_label, text="Capture Window:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.label_title.pack(anchor="center", padx=10)
+        add_tooltip(self.label_title, "When auto is enabled, Rotom will use this window to scan for the provided reference frame.")
 
         row_title = make_row()
         self.entry_title = tk.Entry(row_title, width=40, textvariable=self.title_var)
@@ -4344,6 +4376,7 @@ class ProfileTab:
         row_image_label = make_row(pady=0)
         self.lbl_image = tk.Label(row_image_label, text="Reference Frame:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_image.pack(side="left", padx=10)
+        add_tooltip(self.lbl_image, "When auto is enabled, Rotom will scan for this reference frame in the provided window.")
 
         row_image = make_row()
         self.entry_image_path = tk.Entry(row_image, width=40, textvariable=self.image_path_var)
@@ -4379,6 +4412,7 @@ class ProfileTab:
         row_text_label = make_row(pady=0)
         self.lbl_text = tk.Label(row_text_label, text="Counter File:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_text.pack(side="left", padx=10)
+        add_tooltip(self.lbl_text, "This file will be used for Rotom to update your count, whenever it is incremented.")
 
         row_text = make_row()
         self.entry_text_path = tk.Entry(row_text, width=40, textvariable=self.text_path_var)
@@ -4432,6 +4466,7 @@ class ProfileTab:
 
         self.lbl_increment = tk.Label(row_counter_increment, text="Increment:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_increment.pack(side="left", padx=(0, 4))
+        add_tooltip(self.lbl_increment, "Rotom will increase or decrease the current count by this number, each time there is a change.")
         self.entry_increment = tk.Entry(row_counter_increment, width=3, textvariable=self.increment_var, justify="center")
         # 5px left padding to match spacing, 10px right padding for visual separation from next element
         self.entry_increment.pack(side="left", padx=(5, 10))
@@ -4477,13 +4512,16 @@ class ProfileTab:
         # Create text labels below icons
         self.lbl_audio_text = tk.Label(row_rpc_enable, text="Alerts", bg=DARK_BG, fg=DARK_FG)
         self.lbl_audio_text.grid(row=1, column=0, padx=10, sticky="n")
+        add_tooltip(self.lbl_audio_text, "When enabled, Rotom will give you audio alerts when the counter is incremented.")
         
         self.lbl_count_text = tk.Label(row_rpc_enable, text="Auto", bg=DARK_BG, fg=DARK_FG)
         self.lbl_count_text.grid(row=1, column=1, padx=10, sticky="n")
+        add_tooltip(self.lbl_count_text, "When enabled, Rotom will scan a window automatically for a reference frame and increment the counter when it is detected.")
 
         self.rpc_enabled_var = tk.BooleanVar(value=False)
         self.lbl_rpc_text = tk.Label(row_rpc_enable, text="RPC", bg=DARK_BG, fg=DARK_FG)
         self.lbl_rpc_text.grid(row=1, column=2, padx=10, sticky="n")
+        add_tooltip(self.lbl_rpc_text, "When enabled, Rotom will broadcast your current hunt details to Discord Rich Presence.")
 
         # Update icon appearance based on state
         def update_auto_icon_appearance(*args):
