@@ -321,6 +321,7 @@ hotkey_manager = None
 RUN_BADGE_IMG = None
 TOOLTIP_ENABLED = True
 TOOLTIP_ENABLED_KEY = "tooltips_enabled:"
+TOOLTIP_ICON = None
 
 
 # =========================
@@ -468,9 +469,9 @@ def open_hotkeys_window(parent_grab=None, profile=None):
     profile_name = profile.profile_name_var.get().strip() if profile else ""
     profile_label = profile_name or (profile.default_tab_name if profile else "Profile")
 
-    tk.Label(container, text="Global:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).grid(
-        row=0, column=0, columnspan=2, sticky="w", pady=(0, 4)
-    )
+    global_label = tk.Label(container, text="Global:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
+    global_label.grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 4))
+    add_tooltip(global_label, "Global hotkeys apply across all profiles.")
     tk.Label(
         container,
         text="(Press escape to unbind hotkeys)",
@@ -499,9 +500,9 @@ def open_hotkeys_window(parent_grab=None, profile=None):
             fg="#d46a6a"
         ).grid(row=5, column=0, columnspan=2, sticky="w")
 
-    tk.Label(container, text=f"{profile_label}:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).grid(
-        row=6, column=0, columnspan=2, sticky="w", pady=(8, 4)
-    )
+    profile_label_widget = tk.Label(container, text=f"{profile_label}:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
+    profile_label_widget.grid(row=6, column=0, columnspan=2, sticky="w", pady=(8, 4))
+    add_tooltip(profile_label_widget, "Profile hotkeys apply only to the selected profile.")
 
     profile_count_plus = profile.count_plus_hotkey if profile else ""
     profile_count_minus = profile.count_minus_hotkey if profile else ""
@@ -736,9 +737,9 @@ def open_hotkeys_inline(profile):
     profile_name = profile.profile_name_var.get().strip() if profile else ""
     profile_label = profile_name or (profile.default_tab_name if profile else "Profile")
     
-    tk.Label(content_frame, text="Global:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).grid(
-        row=0, column=0, columnspan=2, sticky="w", pady=(0, 4)
-    )
+    global_label = tk.Label(content_frame, text="Global:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
+    global_label.grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 4))
+    add_tooltip(global_label, "Global hotkeys apply across all profiles.")
     tk.Label(
         content_frame,
         text="(Press escape to unbind hotkeys)",
@@ -770,9 +771,9 @@ def open_hotkeys_inline(profile):
     # Spacer between global and profile hotkeys
     tk.Label(content_frame, text="", bg=DARK_BG).grid(row=6, column=0, columnspan=2, pady=(0, 2))
     
-    tk.Label(content_frame, text=f"{profile_label}:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).grid(
-        row=7, column=0, columnspan=2, sticky="w", pady=(8, 4)
-    )
+    profile_label_widget = tk.Label(content_frame, text=f"{profile_label}:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
+    profile_label_widget.grid(row=7, column=0, columnspan=2, sticky="w", pady=(8, 4))
+    add_tooltip(profile_label_widget, "Profile hotkeys apply only to the selected profile.")
     
     profile_count_plus = profile.count_plus_hotkey if profile else ""
     profile_count_minus = profile.count_minus_hotkey if profile else ""
@@ -993,6 +994,15 @@ def add_tooltip(widget, text):
     if widget is None:
         return
     tip = {"win": None}
+    global TOOLTIP_ICON
+    if TOOLTIP_ICON is None:
+        try:
+            tooltip_path = resource_path(os.path.join("assets", "rotom", "tooltip.png"))
+            if os.path.exists(tooltip_path):
+                img = Image.open(tooltip_path).resize((40, 30), Image.LANCZOS)
+                TOOLTIP_ICON = ImageTk.PhotoImage(img)
+        except Exception:
+            TOOLTIP_ICON = None
 
     def show(_event=None):
         if not TOOLTIP_ENABLED:
@@ -1011,13 +1021,19 @@ def add_tooltip(widget, text):
         tw = tk.Toplevel(widget)
         tw.wm_overrideredirect(True)
         tw.attributes("-topmost", True)
-        # Adjust x after window width is known to center exactly
-        label = tk.Label(
-            tw, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="center",
-            relief="solid", bd=1, font=(FONT_NAME, BASE_FONT_SIZE - 1),
-            wraplength=300
+        tw.configure(bg=DARK_ACCENT)
+        container = tk.Frame(tw, bg=DARK_ACCENT, relief="flat", bd=0)
+        container.pack(padx=10, pady=0)
+        if TOOLTIP_ICON:
+            icon_label = tk.Label(container, image=TOOLTIP_ICON, bg=DARK_ACCENT)
+            icon_label.grid(row=0, column=0, padx=(6, 4), pady=4, sticky="ns")
+        text_label = tk.Label(
+            container, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="center",
+            font=(FONT_NAME, BASE_FONT_SIZE - 1), wraplength=300
         )
-        label.pack(ipadx=6, ipady=3)
+        text_label.grid(row=0, column=1, padx=(4, 6), pady=4, sticky="w")
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(1, weight=1)
         tw.update_idletasks()
         tooltip_w = tw.winfo_width()
         centered_x = x - (tooltip_w // 2)
@@ -1672,52 +1688,35 @@ def rpc_load_pokemon_list():
     try:
         # Load Pokemon names from pokemon_gen1_9.json
         json_path = resource_path(os.path.join("json", "pokemon_gen1_9.json"))
-        print(f"DEBUG: Looking for Pokemon JSON at: {json_path}")
-        print(f"DEBUG: File exists: {os.path.exists(json_path)}")
-        
         pokemon_names = []
         if os.path.exists(json_path):
             with open(json_path, 'r', encoding='utf-8') as f:
                 pokemon_data = json.load(f)
-                print(f"DEBUG: Loaded JSON, type: {type(pokemon_data).__name__}")
                 
                 # Handle different JSON structures
                 all_pokemon = []
                 if isinstance(pokemon_data, dict):
                     # JSON is organized by generation: {"generation_1": [...], "generation_2": [...]}
-                    print(f"DEBUG: JSON is a dict with {len(pokemon_data)} keys: {list(pokemon_data.keys())}")
                     for gen_key, gen_pokemon in pokemon_data.items():
                         if isinstance(gen_pokemon, list):
-                            print(f"DEBUG: Generation '{gen_key}' has {len(gen_pokemon)} Pokemon")
                             all_pokemon.extend(gen_pokemon)
-                        else:
-                            print(f"DEBUG: Skipping '{gen_key}', not a list")
                 elif isinstance(pokemon_data, list):
                     # JSON is a flat list: [{...}, {...}]
-                    print(f"DEBUG: JSON is a list with {len(pokemon_data)} items")
                     all_pokemon = pokemon_data
                 else:
-                    print(f"DEBUG: Unexpected JSON type: {type(pokemon_data)}")
                     return []
-                
-                print(f"DEBUG: Total Pokemon collected: {len(all_pokemon)}")
                 
                 # Filter out non-dictionary items (strings, nulls, etc.)
                 valid_pokemon = [p for p in all_pokemon if isinstance(p, dict) and p.get('name')]
-                print(f"DEBUG: Found {len(valid_pokemon)} valid Pokemon objects (filtered out {len(all_pokemon) - len(valid_pokemon)} invalid entries)")
                 
                 # Sort by id and extract names only
                 sorted_pokemon = sorted(valid_pokemon, key=lambda x: x.get('id', 0))
                 pokemon_names = [p.get('name', '') for p in sorted_pokemon]
-                print(f"DEBUG: Extracted {len(pokemon_names)} Pokemon names")
-                if pokemon_names:
-                    print(f"DEBUG: First few Pokemon: {pokemon_names[:5]}")
-        else:
-            print(f"DEBUG: Pokemon JSON file not found at {json_path}")
-        
+        if not pokemon_names:
+            return []
+
         # Load icons directly from assets/pokemon_icons/ directory
         icons_dir = resource_path(os.path.join("assets", "pokemon_icons"))
-        print(f"DEBUG: Looking for Pokemon icons in: {icons_dir}")
         icon_map = {}
         
         if os.path.exists(icons_dir) and os.path.isdir(icons_dir):
@@ -1735,10 +1734,6 @@ def rpc_load_pokemon_list():
                         # Store relative path from root for load_pokemon_icon()
                         icon_map[pokemon_name.lower()] = os.path.join("assets", "pokemon_icons", icon_filename)
             
-            print(f"DEBUG: Found {len(icon_map)} Pokemon icon files")
-        else:
-            print(f"DEBUG: Pokemon icons directory not found (icons won't display)")
-        
         # Return list of tuples (name, id, icon_path) if icons available, else (name, id)
         if icon_map:
             result = []
@@ -1747,18 +1742,14 @@ def rpc_load_pokemon_list():
                 pokemon_name = pokemon.get('name', '')
                 icon_path = icon_map.get(pokemon_name.lower(), '')
                 result.append((pokemon_name, pokemon_id, icon_path))
-            print(f"DEBUG: Returning {len(result)} Pokemon with IDs and icon paths")
             return result
-        else:
-            print(f"DEBUG: No icons found, returning names and IDs only")
-            return [(p.get('name', ''), p.get('id', 0)) for p in sorted_pokemon]
+        return [(p.get('name', ''), p.get('id', 0)) for p in sorted_pokemon]
             
     except Exception as e:
         print(f"WARNING: Could not load Pokemon list: {e}")
         import traceback
         traceback.print_exc()
     
-    print("DEBUG: Returning empty Pokemon list")
     return []  # Return empty list if file not found or error occurred
 
 
@@ -1777,7 +1768,9 @@ def rpc_open_options(profile, parent_grab=None):
         set_window_disabled(parent_grab, True)
 
     # Add Game section with label
-    tk.Label(win, text="Game:").grid(row=0, column=0, padx=10, pady=(10, 0), sticky="w")
+    game_label = tk.Label(win, text="Game:")
+    game_label.grid(row=0, column=0, padx=10, pady=(10, 0), sticky="w")
+    add_tooltip(game_label, "This is the game which I will display on your Discord Rich Presence.")
     
     # Game tree frame (match Pokemon grid width of 420px)
     tree_frame = tk.Frame(win, width=420)
@@ -1915,7 +1908,6 @@ def rpc_open_options(profile, parent_grab=None):
 
     # Load Pokemon list for Target selector
     pokemon_list_raw = rpc_load_pokemon_list()
-    print(f"DEBUG: Pokemon list for selector contains {len(pokemon_list_raw)} items")
     
     # Format Pokemon names: replace "-" with " " and title case
     def format_pokemon_name(name):
@@ -1954,8 +1946,7 @@ def rpc_open_options(profile, parent_grab=None):
             # Resize to 32x32 for tree display
             image = image.resize((32, 32), Image.LANCZOS)
             return ImageTk.PhotoImage(image)
-        except Exception as e:
-            print(f"DEBUG: Failed to load icon: {e}")
+        except Exception:
             return None
     
     def load_pokemon_sprite(pokemon_name, pokemon_id):
@@ -1973,10 +1964,8 @@ def rpc_open_options(profile, parent_grab=None):
                 # Keep original 128x128 size (no scaling)
                 return ImageTk.PhotoImage(image)
             else:
-                print(f"DEBUG: Sprite not found: {sprite_path}")
                 return None
-        except Exception as e:
-            print(f"DEBUG: Failed to load sprite for {pokemon_name}: {e}")
+        except Exception:
             return None
     
     # Store both original and formatted names, icons, sprites, and IDs
@@ -1995,7 +1984,6 @@ def rpc_open_options(profile, parent_grab=None):
     win.current_game_generation = 9
     
     if has_icons:
-        print(f"DEBUG: Creating Pokemon data with IDs and icons...")
         for pokemon_name, pokemon_id, icon_url in pokemon_list_raw:
             # Load icon (small, for tree view)
             icon_image = load_pokemon_icon(icon_url)
@@ -2010,7 +1998,6 @@ def rpc_open_options(profile, parent_grab=None):
                 'id': pokemon_id
             })
     else:
-        print(f"DEBUG: Creating Pokemon data with IDs only...")
         for pokemon_name, pokemon_id in pokemon_list_raw:
             # Store Pokemon data WITHOUT loading sprite yet (lazy load later)
             win.pokemon_data.append({
@@ -2022,7 +2009,9 @@ def rpc_open_options(profile, parent_grab=None):
 
     
     # Create Pokemon selector (Canvas grid showing 3×1 = 3 items at once)
-    tk.Label(win, text="Target:").grid(row=4, column=0, padx=10, pady=(0, 0), sticky="w")
+    target_label = tk.Label(win, text="Target:")
+    target_label.grid(row=4, column=0, padx=10, pady=(0, 0), sticky="w")
+    add_tooltip(target_label, "This is the target which I will display on your Discord Rich Presence.")
     
     # Configure column weight to expand
     win.grid_columnconfigure(1, weight=1)
@@ -2243,7 +2232,6 @@ def rpc_open_options(profile, parent_grab=None):
         
         # Get max generation from current game (stored when game is selected)
         max_generation = getattr(win, 'current_game_generation', 9)  # Default to all Pokemon
-        print(f"DEBUG: Filtering Pokemon for max generation: {max_generation}")
         
         # Filter Pokemon by generation first
         filtered_by_gen = []
@@ -2276,8 +2264,6 @@ def rpc_open_options(profile, parent_grab=None):
         
         # Show only the first 3 Pokemon (3x1 grid - horizontal)
         display_pokemon = win.filtered_pokemon[:3]
-        
-        print(f"DEBUG: Total filtered Pokemon: {len(win.filtered_pokemon)}, Displaying first {len(display_pokemon)} Pokemon")
         
         # Draw the first 3 Pokemon in a 3x1 grid (horizontal)
         cols = 3
@@ -2315,8 +2301,6 @@ def rpc_open_options(profile, parent_grab=None):
     pokemon_filter_entry.bind("<KeyRelease>", on_pokemon_filter_change)
     pokemon_canvas.bind("<Button-1>", on_pokemon_grid_click)
     
-    print(f"DEBUG: Grid initialized with {len(win.pokemon_data)} total Pokemon")
-
     # Helper function to select Pokemon by name
     def select_pokemon_by_name(name):
         """Select a Pokemon in the grid by name (case-insensitive), only if it's in the filtered list"""
@@ -2329,9 +2313,7 @@ def rpc_open_options(profile, parent_grab=None):
             if pokemon['original'].lower() == name_lower:
                 win.selected_pokemon_name = pokemon['original']
                 highlight_selected_pokemon()
-                print(f"DEBUG: Selected Pokemon: {pokemon['formatted']} (from {name})")
                 return
-        print(f"DEBUG: Pokemon '{name}' not found in filtered list (may be wrong generation)")
 
     suffix_to_label = {suffix: label for label, suffix in RPC_COUNTER_OPTIONS}
     label_to_suffix = {label: suffix for label, suffix in RPC_COUNTER_OPTIONS}
@@ -2339,7 +2321,9 @@ def rpc_open_options(profile, parent_grab=None):
 
     # Empty row for spacing after Pokemon filter (row 7)
     
-    tk.Label(win, text="Method:").grid(row=8, column=0, padx=10, pady=(0, 6), sticky="w")
+    method_label = tk.Label(win, text="Method:")
+    method_label.grid(row=8, column=0, padx=10, pady=(0, 6), sticky="w")
+    add_tooltip(method_label, "I'll alter the suffix of your Discord Rich Presence, to match the type of encounter method you have selected")
     counter_type_var = tk.StringVar(value=selected_label)
     counter_type_menu = ttk.Combobox(
         win,
@@ -2351,7 +2335,9 @@ def rpc_open_options(profile, parent_grab=None):
     )
     counter_type_menu.grid(row=8, column=1, padx=10, pady=(0, 6), sticky="w")
 
-    tk.Label(win, text="Odds:").grid(row=9, column=0, padx=10, pady=(0, 6), sticky="w")
+    odds_label = tk.Label(win, text="Odds:")
+    odds_label.grid(row=9, column=0, padx=10, pady=(0, 6), sticky="w")
+    add_tooltip(odds_label, "I'll use this for calculating 'Confidence' in your Discord Rich Presence.")
     odds_entry = tk.Entry(win, width=5)
     odds_entry.grid(row=9, column=1, padx=10, pady=(0, 6), sticky="w")
     
@@ -2392,8 +2378,6 @@ def rpc_open_options(profile, parent_grab=None):
             except (ValueError, TypeError):
                 win.current_game_generation = 9  # Default to all if invalid
             
-            print(f"DEBUG: Game generation from config: {win.current_game_generation}")
-            
             # Repopulate Pokemon grid based on game's generation FIRST
             # This filters Pokemon to only those available in this generation
             populate_pokemon_grid()
@@ -2427,8 +2411,6 @@ def rpc_open_options(profile, parent_grab=None):
         # No game selected, populate with default (all Pokemon)
         populate_pokemon_grid()
     
-    print(f"DEBUG: Pokemon grid populated with {len(win.filtered_pokemon)} items")
-
     # Helper function to get current pokemon selection from grid
     def get_current_pokemon():
         """Get the currently selected Pokemon from the grid (returns original name)"""
@@ -3301,7 +3283,7 @@ class ProfileTab:
             TOOLTIP_ENABLED = tooltip_var.get()
             save_tooltip_enabled(TOOLTIP_ENABLED)
 
-        tk.Checkbutton(
+        tooltip_check = tk.Checkbutton(
             self._settings_frame,
             text="Enable Tooltips",
             variable=tooltip_var,
@@ -3311,7 +3293,9 @@ class ProfileTab:
             activebackground=DARK_BG,
             activeforeground=DARK_FG,
             selectcolor=DARK_BG
-        ).pack(pady=STANDARD_BUTTON_PADY)
+        )
+        tooltip_check.pack(pady=STANDARD_BUTTON_PADY)
+        add_tooltip(tooltip_check, "If I'm getting annoying, click here and I'll stop giving you extra information when you hover things!")
 
         def close_settings():
             self.close_settings_view()
@@ -3510,9 +3494,9 @@ class ProfileTab:
 
         enable_alerts_var = self.audio_enabled_var
 
-        tk.Label(container, text="Select Alert Sound:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).pack(
-            anchor="w", pady=(0, 6)
-        )
+        alert_label = tk.Label(container, text="Select Alert Sound:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
+        alert_label.pack(anchor="w", pady=(0, 6))
+        add_tooltip(alert_label, "When alerts are enabled, I'll play this sound when the counter increments.")
 
         list_frame = tk.Frame(container, bg=DARK_BG)
         list_frame.pack(fill="both", expand=True)
@@ -3773,9 +3757,9 @@ class ProfileTab:
         
         enable_alerts_var = self.audio_enabled_var
 
-        tk.Label(container, text="Select Alert Sound:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).pack(
-            anchor="w", pady=(0, 6), padx=12
-        )
+        alert_label = tk.Label(container, text="Select Alert Sound:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
+        alert_label.pack(anchor="w", pady=(0, 6), padx=12)
+        add_tooltip(alert_label, "When alerts are enabled, I'll play this sound when the counter increments.")
 
         list_frame = tk.Frame(container, bg=DARK_BG)
         list_frame.pack(fill="both", expand=True, padx=12)
@@ -4557,7 +4541,7 @@ class ProfileTab:
 
         self.label_title = tk.Label(row_title_label, text="Capture Window:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.label_title.pack(anchor="center", padx=10)
-        add_tooltip(self.label_title, "When auto is enabled, Rotom will use this window to scan for the provided reference frame.")
+        add_tooltip(self.label_title, "When auto is enabled, I'll use this window to search for the reference frame.")
 
         row_title = make_row()
         self.entry_title = tk.Entry(row_title, width=40, textvariable=self.title_var)
@@ -4581,7 +4565,7 @@ class ProfileTab:
         row_image_label = make_row(pady=0)
         self.lbl_image = tk.Label(row_image_label, text="Reference Frame:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_image.pack(side="left", padx=10)
-        add_tooltip(self.lbl_image, "When auto is enabled, Rotom will scan for this reference frame in the provided window.")
+        add_tooltip(self.lbl_image, "When auto is enabled, I'll search for this frame in the capture window.")
 
         row_image = make_row()
         self.entry_image_path = tk.Entry(row_image, width=40, textvariable=self.image_path_var)
@@ -4617,7 +4601,7 @@ class ProfileTab:
         row_text_label = make_row(pady=0)
         self.lbl_text = tk.Label(row_text_label, text="Counter File:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_text.pack(side="left", padx=10)
-        add_tooltip(self.lbl_text, "This file will be used for Rotom to update your count, whenever it is incremented.")
+        add_tooltip(self.lbl_text, "I'll use this file to track your current count, and update it whenever the count is incremented.")
 
         row_text = make_row()
         self.entry_text_path = tk.Entry(row_text, width=40, textvariable=self.text_path_var)
@@ -4671,7 +4655,7 @@ class ProfileTab:
 
         self.lbl_increment = tk.Label(row_counter_increment, text="Increment:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_increment.pack(side="left", padx=(0, 4))
-        add_tooltip(self.lbl_increment, "Rotom will increase or decrease the current count by this number, each time there is a change.")
+        add_tooltip(self.lbl_increment, "I'll increase or decrease the current count by this number, each time the counter is incremented or decremented.")
         self.entry_increment = tk.Entry(row_counter_increment, width=3, textvariable=self.increment_var, justify="center")
         # 5px left padding to match spacing, 10px right padding for visual separation from next element
         self.entry_increment.pack(side="left", padx=(5, 10))
@@ -4717,16 +4701,16 @@ class ProfileTab:
         # Create text labels below icons
         self.lbl_audio_text = tk.Label(row_rpc_enable, text="Alerts", bg=DARK_BG, fg=DARK_FG)
         self.lbl_audio_text.grid(row=1, column=0, padx=10, sticky="n")
-        add_tooltip(self.lbl_audio_text, "When enabled, Rotom will give you audio alerts when the counter is incremented.")
+        add_tooltip(self.lbl_audio_text, "When enabled, I'll give you audio alerts when the counter is incremented.")
         
         self.lbl_count_text = tk.Label(row_rpc_enable, text="Auto", bg=DARK_BG, fg=DARK_FG)
         self.lbl_count_text.grid(row=1, column=1, padx=10, sticky="n")
-        add_tooltip(self.lbl_count_text, "When enabled, Rotom will scan a window automatically for a reference frame and increment the counter when it is detected.")
+        add_tooltip(self.lbl_count_text, "When enabled, I'll search the capture window automatically for the reference frame and increment the counter when I detect it.")
 
         self.rpc_enabled_var = tk.BooleanVar(value=False)
         self.lbl_rpc_text = tk.Label(row_rpc_enable, text="RPC", bg=DARK_BG, fg=DARK_FG)
         self.lbl_rpc_text.grid(row=1, column=2, padx=10, sticky="n")
-        add_tooltip(self.lbl_rpc_text, "When enabled, Rotom will broadcast your current hunt details to Discord Rich Presence.")
+        add_tooltip(self.lbl_rpc_text, "When enabled,  I'll broadcast your current hunt details to Discord Rich Presence.")
 
         # Update icon appearance based on state
         def update_auto_icon_appearance(*args):
@@ -4925,7 +4909,7 @@ class ProfileTab:
                 show_custom_error(
                     "count_error",
                     "Error ID 68915449: Missing File",
-                    "No image file selected. Auto mode requires Rotom to have a reference image."
+                    "No image file selected. Auto mode requires Rotom to have a reference frame."
                 )
             return False, None
 
@@ -5179,7 +5163,7 @@ class ProfileTab:
             show_custom_error(
                 "count_error",
                 "Error ID 68915449: Missing File",
-                "No image file selected. Auto mode requires Rotom to have a reference image."
+                "No image file selected. Auto mode requires Rotom to have a reference frame."
             )
             return
 
@@ -5529,7 +5513,9 @@ class ProfileTab:
         content_frame.grid_columnconfigure(1, weight=1)
         
         # ===== GAME SELECTION (Treeview with icons) =====
-        tk.Label(content_frame, text="Game:").grid(row=0, column=0, padx=10, pady=(10, 0), sticky="w")
+        game_label = tk.Label(content_frame, text="Game:")
+        game_label.grid(row=0, column=0, padx=10, pady=(10, 0), sticky="w")
+        add_tooltip(game_label, "This is the game which will be displayed on your Discord Rich Presence.")
         
         # Game tree frame
         tree_frame = tk.Frame(content_frame, width=420)
@@ -5646,7 +5632,9 @@ class ProfileTab:
                 pass
         
         # ===== POKEMON SELECTION (Canvas grid with sprites) =====
-        tk.Label(content_frame, text="Target:").grid(row=4, column=0, padx=10, pady=(0, 0), sticky="w")
+        target_label = tk.Label(content_frame, text="Target:")
+        target_label.grid(row=4, column=0, padx=10, pady=(0, 0), sticky="w")
+        add_tooltip(target_label, "This is the target which will be displayed on your Discord Rich Presence.")
         
         # Frame for pokemon canvas
         pokemon_container = tk.Frame(content_frame, bg=DARK_BG)
@@ -5697,8 +5685,7 @@ class ProfileTab:
                     image = Image.open(sprite_path)
                     return ImageTk.PhotoImage(image)
                 return None
-            except Exception as e:
-                print(f"DEBUG: Failed to load sprite for {pokemon_name}: {e}")
+            except Exception:
                 return None
         
         def get_game_generation(game_name):
@@ -6011,7 +5998,6 @@ class ProfileTab:
                 for game in game_data:
                     if game['id'] == selected_game_id:
                         current_game_generation = get_game_generation(game['name'])
-                        print(f"DEBUG: Game '{game['name']}' -> Generation {current_game_generation}")
                         populate_pokemon_grid(pokemon_filter_entry.get())
                         highlight_selected_pokemon()  # Highlight the selected Pokemon from config
                         update_apply_button_color()
@@ -6026,7 +6012,9 @@ class ProfileTab:
         populate_pokemon_grid()
         
         # ===== SUFFIX/METHOD SELECTION =====
-        tk.Label(content_frame, text="Method:").grid(row=8, column=0, padx=10, pady=(0, 6), sticky="w")
+        method_label = tk.Label(content_frame, text="Method:")
+        method_label.grid(row=8, column=0, padx=10, pady=(0, 6), sticky="w")
+        add_tooltip(method_label, "This will alter the suffix of your Discord Rich Presence, to match the type of encounter method you have selected.")
         
         # Create label/suffix mappings
         suffix_to_label = {suffix: label for label, suffix in RPC_COUNTER_OPTIONS}
@@ -6062,7 +6050,9 @@ class ProfileTab:
         suffix_combo.grid(row=8, column=1, padx=10, pady=(0, 6), sticky="w")
         
         # ===== ODDS SELECTION =====
-        tk.Label(content_frame, text="Odds:").grid(row=9, column=0, padx=10, pady=(0, 6), sticky="w")
+        odds_label = tk.Label(content_frame, text="Odds:")
+        odds_label.grid(row=9, column=0, padx=10, pady=(0, 6), sticky="w")
+        add_tooltip(odds_label, "This is used for calculating 'Confidence' in your Discord Rich Presence.")
         
         odds_options = ["1/512", "1/1024", "1/4096", "1/8192", "Custom"]
         odds_display_map = {
@@ -6889,30 +6879,118 @@ class ProfileTab:
 
         lbl_cooldown = tk.Label(self.configure_window, text="Cooldown (seconds):")
         lbl_cooldown.grid(row=0, column=0, sticky="w", padx=12, pady=6)
+        add_tooltip(lbl_cooldown, "When auto is enabled and I detect the reference frame in the capture window, I will wait this long before I start searching again.")
 
         cooldown_slider = tk.Scale(
             self.configure_window, from_=1, to=10, resolution=1, orient="horizontal", 
-            variable=temp_cooldown_var, command=lambda v: update_apply_button_color()
+            variable=temp_cooldown_var, command=lambda v: on_slider_change()
         )
         cooldown_slider.grid(row=1, column=0, padx=12, pady=4, sticky="we")
 
         lbl_frequency = tk.Label(self.configure_window, text="Frequency (seconds):")
         lbl_frequency.grid(row=2, column=0, sticky="w", padx=12, pady=6)
+        add_tooltip(lbl_frequency, "When auto is enabled, I'll search the capture window for the reference frame this frequently.")
 
         frequency_slider = tk.Scale(
             self.configure_window, from_=0.1, to=5.0, resolution=0.1, orient="horizontal", 
-            variable=temp_frequency_var, command=lambda v: update_apply_button_color()
+            variable=temp_frequency_var, command=lambda v: on_slider_change()
         )
         frequency_slider.grid(row=3, column=0, padx=12, pady=4, sticky="we")
 
         lbl_threshold = tk.Label(self.configure_window, text="Match Threshold (%):")
         lbl_threshold.grid(row=4, column=0, sticky="w", padx=12, pady=6)
+        add_tooltip(lbl_threshold, "When auto is enabled and I am searching the capture window, this is how confident I need to be that it matches the reference frame, before I increment the counter.")
 
         threshold_slider = tk.Scale(
             self.configure_window, from_=0.5, to=1.0, resolution=0.01, orient="horizontal", 
-            variable=temp_threshold_var, command=lambda v: update_apply_button_color()
+            variable=temp_threshold_var, command=lambda v: on_slider_change()
         )
         threshold_slider.grid(row=5, column=0, padx=12, pady=4, sticky="we")
+
+        slider_defaults = {
+            cooldown_slider: (
+                DARK_BG,
+                DARK_BUTTON
+            ),
+            frequency_slider: (
+                DARK_BG,
+                DARK_BUTTON
+            ),
+            threshold_slider: (
+                DARK_BG,
+                DARK_BUTTON
+            ),
+        }
+
+        for slider in (cooldown_slider, frequency_slider, threshold_slider):
+            slider.configure(
+                background=DARK_BG,
+                activebackground=DARK_BUTTON,
+                troughcolor=DARK_ACCENT,
+                highlightthickness=0,
+                sliderrelief="ridge",
+                sliderlength=16,
+                borderwidth=1
+            )
+
+        def refresh_slider_colors():
+            slider_states = [
+                (cooldown_slider, temp_cooldown_var.get(), initial_cooldown),
+                (frequency_slider, temp_frequency_var.get(), initial_frequency),
+                (threshold_slider, temp_threshold_var.get(), initial_threshold),
+            ]
+            for slider, current, initial in slider_states:
+                default_bg, default_active = slider_defaults.get(slider, (DARK_BG, DARK_BUTTON))
+                is_changed = current != initial
+                slider.configure(
+                    background=default_bg,
+                    activebackground=START_ACTIVE_COLOR if is_changed else default_active,
+                    foreground=DARK_FG,
+                    troughcolor=DARK_ACCENT,
+                    highlightthickness=0,
+                    sliderrelief="ridge",
+                    sliderlength=16,
+                    borderwidth=1
+                )
+
+        def on_slider_change(_value=None):
+            update_apply_button_color()
+            refresh_slider_colors()
+
+        def bind_scale_click(slider):
+            def set_from_event(event):
+                slider.update_idletasks()
+                width = slider.winfo_width() or slider.winfo_reqwidth()
+                if width <= 0:
+                    return None
+                from_val = float(slider.cget("from"))
+                to_val = float(slider.cget("to"))
+                resolution = float(slider.cget("resolution"))
+                fraction = min(max(event.x / width, 0), 1)
+                raw = from_val + (to_val - from_val) * fraction
+                if resolution > 0:
+                    raw = round((raw - from_val) / resolution) * resolution + from_val
+                if to_val >= from_val:
+                    raw = max(min(raw, to_val), from_val)
+                else:
+                    raw = min(max(raw, to_val), from_val)
+                slider.set(raw)
+                on_slider_change()
+                return raw
+
+            def on_click(event):
+                set_from_event(event)
+                return "break"
+
+            def on_drag(event):
+                set_from_event(event)
+                return "break"
+
+            slider.bind("<Button-1>", on_click)
+            slider.bind("<B1-Motion>", on_drag)
+
+        for s in (cooldown_slider, frequency_slider, threshold_slider):
+            bind_scale_click(s)
 
         def apply_changes():
             """Apply the changes to the actual variables and save"""
@@ -6937,12 +7015,14 @@ class ProfileTab:
             self.configure_window = None
             self.test_image_button = None
             self._exit_modal()
-            if parent_grab and parent_grab.winfo_exists():
-                set_window_disabled(parent_grab, False)
-                # Only re-grab parent if the test window is not open
-                if not (self.test_window and self.test_window.winfo_exists()):
-                    parent_grab.grab_set()
-                    parent_grab.focus_force()
+        if parent_grab and parent_grab.winfo_exists():
+            set_window_disabled(parent_grab, False)
+            # Only re-grab parent if the test window is not open
+            if not (self.test_window and self.test_window.winfo_exists()):
+                parent_grab.grab_set()
+                parent_grab.focus_force()
+
+        tk.Label(self.configure_window, text="", bg=DARK_BG).grid(row=6, column=0)
 
         test_button = tk.Button(
             self.configure_window,
@@ -6952,7 +7032,7 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         )
-        test_button.grid(row=6, column=0, padx=12, pady=(8, 12))
+        test_button.grid(row=7, column=0, padx=12, pady=(8, 12))
         
         # Save reference to button so we can change its color when test window is open
         self.test_image_button = test_button
@@ -7029,28 +7109,31 @@ class ProfileTab:
 
         lbl_cooldown = tk.Label(content_frame, text="Cooldown (seconds):", bg=DARK_BG)
         lbl_cooldown.pack(anchor="w", pady=(0, 2))
+        add_tooltip(lbl_cooldown, "When auto is enabled and I detect the reference frame in the capture window, I will wait this long before I start searching again.")
 
         cooldown_slider = tk.Scale(
             content_frame, from_=1, to=10, resolution=1, orient="horizontal",
-            variable=temp_cooldown_var, command=lambda v: update_apply_button_color()
+            variable=temp_cooldown_var, command=lambda v: on_slider_change()
         )
         cooldown_slider.pack(fill="x", pady=(0, 8))
 
         lbl_frequency = tk.Label(content_frame, text="Frequency (seconds):", bg=DARK_BG)
         lbl_frequency.pack(anchor="w", pady=(0, 2))
+        add_tooltip(lbl_frequency, "When auto is enabled, I will search the capture window for the reference frame this frequently.")
 
         frequency_slider = tk.Scale(
             content_frame, from_=0.1, to=5.0, resolution=0.1, orient="horizontal",
-            variable=temp_frequency_var, command=lambda v: update_apply_button_color()
+            variable=temp_frequency_var, command=lambda v: on_slider_change()
         )
         frequency_slider.pack(fill="x", pady=(0, 8))
 
         lbl_threshold = tk.Label(content_frame, text="Match Threshold (%):", bg=DARK_BG)
         lbl_threshold.pack(anchor="w", pady=(0, 2))
+        add_tooltip(lbl_threshold, "When auto is enabled and I am searching the capture window, this is how confident I should be that I see the reference frame, before I increment the counter.")
 
         threshold_slider = tk.Scale(
             content_frame, from_=0.5, to=1.0, resolution=0.01, orient="horizontal",
-            variable=temp_threshold_var, command=lambda v: update_apply_button_color()
+            variable=temp_threshold_var, command=lambda v: on_slider_change()
         )
         threshold_slider.pack(fill="x", pady=(0, 8))
 
@@ -7090,14 +7173,56 @@ class ProfileTab:
                 default_bg, default_active = slider_defaults.get(slider, (DARK_BG, DARK_BUTTON))
                 is_changed = current != initial
                 slider.configure(
-                    background=START_ACTIVE_COLOR if is_changed else default_bg,
+                    background=default_bg,
                     activebackground=START_ACTIVE_COLOR if is_changed else default_active,
+                    foreground=DARK_FG,
                     troughcolor=DARK_ACCENT,
                     highlightthickness=0,
                     sliderrelief="ridge",
                     sliderlength=16,
                     borderwidth=1
                 )
+
+        def on_slider_change(_value=None):
+            update_apply_button_color()
+            refresh_slider_colors()
+
+        def bind_scale_click(slider):
+            def set_from_event(event):
+                slider.update_idletasks()
+                width = slider.winfo_width() or slider.winfo_reqwidth()
+                if width <= 0:
+                    return None
+                from_val = float(slider.cget("from"))
+                to_val = float(slider.cget("to"))
+                resolution = float(slider.cget("resolution"))
+                fraction = min(max(event.x / width, 0), 1)
+                raw = from_val + (to_val - from_val) * fraction
+                if resolution > 0:
+                    raw = round((raw - from_val) / resolution) * resolution + from_val
+                if to_val >= from_val:
+                    raw = max(min(raw, to_val), from_val)
+                else:
+                    raw = min(max(raw, to_val), from_val)
+                slider.set(raw)
+                on_slider_change()
+                return raw
+
+            def on_click(event):
+                set_from_event(event)
+                return "break"
+
+            def on_drag(event):
+                set_from_event(event)
+                return "break"
+
+            slider.bind("<Button-1>", on_click)
+            slider.bind("<B1-Motion>", on_drag)
+
+        for s in (cooldown_slider, frequency_slider, threshold_slider):
+            bind_scale_click(s)
+
+        tk.Label(content_frame, text="", bg=DARK_BG).pack()
 
         test_button = tk.Button(
             content_frame,
