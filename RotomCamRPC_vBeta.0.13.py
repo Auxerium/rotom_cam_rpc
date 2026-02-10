@@ -6963,6 +6963,32 @@ class ProfileTab:
             update_apply_button_color()
             refresh_slider_colors()
 
+        def bind_scale_click(slider):
+            def on_click(event):
+                slider.update_idletasks()
+                width = slider.winfo_width() or slider.winfo_reqwidth()
+                if width <= 0:
+                    return
+                from_val = float(slider.cget("from"))
+                to_val = float(slider.cget("to"))
+                resolution = float(slider.cget("resolution"))
+                fraction = min(max(event.x / width, 0), 1)
+                raw = from_val + (to_val - from_val) * fraction
+                if resolution > 0:
+                    raw = round((raw - from_val) / resolution) * resolution + from_val
+                if to_val >= from_val:
+                    raw = max(min(raw, to_val), from_val)
+                else:
+                    raw = min(max(raw, to_val), from_val)
+                slider.set(raw)
+                on_slider_change()
+                return "break"
+
+            slider.bind("<Button-1>", on_click)
+
+        for s in (cooldown_slider, frequency_slider, threshold_slider):
+            bind_scale_click(s)
+
         def apply_changes():
             """Apply the changes to the actual variables and save"""
             self.cooldown_var.set(temp_cooldown_var.get())
@@ -7151,6 +7177,32 @@ class ProfileTab:
         def on_slider_change(_value=None):
             update_apply_button_color()
             refresh_slider_colors()
+
+        def bind_scale_click(slider):
+            def on_click(event):
+                slider.update_idletasks()
+                width = slider.winfo_width() or slider.winfo_reqwidth()
+                if width <= 0:
+                    return
+                from_val = float(slider.cget("from"))
+                to_val = float(slider.cget("to"))
+                resolution = float(slider.cget("resolution"))
+                fraction = min(max(event.x / width, 0), 1)
+                raw = from_val + (to_val - from_val) * fraction
+                if resolution > 0:
+                    raw = round((raw - from_val) / resolution) * resolution + from_val
+                if to_val >= from_val:
+                    raw = max(min(raw, to_val), from_val)
+                else:
+                    raw = min(max(raw, to_val), from_val)
+                slider.set(raw)
+                on_slider_change()
+                return "break"
+
+            slider.bind("<Button-1>", on_click)
+
+        for s in (cooldown_slider, frequency_slider, threshold_slider):
+            bind_scale_click(s)
 
         test_button = tk.Button(
             content_frame,
