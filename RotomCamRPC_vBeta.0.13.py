@@ -321,6 +321,7 @@ hotkey_manager = None
 RUN_BADGE_IMG = None
 TOOLTIP_ENABLED = True
 TOOLTIP_ENABLED_KEY = "tooltips_enabled:"
+TOOLTIP_ICON = None
 
 
 # =========================
@@ -993,6 +994,15 @@ def add_tooltip(widget, text):
     if widget is None:
         return
     tip = {"win": None}
+    global TOOLTIP_ICON
+    if TOOLTIP_ICON is None:
+        try:
+            tooltip_path = resource_path(os.path.join("assets", "rotom", "tooltip.png"))
+            if os.path.exists(tooltip_path):
+                img = Image.open(tooltip_path).resize((40, 30), Image.LANCZOS)
+                TOOLTIP_ICON = ImageTk.PhotoImage(img)
+        except Exception:
+            TOOLTIP_ICON = None
 
     def show(_event=None):
         if not TOOLTIP_ENABLED:
@@ -1011,13 +1021,18 @@ def add_tooltip(widget, text):
         tw = tk.Toplevel(widget)
         tw.wm_overrideredirect(True)
         tw.attributes("-topmost", True)
-        # Adjust x after window width is known to center exactly
-        label = tk.Label(
-            tw, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="center",
-            relief="solid", bd=1, font=(FONT_NAME, BASE_FONT_SIZE - 1),
-            wraplength=300
+        container = tk.Frame(tw, bg=DARK_ACCENT, relief="solid", bd=1)
+        container.pack()
+        if TOOLTIP_ICON:
+            icon_label = tk.Label(container, image=TOOLTIP_ICON, bg=DARK_ACCENT)
+            icon_label.grid(row=0, column=0, padx=(6, 4), pady=4, sticky="ns")
+        text_label = tk.Label(
+            container, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="center",
+            font=(FONT_NAME, BASE_FONT_SIZE - 1), wraplength=300
         )
-        label.pack(ipadx=6, ipady=3)
+        text_label.grid(row=0, column=1, padx=(4, 6), pady=4, sticky="w")
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(1, weight=1)
         tw.update_idletasks()
         tooltip_w = tw.winfo_width()
         centered_x = x - (tooltip_w // 2)
