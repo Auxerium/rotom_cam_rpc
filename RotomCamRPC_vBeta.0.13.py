@@ -7073,11 +7073,11 @@ class ProfileTab:
             slider.configure(
                 background=DARK_BUTTON,
                 activebackground=DARK_BUTTON,
-                troughcolor=DARK_ACCENT,
+                troughcolor=DARK_BORDER,
                 highlightthickness=0,
-                sliderrelief="flat",
-                sliderlength=20,
-                borderwidth=0
+                sliderrelief="ridge",
+                sliderlength=16,
+                borderwidth=1
             )
 
         def refresh_slider_colors():
@@ -7092,8 +7092,11 @@ class ProfileTab:
                 slider.configure(
                     background=START_ACTIVE_COLOR if is_changed else default_bg,
                     activebackground=START_ACTIVE_COLOR if is_changed else default_active,
-                    troughcolor=DARK_ACCENT,
-                    highlightthickness=0
+                    troughcolor=DARK_BORDER,
+                    highlightthickness=0,
+                    sliderrelief="ridge",
+                    sliderlength=16,
+                    borderwidth=1
                 )
 
         test_button = tk.Button(
