@@ -25,6 +25,9 @@ import time
 import ctypes
 import threading
 import json
+import urllib.error
+import urllib.parse
+import urllib.request
 import webbrowser
 import tkinter as tk
 import tkinter.font as tkfont
@@ -275,6 +278,8 @@ def set_window_disabled(window, disabled):
 # =========================
 SCRIPT_FOLDER = os.path.dirname(os.path.abspath(__file__))
 RPC_CONFIG_FOLDER = os.path.join(SCRIPT_FOLDER, "rpc_config")
+RPC_ALLOWED_APPS_PATH = os.path.join(RPC_CONFIG_FOLDER, "allowed_applications.json")
+RPC_AUTH_STATE_PATH = os.path.join(RPC_CONFIG_FOLDER, "discord_auth.json")
 REFERENCES_FOLDER = os.path.join(SCRIPT_FOLDER, "references")
 HOTKEYS_CONFIG_PATH = os.path.join(SCRIPT_FOLDER, "hotkeys_config.txt")
 UI_CONFIG_PATH = os.path.join(SCRIPT_FOLDER, "ui_config.txt")
@@ -302,6 +307,13 @@ UI_SOUND_ERROR_PATH = resource_path(os.path.join("assets", "ui_audio", "error.wa
 os.makedirs(RPC_CONFIG_FOLDER, exist_ok=True)
 os.makedirs(REFERENCES_FOLDER, exist_ok=True)
 os.makedirs(ALERTS_AUDIO_FOLDER, exist_ok=True)
+
+
+# =========================
+# DISCORD VERIFICATION SETTINGS
+# =========================
+DISCORD_CLIENT_ID = os.getenv("ROTOM_DISCORD_CLIENT_ID")
+DISCORD_REQUIRED_GUILD_ID = os.getenv("ROTOM_DISCORD_REQUIRED_GUILD_ID")
 
 
 # =========================
@@ -1677,6 +1689,278 @@ def rpc_find_game_configs():
         except Exception:
             continue
     return games
+
+
+# Discord verification + allowlist helpers
+DISCORD_OAUTH_DEVICE_URL = "https://discord.com/api/v10/oauth2/device/code"
+DISCORD_OAUTH_TOKEN_URL = "https://discord.com/api/v10/oauth2/token"
+DISCORD_API_USER_URL = "https://discord.com/api/v10/users/@me"
+DISCORD_API_GUILDS_URL = "https://discord.com/api/v10/users/@me/guilds"
+DISCORD_OAUTH_SCOPE_BASE = "identify"
+
+
+def _discord_post_form(url, payload):
+    data = urllib.parse.urlencode(payload).encode()
+    req = urllib.request.Request(url, data=data)
+    req.add_header("Content-Type", "application/x-www-form-urlencoded")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        try:
+            err_json = json.loads(exc.read().decode("utf-8"))
+            error_name = err_json.get("error") or err_json.get("message") or f"HTTP {exc.code}"
+        except Exception:
+            error_name = f"HTTP {exc.code}"
+        raise RuntimeError(error_name) from None
+    except Exception as exc:
+        raise RuntimeError(str(exc)) from None
+
+
+def _discord_get(url, token_type, access_token):
+    headers = {"Authorization": f"{token_type} {access_token}"}
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        try:
+            err_json = json.loads(exc.read().decode("utf-8"))
+            error_name = err_json.get("error") or err_json.get("message") or f"HTTP {exc.code}"
+        except Exception:
+            error_name = f"HTTP {exc.code}"
+        raise RuntimeError(error_name) from None
+    except Exception as exc:
+        raise RuntimeError(str(exc)) from None
+
+
+def load_allowed_apps():
+    if not os.path.isfile(RPC_ALLOWED_APPS_PATH):
+        return {}
+    try:
+        with open(RPC_ALLOWED_APPS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict):
+            return data
+    except Exception:
+        return {}
+    return {}
+
+
+def load_verified_user():
+    if not os.path.isfile(RPC_AUTH_STATE_PATH):
+        return None
+    try:
+        with open(RPC_AUTH_STATE_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        expires_at = data.get("expires_at", 0)
+        if expires_at and expires_at < time.time():
+            return None
+        return data
+    except Exception:
+        return None
+
+
+def save_verified_user(auth_state):
+    try:
+        with open(RPC_AUTH_STATE_PATH, "w", encoding="utf-8") as f:
+            json.dump(auth_state, f, indent=2)
+    except Exception:
+        pass
+
+
+def perform_discord_device_login(parent_window=None):
+    if not DISCORD_CLIENT_ID:
+        show_custom_error(
+            "rpc_error",
+            "Error ID 11020111: Missing Discord Client ID",
+            "Set the ROTOM_DISCORD_CLIENT_ID environment variable to your bot application's client ID and try again.",
+            parent=parent_window
+        )
+        return None
+
+    scope = DISCORD_OAUTH_SCOPE_BASE
+    if DISCORD_REQUIRED_GUILD_ID:
+        scope = f"{scope} guilds"
+
+    try:
+        device_data = _discord_post_form(
+            DISCORD_OAUTH_DEVICE_URL,
+            {"client_id": DISCORD_CLIENT_ID, "scope": scope}
+        )
+    except RuntimeError as exc:
+        show_custom_error(
+            "rpc_error",
+            "Error ID 34691115: Discord Verification Failed",
+            f"Rotom could not start Discord verification: {exc}",
+            parent=parent_window
+        )
+        return None
+
+    verify_url = device_data.get("verification_uri") or device_data.get("verification_uri_complete")
+    user_code = device_data.get("user_code")
+    if verify_url:
+        try:
+            webbrowser.open(verify_url)
+        except Exception:
+            pass
+
+    message = f"Open {verify_url or 'https://discord.com/login'} and enter code {user_code} to verify with Discord."
+    try:
+        messagebox.showinfo("Discord Verification Required", message, parent=parent_window)
+    except Exception:
+        pass
+
+    interval = max(5, int(device_data.get("interval", 5)))
+    deadline = time.time() + device_data.get("expires_in", 900)
+    token_data = None
+
+    while time.time() < deadline:
+        time.sleep(interval)
+        try:
+            token_data = _discord_post_form(
+                DISCORD_OAUTH_TOKEN_URL,
+                {
+                    "client_id": DISCORD_CLIENT_ID,
+                    "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+                    "device_code": device_data.get("device_code"),
+                    "scope": scope
+                }
+            )
+            break
+        except RuntimeError as exc:
+            error_text = str(exc)
+            if "authorization_pending" in error_text:
+                continue
+            if "slow_down" in error_text:
+                interval += 1
+                continue
+            if "access_denied" in error_text:
+                show_custom_error(
+                    "rpc_error",
+                    "Error ID 29601193: Discord Authorization Denied",
+                    "Discord denied the authorization request. Approve the device request to broadcast RPC.",
+                    parent=parent_window
+                )
+                return None
+            if "expired_token" in error_text:
+                show_custom_error(
+                    "rpc_error",
+                    "Error ID 74380112: Discord Authorization Expired",
+                    "The Discord verification code expired. Please start verification again.",
+                    parent=parent_window
+                )
+                return None
+            show_custom_error(
+                "rpc_error",
+                "Error ID 94678800: Discord Verification Failed",
+                f"Rotom was unable to verify with Discord: {error_text}",
+                parent=parent_window
+            )
+            return None
+
+    if not token_data:
+        show_custom_error(
+            "rpc_error",
+            "Error ID 21036654: Discord Verification Timeout",
+            "Rotom waited too long for Discord verification. Please try again.",
+            parent=parent_window
+        )
+        return None
+
+    access_token = token_data.get("access_token")
+    token_type = token_data.get("token_type", "Bearer")
+    if not access_token:
+        show_custom_error(
+            "rpc_error",
+            "Error ID 97801155: Discord Verification Failed",
+            "Discord did not return an access token. Please try verifying again.",
+            parent=parent_window
+        )
+        return None
+
+    try:
+        user_info = _discord_get(DISCORD_API_USER_URL, token_type, access_token)
+    except RuntimeError as exc:
+        show_custom_error(
+            "rpc_error",
+            "Error ID 75481025: Discord User Lookup Failed",
+            f"Rotom could not read your Discord profile: {exc}",
+            parent=parent_window
+        )
+        return None
+
+    if DISCORD_REQUIRED_GUILD_ID:
+        try:
+            guilds = _discord_get(DISCORD_API_GUILDS_URL, token_type, access_token)
+            in_required_guild = any(str(g.get("id")) == str(DISCORD_REQUIRED_GUILD_ID) for g in guilds if isinstance(g, dict))
+        except Exception:
+            in_required_guild = False
+        if not in_required_guild:
+            show_custom_error(
+                "rpc_error",
+                "Error ID 31952280: Server Verification Failed",
+                "You must be a member of the required Discord server before broadcasting RPC.",
+                parent=parent_window
+            )
+            return None
+
+    auth_state = {
+        "user": {
+            "id": str(user_info.get("id")),
+            "username": user_info.get("username"),
+            "global_name": user_info.get("global_name") or user_info.get("username")
+        },
+        "access_token": access_token,
+        "token_type": token_type,
+        "scope": token_data.get("scope", scope),
+        "expires_at": time.time() + token_data.get("expires_in", 0)
+    }
+    save_verified_user(auth_state)
+    return auth_state
+
+
+def ensure_rpc_user_verified(application_id, parent_window=None):
+    if not DISCORD_CLIENT_ID:
+        show_custom_error(
+            "rpc_error",
+            "Error ID 62938828: Discord Verification Not Configured",
+            "Set ROTOM_DISCORD_CLIENT_ID so Rotom can verify users before broadcasting RPC.",
+            parent=parent_window
+        )
+        return False
+
+    app_id_str = str(application_id or "").strip()
+    allowed_apps = load_allowed_apps()
+    app_rules = allowed_apps.get(app_id_str) if app_id_str else None
+
+    if allowed_apps and not app_rules and app_id_str:
+        show_custom_error(
+            "rpc_error",
+            "Error ID 88266141: Application Not Allowed",
+            f"Application ID {app_id_str} is not approved. Ask the bot owner to add it to allowed_applications.json.",
+            parent=parent_window
+        )
+        return False
+
+    auth_state = load_verified_user()
+    if not auth_state or auth_state.get("expires_at", 0) <= time.time():
+        auth_state = perform_discord_device_login(parent_window)
+    if not auth_state:
+        return False
+
+    if app_rules:
+        allowed_users = [str(u) for u in app_rules.get("allowed_user_ids", [])]
+        if allowed_users and str(auth_state["user"].get("id")) not in allowed_users:
+            show_custom_error(
+                "rpc_error",
+                "Error ID 60015590: User Not Allowed",
+                "This Discord account is not approved to use the selected application ID. Contact the bot owner for access.",
+                parent=parent_window
+            )
+            return False
+
+    return True
 
 
 def rpc_load_pokemon_list():
@@ -6669,6 +6953,9 @@ class ProfileTab:
                 "Error ID 80756697: Missing Application ID",
                 "Rotom is unable to connect to the application ID. This may be due to maintenance."
             )
+            return
+
+        if not ensure_rpc_user_verified(cfg.get("application_id"), self.frame):
             return
 
         if not self.selected_text_path or not os.path.isfile(self.selected_text_path):
