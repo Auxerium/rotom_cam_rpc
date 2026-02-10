@@ -7068,7 +7068,7 @@ class ProfileTab:
                 troughcolor=DARK_ACCENT,
                 highlightthickness=0,
                 sliderrelief="flat",
-                sliderlength=18,
+                sliderlength=20,
                 borderwidth=0
             )
 
