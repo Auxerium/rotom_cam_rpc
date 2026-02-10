@@ -729,22 +729,25 @@ def open_hotkeys_inline(profile):
             fg="#d46a6a"
         ).grid(row=5, column=0, columnspan=2, sticky="w")
     
+    # Spacer between global and profile hotkeys
+    tk.Label(content_frame, text="", bg=DARK_BG).grid(row=6, column=0, columnspan=2, pady=(0, 2))
+    
     tk.Label(content_frame, text=f"{profile_label}:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).grid(
-        row=6, column=0, columnspan=2, sticky="w", pady=(8, 4)
+        row=7, column=0, columnspan=2, sticky="w", pady=(8, 4)
     )
     
     profile_count_plus = profile.count_plus_hotkey if profile else ""
     profile_count_minus = profile.count_minus_hotkey if profile else ""
     
-    tk.Label(content_frame, text="+ Count:").grid(row=7, column=0, sticky="w", pady=4)
+    tk.Label(content_frame, text="+ Count:").grid(row=8, column=0, sticky="w", pady=4)
     count_plus_entry = tk.Entry(content_frame, width=12, state="readonly")
-    count_plus_entry.grid(row=7, column=1, padx=8, pady=4, sticky="w")
+    count_plus_entry.grid(row=8, column=1, padx=8, pady=4, sticky="w")
     count_plus_entry.configure(readonlybackground=DARK_ACCENT)
     set_readonly_text(count_plus_entry, profile_count_plus)
     
-    tk.Label(content_frame, text="- Count:").grid(row=8, column=0, sticky="w", pady=4)
+    tk.Label(content_frame, text="- Count:").grid(row=9, column=0, sticky="w", pady=4)
     count_minus_entry = tk.Entry(content_frame, width=12, state="readonly")
-    count_minus_entry.grid(row=8, column=1, padx=8, pady=4, sticky="w")
+    count_minus_entry.grid(row=9, column=1, padx=8, pady=4, sticky="w")
     count_minus_entry.configure(readonlybackground=DARK_ACCENT)
     set_readonly_text(count_minus_entry, profile_count_minus)
     
@@ -3645,6 +3648,8 @@ class ProfileTab:
             except ValueError:
                 pass
 
+        tk.Label(container, text="", bg=DARK_BG).pack(anchor="w", padx=12, pady=(2, 2))
+
         tk.Label(container, text="Play Alert For:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).pack(
             anchor="w", pady=(8, 4), padx=12
         )
@@ -5033,12 +5038,12 @@ class ProfileTab:
                         # Show visible image
                         if visible_photo:
                             image_label.config(image=visible_photo)
-                        status_label.config(text=f"Image detected\nConfidence: {percent:.1f}%")
+                        status_label.config(text=f"Image detected\nMatch: {percent:.1f}%")
                     else:
                         # Show not visible image
                         if not_visible_photo:
                             image_label.config(image=not_visible_photo)
-                        status_label.config(text=f"Not detected\nConfidence: {percent:.1f}%")
+                        status_label.config(text=f"Not detected\nMatch: {percent:.1f}%")
                 except Exception as exc:
                     # If template image can't be loaded (e.g., profile reset), close window
                     if "Failed to load template image" in str(exc):
@@ -6231,7 +6236,7 @@ class ProfileTab:
         # First paragraph - instructional text (centered, wrapped)
         text_label1 = tk.Label(
             self._sub_setting_frame,
-            text="If you have found an issue or bug that needs reporting, please join the Rotom Repository Discord and let me know.",
+        text="If you have found a bug or issue that needs reporting, please join the Rotom Repository Discord and let me know.",
             bg=DARK_BG,
             fg=DARK_FG,
             font=(FONT_NAME, BASE_FONT_SIZE),
@@ -6258,7 +6263,7 @@ class ProfileTab:
             self._sub_setting_frame,
             text=discord_url,
             bg=DARK_BG,
-            fg=LINK_COLOR,  # Blue color for link
+            fg=START_ACTIVE_COLOR,
             font=(FONT_NAME, BASE_FONT_SIZE),  # No underline
             cursor="hand2",
             justify="center",
@@ -6359,7 +6364,7 @@ class ProfileTab:
             self._sub_setting_frame,
             text=discord_url,
             bg=DARK_BG,
-            fg=LINK_COLOR,  # Blue color for link
+            fg=START_ACTIVE_COLOR,
             font=(FONT_NAME, BASE_FONT_SIZE),  # No underline
             cursor="hand2",
             justify="center",
@@ -6657,7 +6662,7 @@ class ProfileTab:
         )
         frequency_slider.grid(row=3, column=0, padx=12, pady=4, sticky="we")
 
-        lbl_threshold = tk.Label(self.configure_window, text="Confidence Treshold (%):")
+        lbl_threshold = tk.Label(self.configure_window, text="Match Threshold (%):")
         lbl_threshold.grid(row=4, column=0, sticky="w", padx=12, pady=6)
 
         threshold_slider = tk.Scale(
@@ -6797,7 +6802,7 @@ class ProfileTab:
         )
         frequency_slider.pack(fill="x", pady=(0, 8))
 
-        lbl_threshold = tk.Label(content_frame, text="Confidence Threshold (%):")
+        lbl_threshold = tk.Label(content_frame, text="Match Threshold (%):")
         lbl_threshold.pack(anchor="w", pady=(0, 2))
 
         threshold_slider = tk.Scale(
