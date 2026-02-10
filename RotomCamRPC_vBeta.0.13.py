@@ -138,6 +138,7 @@ def apply_dark_theme(root):
     style.configure("TFrame", background=DARK_BG)
     style.configure("TLabel", background=DARK_BG, foreground=DARK_FG)
     style.configure("TNotebook", background=DARK_BG, bordercolor=DARK_BG, borderwidth=0)
+    style.layout("TNotebook", [("Notebook.client", {"sticky": "nswe"})])
     style.configure(
         "TNotebook.Tab",
         background=DARK_ACCENT,
