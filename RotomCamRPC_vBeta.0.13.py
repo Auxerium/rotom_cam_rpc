@@ -6914,26 +6914,24 @@ class ProfileTab:
         )
         threshold_slider.grid(row=5, column=0, padx=12, pady=4, sticky="we")
 
-        slider_bg = "#161616"
-
         slider_defaults = {
             cooldown_slider: (
-                slider_bg,
+                DARK_BG,
                 DARK_BUTTON
             ),
             frequency_slider: (
-                slider_bg,
+                DARK_BG,
                 DARK_BUTTON
             ),
             threshold_slider: (
-                slider_bg,
+                DARK_BG,
                 DARK_BUTTON
             ),
         }
 
         for slider in (cooldown_slider, frequency_slider, threshold_slider):
             slider.configure(
-                background=slider_bg,
+                background=DARK_BG,
                 activebackground=DARK_BUTTON,
                 troughcolor=DARK_ACCENT,
                 highlightthickness=0,
@@ -6952,7 +6950,7 @@ class ProfileTab:
                 default_bg, default_active = slider_defaults.get(slider, (DARK_BG, DARK_BUTTON))
                 is_changed = current != initial
                 slider.configure(
-                    background=START_ACTIVE_COLOR if is_changed else default_bg,
+                    background=default_bg,
                     activebackground=START_ACTIVE_COLOR if is_changed else default_active,
                     foreground=DARK_FG,
                     troughcolor=DARK_ACCENT,
@@ -7141,26 +7139,24 @@ class ProfileTab:
         )
         threshold_slider.pack(fill="x", pady=(0, 8))
 
-        slider_bg = "#161616"
-
         slider_defaults = {
             cooldown_slider: (
-                slider_bg,
+                DARK_BG,
                 DARK_BUTTON
             ),
             frequency_slider: (
-                slider_bg,
+                DARK_BG,
                 DARK_BUTTON
             ),
             threshold_slider: (
-                slider_bg,
+                DARK_BG,
                 DARK_BUTTON
             ),
         }
 
         for slider in (cooldown_slider, frequency_slider, threshold_slider):
             slider.configure(
-                background=slider_bg,
+                background=DARK_BG,
                 activebackground=DARK_BUTTON,
                 troughcolor=DARK_ACCENT,
                 highlightthickness=0,
@@ -7179,7 +7175,7 @@ class ProfileTab:
                 default_bg, default_active = slider_defaults.get(slider, (DARK_BG, DARK_BUTTON))
                 is_changed = current != initial
                 slider.configure(
-                    background=START_ACTIVE_COLOR if is_changed else default_bg,
+                    background=default_bg,
                     activebackground=START_ACTIVE_COLOR if is_changed else default_active,
                     foreground=DARK_FG,
                     troughcolor=DARK_ACCENT,
