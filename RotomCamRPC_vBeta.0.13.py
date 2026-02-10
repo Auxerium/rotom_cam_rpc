@@ -7074,6 +7074,12 @@ class ProfileTab:
             sliderrelief="flat",
             borderwidth=0
         )
+        try:
+            base_layout = scale_style.layout("Horizontal.TScale")
+            scale_style.layout("AutoPill.TScale", base_layout)
+            scale_style.layout("AutoPillActive.TScale", base_layout)
+        except Exception:
+            pass
 
         def refresh_slider_colors():
             slider_states = [
