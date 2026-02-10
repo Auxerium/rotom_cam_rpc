@@ -7059,12 +7059,14 @@ class ProfileTab:
             self.configure_window = None
             self.test_image_button = None
             self._exit_modal()
-            if parent_grab and parent_grab.winfo_exists():
-                set_window_disabled(parent_grab, False)
-                # Only re-grab parent if the test window is not open
-                if not (self.test_window and self.test_window.winfo_exists()):
-                    parent_grab.grab_set()
-                    parent_grab.focus_force()
+        if parent_grab and parent_grab.winfo_exists():
+            set_window_disabled(parent_grab, False)
+            # Only re-grab parent if the test window is not open
+            if not (self.test_window and self.test_window.winfo_exists()):
+                parent_grab.grab_set()
+                parent_grab.focus_force()
+
+        tk.Label(self.configure_window, text="", bg=DARK_BG).grid(row=6, column=0)
 
         test_button = tk.Button(
             self.configure_window,
@@ -7074,7 +7076,7 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         )
-        test_button.grid(row=6, column=0, padx=12, pady=(8, 12))
+        test_button.grid(row=7, column=0, padx=12, pady=(8, 12))
         
         # Save reference to button so we can change its color when test window is open
         self.test_image_button = test_button
@@ -7263,6 +7265,8 @@ class ProfileTab:
 
         for s in (cooldown_slider, frequency_slider, threshold_slider):
             bind_scale_click(s)
+
+        tk.Label(content_frame, text="", bg=DARK_BG).pack()
 
         test_button = tk.Button(
             content_frame,
