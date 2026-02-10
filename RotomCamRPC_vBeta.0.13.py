@@ -965,8 +965,11 @@ def add_tooltip(widget, text):
         if tip["win"]:
             return
         try:
-            x = widget.winfo_rootx() + 10
-            y = widget.winfo_rooty() + widget.winfo_height() + 4
+            widget.update_idletasks()
+            w = widget.winfo_width()
+            h = widget.winfo_height()
+            x = widget.winfo_rootx() + max(0, (w // 2))
+            y = widget.winfo_rooty() + h + 6
         except Exception:
             return
         tw = tk.Toplevel(widget)
