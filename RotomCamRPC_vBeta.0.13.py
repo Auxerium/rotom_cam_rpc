@@ -179,7 +179,18 @@ def apply_dark_theme(root):
         foreground=DARK_FG
     )
     style.configure("Treeview.Heading", background=DARK_BUTTON, foreground=DARK_FG)
-    style.configure("AlertSound.Treeview", rowheight=36)
+    style.configure(
+        "AlertSound.Treeview",
+        rowheight=36,
+        background=DARK_ACCENT,
+        fieldbackground=DARK_ACCENT,
+        foreground=DARK_FG
+    )
+    style.map(
+        "AlertSound.Treeview",
+        background=[("selected", START_ACTIVE_COLOR)],
+        foreground=[("selected", DARK_FG)]
+    )
     style.configure(
         "TScrollbar",
         background=DARK_BUTTON,
