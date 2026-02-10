@@ -1022,18 +1022,53 @@ def add_tooltip(widget, text):
         tw.wm_overrideredirect(True)
         tw.attributes("-topmost", True)
         tw.configure(bg=DARK_ACCENT)
-        container = tk.Frame(tw, bg=DARK_ACCENT, relief="flat", bd=0)
-        container.pack(padx=10, pady=0)
+        canvas = tk.Canvas(tw, bg=DARK_ACCENT, highlightthickness=0, bd=0)
+        canvas.pack(padx=10, pady=0)
+
+        content = tk.Frame(canvas, bg=DARK_ACCENT)
         if TOOLTIP_ICON:
-            icon_label = tk.Label(container, image=TOOLTIP_ICON, bg=DARK_ACCENT)
+            icon_label = tk.Label(content, image=TOOLTIP_ICON, bg=DARK_ACCENT)
             icon_label.grid(row=0, column=0, padx=(6, 4), pady=4, sticky="ns")
         text_label = tk.Label(
-            container, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="center",
+            content, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="center",
             font=(FONT_NAME, BASE_FONT_SIZE - 1), wraplength=300
         )
         text_label.grid(row=0, column=1, padx=(4, 6), pady=4, sticky="w")
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_columnconfigure(1, weight=1)
+        content.grid_rowconfigure(0, weight=1)
+        content.grid_columnconfigure(1, weight=1)
+
+        pad = 8
+        radius = 8
+
+        def draw_rounded():
+            content.update_idletasks()
+            w = content.winfo_width()
+            h = content.winfo_height()
+            width = w + pad * 2
+            height = h + pad * 2
+            canvas.config(width=width, height=height)
+            canvas.delete("bg")
+            x0, y0, x1, y1 = 0, 0, width, height
+            points = [
+                x0 + radius, y0,
+                x1 - radius, y0,
+                x1, y0,
+                x1, y0 + radius,
+                x1, y1 - radius,
+                x1, y1,
+                x1 - radius, y1,
+                x0 + radius, y1,
+                x0, y1,
+                x0, y1 - radius,
+                x0, y0 + radius,
+                x0, y0
+            ]
+            canvas.create_polygon(points, smooth=True, splinesteps=20, fill=DARK_ACCENT, outline="", tags="bg")
+            canvas.tag_lower("bg")
+
+        window_id = canvas.create_window(pad, pad, window=content, anchor="nw")
+        draw_rounded()
+
         tw.update_idletasks()
         tooltip_w = tw.winfo_width()
         centered_x = x - (tooltip_w // 2)
