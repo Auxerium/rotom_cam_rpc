@@ -185,6 +185,7 @@ def apply_dark_theme(root):
         background=DARK_ACCENT,
         fieldbackground=DARK_ACCENT,
         foreground=DARK_FG,
+        font=(FONT_NAME, BASE_FONT_SIZE + 1),
         selectbackground=START_ACTIVE_COLOR,
         selectforeground=DARK_FG
     )
@@ -3549,8 +3550,19 @@ class ProfileTab:
 
         display_to_file = {}
         item_ids = {}
-        tree.tag_configure("alert", background=DARK_ACCENT, foreground=DARK_FG)
-        tree.tag_configure("alert-selected", background=START_ACTIVE_COLOR, foreground=DARK_FG)
+        tree.tag_configure("alert", background=DARK_ACCENT, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE + 1))
+        tree.tag_configure("alert-selected", background=START_ACTIVE_COLOR, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE + 1))
+        suppress_initial_play = True
+        def clear_initial_suppress():
+            nonlocal suppress_initial_play
+            suppress_initial_play = False
+        padding_prefix = ""
+        try:
+            space_width = tkfont.Font(family=FONT_NAME, size=BASE_FONT_SIZE + 1).measure(" ")
+            spaces = max(1, round(10 / max(space_width, 1)))
+            padding_prefix = " " * spaces
+        except Exception:
+            padding_prefix = "  "
 
         if not audio_files:
             tree.insert("", "end", text="(No .wav files found)")
@@ -3560,7 +3572,7 @@ class ProfileTab:
                 display_name = os.path.splitext(filename)[0]
                 display_to_file[display_name] = filename
                 item_ids[display_name] = tree.insert(
-                    "", "end", text=display_name, image=self._alert_icon_unselected, tags=("alert",)
+                    "", "end", text=f"{padding_prefix}{display_name}", image=self._alert_icon_unselected, tags=("alert",)
                 )
 
         def update_icons(selected_display):
@@ -3572,6 +3584,7 @@ class ProfileTab:
                 tree.item(item_id, tags=("alert-selected",) if name == selected_display else ("alert",))
 
         def on_select(_event=None):
+            nonlocal suppress_initial_play
             if not audio_files:
                 return
             selection = tree.selection()
@@ -3591,9 +3604,9 @@ class ProfileTab:
                 return
             self.alert_sound_file = selected
             update_icons(selected_display)
+            if suppress_initial_play:
+                return
             self._play_alert_sound(os.path.join(ALERTS_AUDIO_FOLDER, selected), use_cooldown=False)
-
-        tree.bind("<<TreeviewSelect>>", on_select)
 
         if self.alert_sound_file in audio_files:
             display_name = os.path.splitext(self.alert_sound_file)[0]
@@ -3604,6 +3617,7 @@ class ProfileTab:
                     update_icons(display_name)
                 except Exception:
                     pass
+        tree.after_idle(clear_initial_suppress)
 
         tk.Label(container, text="Play Alert For:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).pack(
             anchor="w", pady=(8, 4)
@@ -3737,12 +3751,12 @@ class ProfileTab:
             height=BUTTON_HEIGHT
         ).grid(row=0, column=1, padx=(4, 0), sticky="w")
 
-        # Update listbox selection to track changes
+        # Update selection to track changes
         def on_select_with_tracking(_event=None):
             on_select(_event)
             update_apply_button_color()
         
-        listbox.bind("<<ListboxSelect>>", on_select_with_tracking)
+        tree.bind("<<TreeviewSelect>>", on_select_with_tracking)
 
         # Initial state setup (after button creation)
         update_apply_button_color()
@@ -3766,12 +3780,29 @@ class ProfileTab:
         list_frame = tk.Frame(container, bg=DARK_BG)
         list_frame.pack(fill="both", expand=True, padx=12)
 
-        listbox = tk.Listbox(list_frame, width=32, height=4)
-        listbox.pack(side="left", fill="both", expand=True)
+        if self._alert_icon_selected is None:
+            try:
+                self._alert_icon_selected = tk.PhotoImage(
+                    file=resource_path(os.path.join("assets", "ui", "audio_selected.png"))
+                )
+            except Exception:
+                self._alert_icon_selected = None
+        if self._alert_icon_unselected is None:
+            try:
+                self._alert_icon_unselected = tk.PhotoImage(
+                    file=resource_path(os.path.join("assets", "ui", "audio_not_selected.png"))
+                )
+            except Exception:
+                self._alert_icon_unselected = None
 
-        scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=listbox.yview)
+        tree = ttk.Treeview(list_frame, show="tree", selectmode="browse", height=4, style="AlertSound.Treeview")
+        tree.pack(side="left", fill="both", expand=True)
+        tree.column("#0", width=260, minwidth=200, anchor="w", stretch=True)
+        tree._img_refs = [self._alert_icon_selected, self._alert_icon_unselected]
+
+        scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=tree.yview)
         scrollbar.pack(side="right", fill="y")
-        listbox.config(yscrollcommand=scrollbar.set)
+        tree.configure(yscrollcommand=scrollbar.set)
 
         audio_files = []
         if os.path.isdir(ALERTS_AUDIO_FOLDER):
@@ -3781,23 +3812,54 @@ class ProfileTab:
         audio_files.sort(key=str.lower)
 
         display_to_file = {}
+        item_ids = {}
+        tree.tag_configure("alert", background=DARK_ACCENT, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE + 1))
+        tree.tag_configure("alert-selected", background=START_ACTIVE_COLOR, foreground=DARK_FG, font=(FONT_NAME, BASE_FONT_SIZE + 1))
+        suppress_initial_play = True
+        def clear_initial_suppress():
+            nonlocal suppress_initial_play
+            suppress_initial_play = False
+        padding_prefix = ""
+        try:
+            space_width = tkfont.Font(family=FONT_NAME, size=BASE_FONT_SIZE + 1).measure(" ")
+            spaces = max(1, round(10 / max(space_width, 1)))
+            padding_prefix = " " * spaces
+        except Exception:
+            padding_prefix = "  "
+
         if not audio_files:
-            listbox.insert(tk.END, "(No .wav files found)")
-            listbox.config(state="disabled")
+            tree.insert("", "end", text="(No .wav files found)")
+            tree.state(["disabled"])
         else:
             for filename in audio_files:
                 display_name = os.path.splitext(filename)[0]
                 display_to_file[display_name] = filename
-                listbox.insert(tk.END, display_name)
+                item_ids[display_name] = tree.insert(
+                    "", "end", text=f"{padding_prefix}{display_name}", image=self._alert_icon_unselected, tags=("alert",)
+                )
+
+        def update_icons(selected_display):
+            if not item_ids:
+                return
+            for name, item_id in item_ids.items():
+                icon = self._alert_icon_selected if name == selected_display else self._alert_icon_unselected
+                tree.item(item_id, image=icon or "")
+                tree.item(item_id, tags=("alert-selected",) if name == selected_display else ("alert",))
 
         def on_select(_event=None):
-            if listbox.curselection() is None or not audio_files:
+            nonlocal suppress_initial_play
+            if not audio_files:
                 return
-            index = listbox.curselection()
-            if not index:
+            selection = tree.selection()
+            if not selection:
                 return
-            selected_display = listbox.get(index[0])
-            if selected_display == "(No .wav files found)":
+            item_id = selection[0]
+            selected_display = None
+            for name, iid in item_ids.items():
+                if iid == item_id:
+                    selected_display = name
+                    break
+            if not selected_display:
                 return
 
             selected = display_to_file.get(selected_display, "")
@@ -3805,18 +3867,21 @@ class ProfileTab:
                 return
 
             self.alert_sound_file = selected
+            update_icons(selected_display)
+            if suppress_initial_play:
+                return
             self._play_alert_sound(os.path.join(ALERTS_AUDIO_FOLDER, selected), use_cooldown=False)
-
-        listbox.bind("<<ListboxSelect>>", on_select)
 
         if self.alert_sound_file in audio_files:
             display_name = os.path.splitext(self.alert_sound_file)[0]
-            try:
-                index = list(display_to_file.keys()).index(display_name)
-                listbox.selection_set(index)
-                listbox.see(index)
-            except ValueError:
-                pass
+            if display_name in item_ids:
+                try:
+                    tree.selection_set(item_ids[display_name])
+                    tree.see(item_ids[display_name])
+                    update_icons(display_name)
+                except Exception:
+                    pass
+        tree.after_idle(clear_initial_suppress)
 
         tk.Label(container, text="", bg=DARK_BG).pack(anchor="w", padx=12, pady=(2, 2))
 
@@ -3849,7 +3914,8 @@ class ProfileTab:
             return False
 
         def update_apply_button_color():
-            if check_for_changes():
+            changed = check_for_changes()
+            if changed:
                 apply_button.config(bg=START_ACTIVE_COLOR, activebackground=START_ACTIVE_COLOR)
             else:
                 apply_button.config(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
@@ -3912,7 +3978,7 @@ class ProfileTab:
             on_select(_event)
             update_apply_button_color()
         
-        listbox.bind("<<ListboxSelect>>", on_select_with_tracking)
+        tree.bind("<<TreeviewSelect>>", on_select_with_tracking)
 
         # Spacer to push buttons to bottom
         spacer = tk.Frame(container, bg=DARK_BG)
@@ -6961,32 +7027,77 @@ class ProfileTab:
         content_frame = tk.Frame(container, bg=DARK_BG)
         content_frame.pack(fill="both", expand=True, padx=12, pady=6)
 
-        lbl_cooldown = tk.Label(content_frame, text="Cooldown (seconds):")
+        lbl_cooldown = tk.Label(content_frame, text="Cooldown (seconds):", bg=DARK_BG)
         lbl_cooldown.pack(anchor="w", pady=(0, 2))
 
         cooldown_slider = tk.Scale(
-            content_frame, from_=1, to=10, resolution=1, orient="horizontal", 
+            content_frame, from_=1, to=10, resolution=1, orient="horizontal",
             variable=temp_cooldown_var, command=lambda v: update_apply_button_color()
         )
         cooldown_slider.pack(fill="x", pady=(0, 8))
 
-        lbl_frequency = tk.Label(content_frame, text="Frequency (seconds):")
+        lbl_frequency = tk.Label(content_frame, text="Frequency (seconds):", bg=DARK_BG)
         lbl_frequency.pack(anchor="w", pady=(0, 2))
 
         frequency_slider = tk.Scale(
-            content_frame, from_=0.1, to=5.0, resolution=0.1, orient="horizontal", 
+            content_frame, from_=0.1, to=5.0, resolution=0.1, orient="horizontal",
             variable=temp_frequency_var, command=lambda v: update_apply_button_color()
         )
         frequency_slider.pack(fill="x", pady=(0, 8))
 
-        lbl_threshold = tk.Label(content_frame, text="Match Threshold (%):")
+        lbl_threshold = tk.Label(content_frame, text="Match Threshold (%):", bg=DARK_BG)
         lbl_threshold.pack(anchor="w", pady=(0, 2))
 
         threshold_slider = tk.Scale(
-            content_frame, from_=0.5, to=1.0, resolution=0.01, orient="horizontal", 
+            content_frame, from_=0.5, to=1.0, resolution=0.01, orient="horizontal",
             variable=temp_threshold_var, command=lambda v: update_apply_button_color()
         )
         threshold_slider.pack(fill="x", pady=(0, 8))
+
+        slider_defaults = {
+            cooldown_slider: (
+                DARK_BG,
+                DARK_BUTTON
+            ),
+            frequency_slider: (
+                DARK_BG,
+                DARK_BUTTON
+            ),
+            threshold_slider: (
+                DARK_BG,
+                DARK_BUTTON
+            ),
+        }
+
+        for slider in (cooldown_slider, frequency_slider, threshold_slider):
+            slider.configure(
+                background=DARK_BG,
+                activebackground=DARK_BUTTON,
+                troughcolor=DARK_ACCENT,
+                highlightthickness=0,
+                sliderrelief="ridge",
+                sliderlength=16,
+                borderwidth=1
+            )
+
+        def refresh_slider_colors():
+            slider_states = [
+                (cooldown_slider, temp_cooldown_var.get(), initial_cooldown),
+                (frequency_slider, temp_frequency_var.get(), initial_frequency),
+                (threshold_slider, temp_threshold_var.get(), initial_threshold),
+            ]
+            for slider, current, initial in slider_states:
+                default_bg, default_active = slider_defaults.get(slider, (DARK_BG, DARK_BUTTON))
+                is_changed = current != initial
+                slider.configure(
+                    background=START_ACTIVE_COLOR if is_changed else default_bg,
+                    activebackground=START_ACTIVE_COLOR if is_changed else default_active,
+                    troughcolor=DARK_ACCENT,
+                    highlightthickness=0,
+                    sliderrelief="ridge",
+                    sliderlength=16,
+                    borderwidth=1
+                )
 
         test_button = tk.Button(
             content_frame,
@@ -7014,6 +7125,7 @@ class ProfileTab:
             initial_frequency = temp_frequency_var.get()
             initial_threshold = temp_threshold_var.get()
             update_apply_button_color()
+            refresh_slider_colors()
 
         # Spacer to push buttons to bottom
         spacer = tk.Frame(container, bg=DARK_BG)
