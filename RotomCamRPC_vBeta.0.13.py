@@ -163,7 +163,8 @@ def apply_dark_theme(root):
     style.map(
         "TNotebook.Tab",
         background=[("selected", DARK_BUTTON)],
-        foreground=[("selected", DARK_FG)]
+        foreground=[("selected", DARK_FG)],
+        padding=[("selected", [10, 4, 15, 4])]
     )
     style.configure("TButton", background=DARK_BUTTON, foreground=DARK_FG)
     style.map("TButton", background=[("active", "#606060")])
