@@ -7056,19 +7056,21 @@ class ProfileTab:
         threshold_slider.pack(fill="x", pady=(0, 8))
 
         slider_defaults = {
-            cooldown_slider: (
-                cooldown_slider.cget("background"),
-                cooldown_slider.cget("activebackground")
-            ),
-            frequency_slider: (
-                frequency_slider.cget("background"),
-                frequency_slider.cget("activebackground")
-            ),
-            threshold_slider: (
-                threshold_slider.cget("background"),
-                threshold_slider.cget("activebackground")
-            ),
+            cooldown_slider: (DARK_BG, DARK_BUTTON),
+            frequency_slider: (DARK_BG, DARK_BUTTON),
+            threshold_slider: (DARK_BG, DARK_BUTTON),
         }
+
+        for slider in (cooldown_slider, frequency_slider, threshold_slider):
+            slider.configure(
+                background=DARK_BG,
+                activebackground=DARK_BUTTON,
+                troughcolor=DARK_ACCENT,
+                highlightthickness=0,
+                sliderrelief="flat",
+                sliderlength=18,
+                borderwidth=0
+            )
 
         def refresh_slider_colors():
             slider_states = [
