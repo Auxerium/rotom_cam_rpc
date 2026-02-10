@@ -184,12 +184,14 @@ def apply_dark_theme(root):
         rowheight=36,
         background=DARK_ACCENT,
         fieldbackground=DARK_ACCENT,
-        foreground=DARK_FG
+        foreground=DARK_FG,
+        selectbackground=START_ACTIVE_COLOR,
+        selectforeground=DARK_FG
     )
     style.map(
         "AlertSound.Treeview",
-        background=[("selected", START_ACTIVE_COLOR), ("active", START_ACTIVE_COLOR)],
-        foreground=[("selected", DARK_FG), ("active", DARK_FG)]
+        background=[("selected", START_ACTIVE_COLOR)],
+        foreground=[("selected", DARK_FG)]
     )
     style.configure(
         "TScrollbar",
