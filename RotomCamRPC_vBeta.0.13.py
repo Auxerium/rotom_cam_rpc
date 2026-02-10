@@ -242,6 +242,7 @@ SCRIPT_FOLDER = os.path.dirname(os.path.abspath(__file__))
 RPC_CONFIG_FOLDER = os.path.join(SCRIPT_FOLDER, "rpc_config")
 REFERENCES_FOLDER = os.path.join(SCRIPT_FOLDER, "references")
 HOTKEYS_CONFIG_PATH = os.path.join(SCRIPT_FOLDER, "hotkeys_config.txt")
+UI_CONFIG_PATH = os.path.join(SCRIPT_FOLDER, "ui_config.txt")
 ALERTS_AUDIO_FOLDER = os.path.join(SCRIPT_FOLDER, "assets", "audio")
 ICON_PATH = os.path.join(SCRIPT_FOLDER, "assets", "rotom", "main", "main_icon.ico")
 FONT_PATH = resource_path(os.path.join("fonts", FONT_FILENAME))
@@ -283,6 +284,8 @@ DEFAULT_HOTKEYS = {
 ACTIVE_BROADCAST_PROFILE = None
 hotkey_manager = None
 RUN_BADGE_IMG = None
+TOOLTIP_ENABLED = True
+TOOLTIP_ENABLED_KEY = "tooltips_enabled:"
 
 
 # =========================
@@ -663,7 +666,7 @@ def open_hotkeys_inline(profile):
     
     def add_row(row, label_text, key):
         tk.Label(content_frame, text=label_text).grid(row=row, column=0, sticky="w", pady=4)
-        entry = tk.Entry(content_frame, width=4, state="readonly")  # Width set to fit 4 characters
+        entry = tk.Entry(content_frame, width=12, state="readonly")
         entry.grid(row=row, column=1, padx=8, pady=4, sticky="w")
         entry.configure(readonlybackground=DARK_ACCENT)
         set_readonly_text(entry, hotkey_manager.hotkeys.get(key, ""))
@@ -729,22 +732,25 @@ def open_hotkeys_inline(profile):
             fg="#d46a6a"
         ).grid(row=5, column=0, columnspan=2, sticky="w")
     
+    # Spacer between global and profile hotkeys
+    tk.Label(content_frame, text="", bg=DARK_BG).grid(row=6, column=0, columnspan=2, pady=(0, 2))
+    
     tk.Label(content_frame, text=f"{profile_label}:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).grid(
-        row=6, column=0, columnspan=2, sticky="w", pady=(8, 4)
+        row=7, column=0, columnspan=2, sticky="w", pady=(8, 4)
     )
     
     profile_count_plus = profile.count_plus_hotkey if profile else ""
     profile_count_minus = profile.count_minus_hotkey if profile else ""
     
-    tk.Label(content_frame, text="+ Count:").grid(row=7, column=0, sticky="w", pady=4)
-    count_plus_entry = tk.Entry(content_frame, width=4, state="readonly")
-    count_plus_entry.grid(row=7, column=1, padx=8, pady=4, sticky="w")
+    tk.Label(content_frame, text="+ Count:").grid(row=8, column=0, sticky="w", pady=4)
+    count_plus_entry = tk.Entry(content_frame, width=12, state="readonly")
+    count_plus_entry.grid(row=8, column=1, padx=8, pady=4, sticky="w")
     count_plus_entry.configure(readonlybackground=DARK_ACCENT)
     set_readonly_text(count_plus_entry, profile_count_plus)
     
-    tk.Label(content_frame, text="- Count:").grid(row=8, column=0, sticky="w", pady=4)
-    count_minus_entry = tk.Entry(content_frame, width=4, state="readonly")
-    count_minus_entry.grid(row=8, column=1, padx=8, pady=4, sticky="w")
+    tk.Label(content_frame, text="- Count:").grid(row=9, column=0, sticky="w", pady=4)
+    count_minus_entry = tk.Entry(content_frame, width=12, state="readonly")
+    count_minus_entry.grid(row=9, column=1, padx=8, pady=4, sticky="w")
     count_minus_entry.configure(readonlybackground=DARK_ACCENT)
     set_readonly_text(count_minus_entry, profile_count_minus)
     
@@ -803,6 +809,7 @@ def open_hotkeys_inline(profile):
             apply_button.config(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
     
     def apply_changes():
+        nonlocal initial_hotkeys, initial_global_enabled, initial_count_plus, initial_count_minus
         new_hotkeys = {}
         for key, entry in entries.items():
             new_hotkeys[key] = normalize_hotkey_display(entry.get().strip())
@@ -819,7 +826,11 @@ def open_hotkeys_inline(profile):
         hotkey_manager.resume()
         hotkey_manager.register_local_hotkeys()
         hotkey_manager.refresh_profile_hotkeys()
-        profile._close_sub_setting()
+        initial_hotkeys = {key: entry.get() for key, entry in entries.items()}
+        initial_global_enabled = global_var.get()
+        initial_count_plus = count_plus_entry.get()
+        initial_count_minus = count_minus_entry.get()
+        update_apply_button_color()
     
     def on_close():
         hotkey_manager.resume()
@@ -908,6 +919,78 @@ def play_ui_sound(sound_path):
             winsound.PlaySound(sound_path, winsound.SND_FILENAME | winsound.SND_ASYNC)
     except Exception:
         pass  # Silently fail if sound can't play
+
+
+def load_tooltip_enabled():
+    if not os.path.exists(UI_CONFIG_PATH):
+        return True
+    try:
+        with open(UI_CONFIG_PATH, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.lower().startswith(TOOLTIP_ENABLED_KEY):
+                    return line.split(":", 1)[1].strip() == "1"
+    except Exception:
+        return True
+    return True
+
+
+def save_tooltip_enabled(enabled):
+    try:
+        lines = []
+        if os.path.exists(UI_CONFIG_PATH):
+            with open(UI_CONFIG_PATH, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+        wrote = False
+        for i, line in enumerate(lines):
+            if line.lower().startswith(TOOLTIP_ENABLED_KEY):
+                lines[i] = f"{TOOLTIP_ENABLED_KEY} {'1' if enabled else '0'}\n"
+                wrote = True
+                break
+        if not wrote:
+            lines.append(f"{TOOLTIP_ENABLED_KEY} {'1' if enabled else '0'}\n")
+        with open(UI_CONFIG_PATH, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+    except Exception:
+        pass
+
+
+def add_tooltip(widget, text):
+    if widget is None:
+        return
+    tip = {"win": None}
+
+    def show(_event=None):
+        if not TOOLTIP_ENABLED:
+            return
+        if tip["win"]:
+            return
+        try:
+            widget.update_idletasks()
+            w = widget.winfo_width()
+            h = widget.winfo_height()
+            x = widget.winfo_rootx() + max(0, (w // 2))
+            y = widget.winfo_rooty() + h + 6
+        except Exception:
+            return
+        tw = tk.Toplevel(widget)
+        tw.wm_overrideredirect(True)
+        tw.attributes("-topmost", True)
+        tw.geometry(f"+{x}+{y}")
+        tk.Label(
+            tw, text=text, bg=DARK_ACCENT, fg=DARK_FG, justify="center",
+            relief="solid", bd=1, font=(FONT_NAME, BASE_FONT_SIZE - 1),
+            wraplength=300
+        ).pack(ipadx=6, ipady=3)
+        tip["win"] = tw
+
+    def hide(_event=None):
+        if tip["win"]:
+            tip["win"].destroy()
+        tip["win"] = None
+
+    widget.bind("<Enter>", show, add="+")
+    widget.bind("<Leave>", hide, add="+")
+    widget.bind("<FocusOut>", hide, add="+")
 
 
 def show_custom_error(kind, title, message, parent=None):
@@ -2646,6 +2729,7 @@ class ProfileTab:
         self.is_running = False
         self.configure_window = None
         self.test_window = None
+        self.test_image_button = None
         self.capture_window = None
         self.rpc_window = None
         self.settings_window = None
@@ -2732,6 +2816,18 @@ class ProfileTab:
         else:
             self.btn_decrement.configure(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
             self.btn_increment.configure(bg=DARK_BUTTON, activebackground=DARK_BUTTON)
+    
+    def _update_test_image_button_color(self, color):
+        btn = getattr(self, "test_image_button", None)
+        if not btn:
+            return
+        try:
+            if btn.winfo_exists():
+                btn.config(bg=color, activebackground=color)
+            else:
+                self.test_image_button = None
+        except tk.TclError:
+            self.test_image_button = None
 
     # ---------- Modal helpers ----------
     def _set_tabs_enabled(self, enabled: bool):
@@ -3154,6 +3250,25 @@ class ProfileTab:
             pady=BUTTON_PADY,
             height=BUTTON_HEIGHT
         ).pack(pady=STANDARD_BUTTON_PADY, ipadx=STANDARD_BUTTON_IPADX)
+
+        tooltip_var = tk.BooleanVar(value=TOOLTIP_ENABLED)
+
+        def on_toggle_tooltips():
+            global TOOLTIP_ENABLED
+            TOOLTIP_ENABLED = tooltip_var.get()
+            save_tooltip_enabled(TOOLTIP_ENABLED)
+
+        tk.Checkbutton(
+            self._settings_frame,
+            text="Enable Tooltips",
+            variable=tooltip_var,
+            command=on_toggle_tooltips,
+            bg=DARK_BG,
+            fg=DARK_FG,
+            activebackground=DARK_BG,
+            activeforeground=DARK_FG,
+            selectcolor=DARK_BG
+        ).pack(pady=STANDARD_BUTTON_PADY)
 
         def close_settings():
             self.close_settings_view()
@@ -3627,6 +3742,8 @@ class ProfileTab:
             except ValueError:
                 pass
 
+        tk.Label(container, text="", bg=DARK_BG).pack(anchor="w", padx=12, pady=(2, 2))
+
         tk.Label(container, text="Play Alert For:", font=(FONT_NAME, BASE_FONT_SIZE, "bold")).pack(
             anchor="w", pady=(8, 4), padx=12
         )
@@ -3692,6 +3809,7 @@ class ProfileTab:
         auto_check.pack(anchor="w")
 
         def apply_changes():
+            nonlocal initial_enabled, initial_sound_file, initial_manual, initial_hotkey, initial_auto
             is_enabled = enable_alerts_var.get()
             self.audio_enabled = is_enabled
             self.update_config_value(CONFIG_KEY_ALERT_ENABLED, "1" if is_enabled else "0")
@@ -3707,7 +3825,12 @@ class ProfileTab:
             self.update_config_value(CONFIG_KEY_ALERT_PLAY_AUTO, "1" if self.alert_play_auto else "0")
             
             self.mark_dirty()
-            self._close_sub_setting()
+            initial_enabled = enable_alerts_var.get()
+            initial_sound_file = self.alert_sound_file
+            initial_manual = manual_var.get()
+            initial_hotkey = hotkey_var.get()
+            initial_auto = auto_var.get()
+            update_apply_button_color()
 
         def on_select_with_tracking(_event=None):
             on_select(_event)
@@ -4292,6 +4415,7 @@ class ProfileTab:
 
         self.label_title = tk.Label(row_title_label, text="Capture Window:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.label_title.pack(anchor="center", padx=10)
+        add_tooltip(self.label_title, "When auto is enabled, Rotom will use this window to scan for the provided reference frame.")
 
         row_title = make_row()
         self.entry_title = tk.Entry(row_title, width=40, textvariable=self.title_var)
@@ -4315,6 +4439,7 @@ class ProfileTab:
         row_image_label = make_row(pady=0)
         self.lbl_image = tk.Label(row_image_label, text="Reference Frame:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_image.pack(side="left", padx=10)
+        add_tooltip(self.lbl_image, "When auto is enabled, Rotom will scan for this reference frame in the provided window.")
 
         row_image = make_row()
         self.entry_image_path = tk.Entry(row_image, width=40, textvariable=self.image_path_var)
@@ -4350,6 +4475,7 @@ class ProfileTab:
         row_text_label = make_row(pady=0)
         self.lbl_text = tk.Label(row_text_label, text="Counter File:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_text.pack(side="left", padx=10)
+        add_tooltip(self.lbl_text, "This file will be used for Rotom to update your count, whenever it is incremented.")
 
         row_text = make_row()
         self.entry_text_path = tk.Entry(row_text, width=40, textvariable=self.text_path_var)
@@ -4403,6 +4529,7 @@ class ProfileTab:
 
         self.lbl_increment = tk.Label(row_counter_increment, text="Increment:", font=(FONT_NAME, BASE_FONT_SIZE, "bold"))
         self.lbl_increment.pack(side="left", padx=(0, 4))
+        add_tooltip(self.lbl_increment, "Rotom will increase or decrease the current count by this number, each time there is a change.")
         self.entry_increment = tk.Entry(row_counter_increment, width=3, textvariable=self.increment_var, justify="center")
         # 5px left padding to match spacing, 10px right padding for visual separation from next element
         self.entry_increment.pack(side="left", padx=(5, 10))
@@ -4448,13 +4575,16 @@ class ProfileTab:
         # Create text labels below icons
         self.lbl_audio_text = tk.Label(row_rpc_enable, text="Alerts", bg=DARK_BG, fg=DARK_FG)
         self.lbl_audio_text.grid(row=1, column=0, padx=10, sticky="n")
+        add_tooltip(self.lbl_audio_text, "When enabled, Rotom will give you audio alerts when the counter is incremented.")
         
         self.lbl_count_text = tk.Label(row_rpc_enable, text="Auto", bg=DARK_BG, fg=DARK_FG)
         self.lbl_count_text.grid(row=1, column=1, padx=10, sticky="n")
+        add_tooltip(self.lbl_count_text, "When enabled, Rotom will scan a window automatically for a reference frame and increment the counter when it is detected.")
 
         self.rpc_enabled_var = tk.BooleanVar(value=False)
         self.lbl_rpc_text = tk.Label(row_rpc_enable, text="RPC", bg=DARK_BG, fg=DARK_FG)
         self.lbl_rpc_text.grid(row=1, column=2, padx=10, sticky="n")
+        add_tooltip(self.lbl_rpc_text, "When enabled, Rotom will broadcast your current hunt details to Discord Rich Presence.")
 
         # Update icon appearance based on state
         def update_auto_icon_appearance(*args):
@@ -4923,9 +5053,7 @@ class ProfileTab:
         if hasattr(self, 'test_window') and self.test_window and self.test_window.winfo_exists():
             return
         
-        # Change Test Image button to orange when opening
-        if hasattr(self, 'test_image_button'):
-            self.test_image_button.config(bg=START_ACTIVE_COLOR)
+        self._update_test_image_button_color(START_ACTIVE_COLOR)
         
         self.test_window = tk.Toplevel(self.frame)
         apply_window_style(self.test_window)
@@ -4975,9 +5103,7 @@ class ProfileTab:
             is_active["running"] = False
             self.test_window.destroy()
             self.test_window = None
-            # Restore Test Image button to normal color when closing
-            if hasattr(self, 'test_image_button'):
-                self.test_image_button.config(bg=DARK_BUTTON)
+            self._update_test_image_button_color(DARK_BUTTON)
             self.frame.winfo_toplevel().focus_force()
 
         self.test_window.protocol("WM_DELETE_WINDOW", on_close)
@@ -5013,12 +5139,12 @@ class ProfileTab:
                         # Show visible image
                         if visible_photo:
                             image_label.config(image=visible_photo)
-                        status_label.config(text=f"Image detected\nConfidence: {percent:.1f}%")
+                        status_label.config(text=f"Image detected\nMatch: {percent:.1f}%")
                     else:
                         # Show not visible image
                         if not_visible_photo:
                             image_label.config(image=not_visible_photo)
-                        status_label.config(text=f"Not detected\nConfidence: {percent:.1f}%")
+                        status_label.config(text=f"Not detected\nMatch: {percent:.1f}%")
                 except Exception as exc:
                     # If template image can't be loaded (e.g., profile reset), close window
                     if "Failed to load template image" in str(exc):
@@ -6211,7 +6337,7 @@ class ProfileTab:
         # First paragraph - instructional text (centered, wrapped)
         text_label1 = tk.Label(
             self._sub_setting_frame,
-            text="If you have found an issue or bug that needs reporting, please join the Rotom Repository Discord and let me know.",
+        text="If you have found a bug or issue that needs reporting, please join the Rotom Repository Discord and let me know.",
             bg=DARK_BG,
             fg=DARK_FG,
             font=(FONT_NAME, BASE_FONT_SIZE),
@@ -6238,7 +6364,7 @@ class ProfileTab:
             self._sub_setting_frame,
             text=discord_url,
             bg=DARK_BG,
-            fg=LINK_COLOR,  # Blue color for link
+            fg=START_ACTIVE_COLOR,
             font=(FONT_NAME, BASE_FONT_SIZE),  # No underline
             cursor="hand2",
             justify="center",
@@ -6248,7 +6374,19 @@ class ProfileTab:
         
         # Make link clickable
         def open_discord_link(event):
-            webbrowser.open("https://discord.gg/fQJNabqqzE")
+            opened = False
+            try:
+                opened = webbrowser.open_new(discord_url)
+            except Exception:
+                opened = False
+            if not opened:
+                try:
+                    top = self.frame.winfo_toplevel()
+                    top.clipboard_clear()
+                    top.clipboard_append(discord_url)
+                except Exception:
+                    pass
+                messagebox.showinfo("Open Discord", f"If your browser didn't open, use this invite:\n{discord_url}\n\n(Invite copied to clipboard when possible.)")
         
         link_label.bind("<Button-1>", open_discord_link)
         
@@ -6327,7 +6465,7 @@ class ProfileTab:
             self._sub_setting_frame,
             text=discord_url,
             bg=DARK_BG,
-            fg=LINK_COLOR,  # Blue color for link
+            fg=START_ACTIVE_COLOR,
             font=(FONT_NAME, BASE_FONT_SIZE),  # No underline
             cursor="hand2",
             justify="center",
@@ -6337,7 +6475,19 @@ class ProfileTab:
         
         # Make link clickable
         def open_discord_link(event):
-            webbrowser.open("https://discord.gg/fQJNabqqzE")
+            opened = False
+            try:
+                opened = webbrowser.open_new(discord_url)
+            except Exception:
+                opened = False
+            if not opened:
+                try:
+                    top = self.frame.winfo_toplevel()
+                    top.clipboard_clear()
+                    top.clipboard_append(discord_url)
+                except Exception:
+                    pass
+                messagebox.showinfo("Open Discord", f"If your browser didn't open, use this invite:\n{discord_url}\n\n(Invite copied to clipboard when possible.)")
         
         link_label.bind("<Button-1>", open_discord_link)
         
@@ -6613,7 +6763,7 @@ class ProfileTab:
         )
         frequency_slider.grid(row=3, column=0, padx=12, pady=4, sticky="we")
 
-        lbl_threshold = tk.Label(self.configure_window, text="Confidence Treshold (%):")
+        lbl_threshold = tk.Label(self.configure_window, text="Match Threshold (%):")
         lbl_threshold.grid(row=4, column=0, sticky="w", padx=12, pady=6)
 
         threshold_slider = tk.Scale(
@@ -6632,6 +6782,7 @@ class ProfileTab:
             # Close the window
             self.configure_window.destroy()
             self.configure_window = None
+            self.test_image_button = None
             self._exit_modal()
             if parent_grab and parent_grab.winfo_exists():
                 set_window_disabled(parent_grab, False)
@@ -6642,6 +6793,7 @@ class ProfileTab:
         def on_close():
             self.configure_window.destroy()
             self.configure_window = None
+            self.test_image_button = None
             self._exit_modal()
             if parent_grab and parent_grab.winfo_exists():
                 set_window_disabled(parent_grab, False)
@@ -6665,7 +6817,7 @@ class ProfileTab:
         
         # If test window is already open, set button to orange (persists through menu changes)
         if hasattr(self, 'test_window') and self.test_window and self.test_window.winfo_exists():
-            self.test_image_button.config(bg=START_ACTIVE_COLOR)
+            self._update_test_image_button_color(START_ACTIVE_COLOR)
 
         button_row = tk.Frame(self.configure_window, bg=DARK_BG)
         button_row.grid(row=7, column=0, padx=12, pady=(0, 12))
@@ -6751,7 +6903,7 @@ class ProfileTab:
         )
         frequency_slider.pack(fill="x", pady=(0, 8))
 
-        lbl_threshold = tk.Label(content_frame, text="Confidence Threshold (%):")
+        lbl_threshold = tk.Label(content_frame, text="Match Threshold (%):")
         lbl_threshold.pack(anchor="w", pady=(0, 2))
 
         threshold_slider = tk.Scale(
@@ -6775,13 +6927,17 @@ class ProfileTab:
         
         # If test window is already open, set button to orange (persists through menu changes)
         if hasattr(self, 'test_window') and self.test_window and self.test_window.winfo_exists():
-            self.test_image_button.config(bg=START_ACTIVE_COLOR)
+            self._update_test_image_button_color(START_ACTIVE_COLOR)
 
         def apply_changes():
+            nonlocal initial_cooldown, initial_frequency, initial_threshold
             self.cooldown_var.set(temp_cooldown_var.get())
             self.frequency_var.set(temp_frequency_var.get())
             self.threshold_var.set(temp_threshold_var.get())
-            self._close_sub_setting()
+            initial_cooldown = temp_cooldown_var.get()
+            initial_frequency = temp_frequency_var.get()
+            initial_threshold = temp_threshold_var.get()
+            update_apply_button_color()
 
         # Spacer to push buttons to bottom
         spacer = tk.Frame(container, bg=DARK_BG)
@@ -6906,6 +7062,7 @@ class ProfileTab:
 # MAIN UI
 # =========================
 register_font(FONT_PATH)
+TOOLTIP_ENABLED = load_tooltip_enabled()
 
 root = tk.Tk()
 apply_window_style(root)
