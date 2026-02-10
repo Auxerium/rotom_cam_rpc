@@ -10,3 +10,4 @@
 **If you see “No module named pyinstaller” even after installing it:**
 - Ensure you are using the same Python where you installed PyInstaller: `python -m pip install pyinstaller` then run `python -m PyInstaller ...`.
 - Verify your PATH isn’t mixing `python`/`pip` from different environments (e.g., virtualenv vs system). Running `python -m pip show pyinstaller` should report the install location you expect.
+- On Windows/PowerShell, the safest invocation is: `python -m PyInstaller --onefile --noconsole --name "XIII Auto Counter" --add-data "assets;assets" --icon assets/rotom/main/main_icon.ico RotomCamRPC_vBeta.0.13.py` (note the capital `P`).
