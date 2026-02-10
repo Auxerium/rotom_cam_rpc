@@ -3519,6 +3519,8 @@ class ProfileTab:
 
         tree = ttk.Treeview(list_frame, show="tree", selectmode="browse", height=4, style="AlertSound.Treeview")
         tree.pack(side="left", fill="both", expand=True)
+        tree.column("#0", width=260, minwidth=200, anchor="w", stretch=True)
+        tree._img_refs = [self._alert_icon_selected, self._alert_icon_unselected]
 
         scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=tree.yview)
         scrollbar.pack(side="right", fill="y")
