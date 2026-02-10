@@ -6950,7 +6950,7 @@ class ProfileTab:
                 default_bg, default_active = slider_defaults.get(slider, (DARK_BG, DARK_BUTTON))
                 is_changed = current != initial
                 slider.configure(
-                    background=START_ACTIVE_COLOR if is_changed else default_bg,
+                    background=default_bg,
                     activebackground=START_ACTIVE_COLOR if is_changed else default_active,
                     troughcolor=DARK_ACCENT,
                     highlightthickness=0,
@@ -7139,7 +7139,7 @@ class ProfileTab:
                 default_bg, default_active = slider_defaults.get(slider, (DARK_BG, DARK_BUTTON))
                 is_changed = current != initial
                 slider.configure(
-                    background=START_ACTIVE_COLOR if is_changed else default_bg,
+                    background=default_bg,
                     activebackground=START_ACTIVE_COLOR if is_changed else default_active,
                     troughcolor=DARK_ACCENT,
                     highlightthickness=0,
