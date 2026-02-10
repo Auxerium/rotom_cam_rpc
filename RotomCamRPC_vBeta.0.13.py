@@ -7030,46 +7030,50 @@ class ProfileTab:
         lbl_cooldown = tk.Label(content_frame, text="Cooldown (seconds):")
         lbl_cooldown.pack(anchor="w", pady=(0, 2))
 
-        cooldown_slider = tk.Scale(
-            content_frame, from_=1, to=10, resolution=1, orient="horizontal", 
-            variable=temp_cooldown_var, command=lambda v: update_apply_button_color()
+        cooldown_slider = ttk.Scale(
+            content_frame, from_=1, to=10, orient="horizontal",
+            variable=temp_cooldown_var, command=lambda v: update_apply_button_color(),
+            style="AutoPill.TScale", length=260
         )
         cooldown_slider.pack(fill="x", pady=(0, 8))
 
         lbl_frequency = tk.Label(content_frame, text="Frequency (seconds):")
         lbl_frequency.pack(anchor="w", pady=(0, 2))
 
-        frequency_slider = tk.Scale(
-            content_frame, from_=0.1, to=5.0, resolution=0.1, orient="horizontal", 
-            variable=temp_frequency_var, command=lambda v: update_apply_button_color()
+        frequency_slider = ttk.Scale(
+            content_frame, from_=0.1, to=5.0, orient="horizontal",
+            variable=temp_frequency_var, command=lambda v: update_apply_button_color(),
+            style="AutoPill.TScale", length=260
         )
         frequency_slider.pack(fill="x", pady=(0, 8))
 
         lbl_threshold = tk.Label(content_frame, text="Match Threshold (%):")
         lbl_threshold.pack(anchor="w", pady=(0, 2))
 
-        threshold_slider = tk.Scale(
-            content_frame, from_=0.5, to=1.0, resolution=0.01, orient="horizontal", 
-            variable=temp_threshold_var, command=lambda v: update_apply_button_color()
+        threshold_slider = ttk.Scale(
+            content_frame, from_=0.5, to=1.0, orient="horizontal",
+            variable=temp_threshold_var, command=lambda v: update_apply_button_color(),
+            style="AutoPill.TScale", length=260
         )
         threshold_slider.pack(fill="x", pady=(0, 8))
 
-        slider_defaults = {
-            cooldown_slider: (DARK_BG, DARK_BUTTON),
-            frequency_slider: (DARK_BG, DARK_BUTTON),
-            threshold_slider: (DARK_BG, DARK_BUTTON),
-        }
-
-        for slider in (cooldown_slider, frequency_slider, threshold_slider):
-            slider.configure(
-                background=DARK_BG,
-                activebackground=DARK_BUTTON,
-                troughcolor=DARK_ACCENT,
-                highlightthickness=0,
-                sliderrelief="flat",
-                sliderlength=20,
-                borderwidth=0
-            )
+        scale_style = ttk.Style(container)
+        scale_style.configure(
+            "AutoPill.TScale",
+            troughcolor=DARK_ACCENT,
+            background=DARK_BG,
+            sliderlength=20,
+            sliderrelief="flat",
+            borderwidth=0
+        )
+        scale_style.configure(
+            "AutoPillActive.TScale",
+            troughcolor=DARK_ACCENT,
+            background=START_ACTIVE_COLOR,
+            sliderlength=20,
+            sliderrelief="flat",
+            borderwidth=0
+        )
 
         def refresh_slider_colors():
             slider_states = [
@@ -7078,14 +7082,8 @@ class ProfileTab:
                 (threshold_slider, temp_threshold_var.get(), initial_threshold),
             ]
             for slider, current, initial in slider_states:
-                default_bg, default_active = slider_defaults.get(slider, (DARK_BG, DARK_BUTTON))
                 is_changed = current != initial
-                slider.configure(
-                    background=START_ACTIVE_COLOR if is_changed else default_bg,
-                    activebackground=START_ACTIVE_COLOR if is_changed else default_active,
-                    troughcolor=DARK_ACCENT,
-                    highlightthickness=0
-                )
+                slider.configure(style="AutoPillActive.TScale" if is_changed else "AutoPill.TScale")
 
         test_button = tk.Button(
             content_frame,
