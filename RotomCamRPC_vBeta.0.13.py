@@ -6914,24 +6914,26 @@ class ProfileTab:
         )
         threshold_slider.grid(row=5, column=0, padx=12, pady=4, sticky="we")
 
+        slider_bg = "#161616"
+
         slider_defaults = {
             cooldown_slider: (
-                DARK_BG,
+                slider_bg,
                 DARK_BUTTON
             ),
             frequency_slider: (
-                DARK_BG,
+                slider_bg,
                 DARK_BUTTON
             ),
             threshold_slider: (
-                DARK_BG,
+                slider_bg,
                 DARK_BUTTON
             ),
         }
 
         for slider in (cooldown_slider, frequency_slider, threshold_slider):
             slider.configure(
-                background=DARK_BG,
+                background=slider_bg,
                 activebackground=DARK_BUTTON,
                 troughcolor=DARK_ACCENT,
                 highlightthickness=0,
@@ -7139,24 +7141,26 @@ class ProfileTab:
         )
         threshold_slider.pack(fill="x", pady=(0, 8))
 
+        slider_bg = "#161616"
+
         slider_defaults = {
             cooldown_slider: (
-                DARK_BG,
+                slider_bg,
                 DARK_BUTTON
             ),
             frequency_slider: (
-                DARK_BG,
+                slider_bg,
                 DARK_BUTTON
             ),
             threshold_slider: (
-                DARK_BG,
+                slider_bg,
                 DARK_BUTTON
             ),
         }
 
         for slider in (cooldown_slider, frequency_slider, threshold_slider):
             slider.configure(
-                background=DARK_BG,
+                background=slider_bg,
                 activebackground=DARK_BUTTON,
                 troughcolor=DARK_ACCENT,
                 highlightthickness=0,
