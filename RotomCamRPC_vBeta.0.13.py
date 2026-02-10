@@ -6964,11 +6964,11 @@ class ProfileTab:
             refresh_slider_colors()
 
         def bind_scale_click(slider):
-            def on_click(event):
+            def set_from_event(event):
                 slider.update_idletasks()
                 width = slider.winfo_width() or slider.winfo_reqwidth()
                 if width <= 0:
-                    return
+                    return None
                 from_val = float(slider.cget("from"))
                 to_val = float(slider.cget("to"))
                 resolution = float(slider.cget("resolution"))
@@ -6982,9 +6982,18 @@ class ProfileTab:
                     raw = min(max(raw, to_val), from_val)
                 slider.set(raw)
                 on_slider_change()
+                return raw
+
+            def on_click(event):
+                set_from_event(event)
+                return "break"
+
+            def on_drag(event):
+                set_from_event(event)
                 return "break"
 
             slider.bind("<Button-1>", on_click)
+            slider.bind("<B1-Motion>", on_drag)
 
         for s in (cooldown_slider, frequency_slider, threshold_slider):
             bind_scale_click(s)
@@ -7179,11 +7188,11 @@ class ProfileTab:
             refresh_slider_colors()
 
         def bind_scale_click(slider):
-            def on_click(event):
+            def set_from_event(event):
                 slider.update_idletasks()
                 width = slider.winfo_width() or slider.winfo_reqwidth()
                 if width <= 0:
-                    return
+                    return None
                 from_val = float(slider.cget("from"))
                 to_val = float(slider.cget("to"))
                 resolution = float(slider.cget("resolution"))
@@ -7197,9 +7206,18 @@ class ProfileTab:
                     raw = min(max(raw, to_val), from_val)
                 slider.set(raw)
                 on_slider_change()
+                return raw
+
+            def on_click(event):
+                set_from_event(event)
+                return "break"
+
+            def on_drag(event):
+                set_from_event(event)
                 return "break"
 
             slider.bind("<Button-1>", on_click)
+            slider.bind("<B1-Motion>", on_drag)
 
         for s in (cooldown_slider, frequency_slider, threshold_slider):
             bind_scale_click(s)
