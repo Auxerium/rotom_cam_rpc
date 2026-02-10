@@ -137,7 +137,16 @@ def apply_dark_theme(root):
     style.theme_use("clam")
     style.configure("TFrame", background=DARK_BG)
     style.configure("TLabel", background=DARK_BG, foreground=DARK_FG)
-    style.configure("TNotebook", background=DARK_BG, bordercolor=DARK_BG, borderwidth=0, padding=0)
+    style.configure(
+        "TNotebook",
+        background=DARK_BG,
+        bordercolor=DARK_BUTTON,
+        lightcolor=DARK_BUTTON,
+        darkcolor=DARK_BUTTON,
+        borderwidth=0,
+        padding=0,
+        tabmargins=(0, 0, 0, 0)
+    )
     style.layout("TNotebook", [("Notebook.client", {"sticky": "nswe"})])
     style.configure(
         "TNotebook.Tab",
@@ -145,6 +154,9 @@ def apply_dark_theme(root):
         foreground=DARK_FG,
         font=(FONT_NAME, TAB_FONT_SIZE),
         borderwidth=0,
+        bordercolor=DARK_BUTTON,
+        lightcolor=DARK_BUTTON,
+        darkcolor=DARK_BUTTON,
         padding=[8, 4]
     )
     style.map(
