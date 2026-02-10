@@ -150,8 +150,8 @@ def apply_dark_theme(root):
     style.layout("TNotebook", [("Notebook.client", {"sticky": "nswe"})])
     style.configure(
         "TNotebook.Tab",
-        background="#1a1a1a",
-        foreground=DARK_FG,
+        background="#0f0f0f",
+        foreground="#9a9a9a",
         font=(FONT_NAME, TAB_FONT_SIZE),
         borderwidth=1,
         bordercolor=DARK_BUTTON,
