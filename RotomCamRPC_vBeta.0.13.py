@@ -139,7 +139,7 @@ def apply_dark_theme(root):
     style.configure("TLabel", background=DARK_BG, foreground=DARK_FG)
     style.configure(
         "TNotebook",
-        background=DARK_BG,
+        background=DARK_BUTTON,
         bordercolor=DARK_BUTTON,
         lightcolor=DARK_BUTTON,
         darkcolor=DARK_BUTTON,
@@ -157,7 +157,8 @@ def apply_dark_theme(root):
         bordercolor=DARK_BUTTON,
         lightcolor=DARK_BUTTON,
         darkcolor=DARK_BUTTON,
-        padding=[8, 4]
+        focuscolor=DARK_BUTTON,
+        padding=[10, 4]
     )
     style.map(
         "TNotebook.Tab",
@@ -7130,9 +7131,9 @@ def on_tab_changed(event):
 # Removed - merged into on_profile_tab_change below
 
 root.update_idletasks()
-root.geometry("462x805")  #  WINDOW SIZE (reduced by 5px from 810)
-root.minsize(462, 805)
-root.maxsize(462, 805)
+root.geometry("462x803")  #  WINDOW SIZE (reduced by 7px from 810)
+root.minsize(462, 803)
+root.maxsize(462, 803)
 root.resizable(False, False)
 
 
