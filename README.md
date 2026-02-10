@@ -15,3 +15,7 @@
 **If Windows Smart App Control blocks the EXE:**
 - Use `python -m PyInstaller ...` on your own machine so Windows sees it as locally built.
 - If Smart App Control still blocks it, you may need to allow it via Windows Security > App & browser control > Smart App Control (turn off) or run via right-click > Properties > Unblock, depending on your org’s policy.
+
+**Bundle default config files with the EXE:**
+- Add each folder/file that must ship (e.g., `config` or `profiles`) with extra `--add-data` entries. Example: `--add-data "config;config" --add-data "profiles;profiles"` so they end up inside the bundle and are extracted at runtime alongside `assets`.
+- If your config is written at runtime, ensure the app writes to a user-writable location (e.g., `%APPDATA%/XIII Auto Counter/` or a sibling to the extracted folder) instead of the exe directory.
