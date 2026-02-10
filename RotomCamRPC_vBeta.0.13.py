@@ -6952,7 +6952,6 @@ class ProfileTab:
                 slider.configure(
                     background=default_bg,
                     activebackground=START_ACTIVE_COLOR if is_changed else default_active,
-                    foreground=START_ACTIVE_COLOR if is_changed else DARK_FG,
                     troughcolor=DARK_ACCENT,
                     highlightthickness=0,
                     sliderrelief="ridge",
@@ -7142,7 +7141,6 @@ class ProfileTab:
                 slider.configure(
                     background=default_bg,
                     activebackground=START_ACTIVE_COLOR if is_changed else default_active,
-                    foreground=START_ACTIVE_COLOR if is_changed else DARK_FG,
                     troughcolor=DARK_ACCENT,
                     highlightthickness=0,
                     sliderrelief="ridge",
