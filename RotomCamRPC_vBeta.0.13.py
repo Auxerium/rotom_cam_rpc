@@ -6268,7 +6268,19 @@ class ProfileTab:
         
         # Make link clickable
         def open_discord_link(event):
-            webbrowser.open_new(discord_url)
+            opened = False
+            try:
+                opened = webbrowser.open_new(discord_url)
+            except Exception:
+                opened = False
+            if not opened:
+                try:
+                    top = self.frame.winfo_toplevel()
+                    top.clipboard_clear()
+                    top.clipboard_append(discord_url)
+                except Exception:
+                    pass
+                messagebox.showinfo("Open Discord", f"If your browser didn't open, use this invite:\n{discord_url}\n\n(Invite copied to clipboard when possible.)")
         
         link_label.bind("<Button-1>", open_discord_link)
         
@@ -6357,7 +6369,19 @@ class ProfileTab:
         
         # Make link clickable
         def open_discord_link(event):
-            webbrowser.open_new(discord_url)
+            opened = False
+            try:
+                opened = webbrowser.open_new(discord_url)
+            except Exception:
+                opened = False
+            if not opened:
+                try:
+                    top = self.frame.winfo_toplevel()
+                    top.clipboard_clear()
+                    top.clipboard_append(discord_url)
+                except Exception:
+                    pass
+                messagebox.showinfo("Open Discord", f"If your browser didn't open, use this invite:\n{discord_url}\n\n(Invite copied to clipboard when possible.)")
         
         link_label.bind("<Button-1>", open_discord_link)
         
