@@ -31,6 +31,7 @@ import tkinter.font as tkfont
 from ctypes import wintypes
 from tkinter import messagebox, filedialog, ttk, simpledialog
 from PIL import Image, ImageTk, ImageSequence, ImageDraw
+import shutil
 
 try:
     from pypresence import Presence
@@ -274,12 +275,25 @@ def set_window_disabled(window, disabled):
 # PATHS
 # =========================
 SCRIPT_FOLDER = os.path.dirname(os.path.abspath(__file__))
-RPC_CONFIG_FOLDER = os.path.join(SCRIPT_FOLDER, "rpc_config")
-REFERENCES_FOLDER = os.path.join(SCRIPT_FOLDER, "references")
-HOTKEYS_CONFIG_PATH = os.path.join(SCRIPT_FOLDER, "hotkeys_config.txt")
-UI_CONFIG_PATH = os.path.join(SCRIPT_FOLDER, "ui_config.txt")
-ALERTS_AUDIO_FOLDER = os.path.join(SCRIPT_FOLDER, "assets", "audio")
-ICON_PATH = os.path.join(SCRIPT_FOLDER, "assets", "rotom", "main", "main_icon.ico")
+def _get_data_folder():
+    if os.name == "nt":
+        appdata = os.environ.get("APPDATA")
+        if appdata:
+            return os.path.join(appdata, "RotomCamRPC")
+    return os.path.join(os.path.expanduser("~"), ".rotom_cam_rpc")
+
+DATA_FOLDER = _get_data_folder()
+CONFIG_FOLDER = os.path.join(DATA_FOLDER, "config")
+RPC_CONFIG_FOLDER = os.path.join(DATA_FOLDER, "rpc_config")
+REFERENCES_FOLDER = os.path.join(DATA_FOLDER, "references")
+HOTKEYS_CONFIG_PATH = os.path.join(DATA_FOLDER, "hotkeys_config.txt")
+UI_CONFIG_PATH = os.path.join(DATA_FOLDER, "ui_config.txt")
+ALERTS_AUDIO_FOLDER = resource_path(os.path.join("assets", "audio"))
+ICON_PATH = resource_path(os.path.join("assets", "rotom", "main", "main_icon.ico"))
+ICON_PATH_PNG = resource_path(os.path.join("assets", "rotom", "main", "main_icon.png"))
+RESOURCE_CONFIG_FOLDER = resource_path("config")
+RESOURCE_RPC_CONFIG_FOLDER = resource_path("rpc_config")
+RESOURCE_JSON_FOLDER = resource_path("json")
 FONT_PATH = resource_path(os.path.join("fonts", FONT_FILENAME))
 ICON_RPC_INACTIVE_PATH = resource_path(os.path.join("assets", "rotom", "rpc", "icon_rpc_inactive.png"))
 ICON_RPC_ENABLED_PATH = resource_path(os.path.join("assets", "rotom", "rpc", "icon_rpc_enabled.png"))
@@ -299,9 +313,33 @@ UI_SOUND_START_PATH = resource_path(os.path.join("assets", "ui_audio", "start.wa
 UI_SOUND_STOP_PATH = resource_path(os.path.join("assets", "ui_audio", "stop.wav"))
 UI_SOUND_ERROR_PATH = resource_path(os.path.join("assets", "ui_audio", "error.wav"))
 
+os.makedirs(DATA_FOLDER, exist_ok=True)
+os.makedirs(CONFIG_FOLDER, exist_ok=True)
 os.makedirs(RPC_CONFIG_FOLDER, exist_ok=True)
 os.makedirs(REFERENCES_FOLDER, exist_ok=True)
-os.makedirs(ALERTS_AUDIO_FOLDER, exist_ok=True)
+try:
+    os.makedirs(ALERTS_AUDIO_FOLDER, exist_ok=True)
+except Exception:
+    pass
+
+def _seed_folder(src_dir, dst_dir):
+    if not os.path.isdir(src_dir):
+        return
+    for root, _, files in os.walk(src_dir):
+        rel = os.path.relpath(root, src_dir)
+        dest_root = os.path.join(dst_dir, "" if rel == "." else rel)
+        os.makedirs(dest_root, exist_ok=True)
+        for fname in files:
+            src_path = os.path.join(root, fname)
+            dst_path = os.path.join(dest_root, fname)
+            if not os.path.exists(dst_path):
+                try:
+                    shutil.copy2(src_path, dst_path)
+                except Exception:
+                    pass
+
+_seed_folder(RESOURCE_CONFIG_FOLDER, CONFIG_FOLDER)
+_seed_folder(RESOURCE_RPC_CONFIG_FOLDER, RPC_CONFIG_FOLDER)
 
 
 # =========================
@@ -322,6 +360,7 @@ RUN_BADGE_IMG = None
 TOOLTIP_ENABLED = True
 TOOLTIP_ENABLED_KEY = "tooltips_enabled:"
 TOOLTIP_ICON = None
+ICON_PHOTO = None
 
 
 # =========================
@@ -374,11 +413,30 @@ def build_tab_badge(size=12, color=START_ACTIVE_COLOR, filled=True, outline_widt
     return ImageTk.PhotoImage(img)
 
 
-def apply_window_style(window, title="RotomCamRPC"):
+def apply_window_style(window, title="XIII Auto Counter"):
     window.title(title)
     try:
         if os.path.isfile(ICON_PATH):
             window.iconbitmap(ICON_PATH)
+            return
+    except Exception:
+        pass
+    try:
+        global ICON_PHOTO
+        if ICON_PHOTO is None and os.path.isfile(ICON_PATH_PNG):
+            ICON_PHOTO = tk.PhotoImage(file=ICON_PATH_PNG)
+        if ICON_PHOTO:
+            window.iconphoto(False, ICON_PHOTO)
+    except Exception:
+        pass
+
+def hide_console_window():
+    if os.name != "nt":
+        return
+    try:
+        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+        if hwnd:
+            ctypes.windll.user32.ShowWindow(hwnd, 0)
     except Exception:
         pass
 
@@ -1863,7 +1921,7 @@ def rpc_open_options(profile, parent_grab=None):
 
             icon_name = cfg.get("icon", "")
             if icon_name:
-                icon_path = os.path.join(SCRIPT_FOLDER, "assets", "game_icon", f"{icon_name}.png")
+                icon_path = resource_path(os.path.join("assets", "game_icon", f"{icon_name}.png"))
                 if os.path.isfile(icon_path):
                     image = Image.open(icon_path).resize((RPC_ICON_SIZE, RPC_ICON_SIZE), Image.LANCZOS)
                     icon_image = ImageTk.PhotoImage(image)
@@ -2744,7 +2802,7 @@ class ProfileTab:
         self.notebook = parent
         self.profile_index = profile_index
         self.default_tab_name = f"Profile {profile_index}"
-        self.config_path = os.path.join("config", f"config{profile_index}.txt")
+        self.config_path = os.path.join(CONFIG_FOLDER, f"config{profile_index}.txt")
 
         self.selected_image_path = ""
         self.selected_text_path = ""
@@ -5199,11 +5257,11 @@ class ProfileTab:
 
         # Load images for visible/not visible states
         try:
-            visible_img = Image.open(os.path.join(os.path.dirname(__file__), "assets", "rotom", "image_test", "visible.png"))
+            visible_img = Image.open(resource_path(os.path.join("assets", "rotom", "image_test", "visible.png")))
             visible_img = visible_img.resize((100, 100), Image.Resampling.LANCZOS)
             visible_photo = ImageTk.PhotoImage(visible_img)
             
-            not_visible_img = Image.open(os.path.join(os.path.dirname(__file__), "assets", "rotom", "image_test", "not_visible.png"))
+            not_visible_img = Image.open(resource_path(os.path.join("assets", "rotom", "image_test", "not_visible.png")))
             not_visible_img = not_visible_img.resize((100, 100), Image.Resampling.LANCZOS)
             not_visible_photo = ImageTk.PhotoImage(not_visible_img)
         except Exception as e:
@@ -5592,7 +5650,7 @@ class ProfileTab:
                 
                 icon_name = cfg.get("icon", "")
                 if icon_name:
-                    icon_path = os.path.join(SCRIPT_FOLDER, "assets", "game_icon", f"{icon_name}.png")
+                    icon_path = resource_path(os.path.join("assets", "game_icon", f"{icon_name}.png"))
                     if os.path.isfile(icon_path):
                         image = Image.open(icon_path).resize((RPC_ICON_SIZE, RPC_ICON_SIZE), Image.LANCZOS)
                         icon_image = ImageTk.PhotoImage(image)
@@ -6152,7 +6210,7 @@ class ProfileTab:
             selected_target = selected_pokemon_name
             if not selected_target and selected_game_id:
                 # Load current config to preserve existing target
-                config_path = os.path.join(os.path.dirname(__file__), "rpc_config", f"{selected_game_id}.txt")
+                config_path = os.path.join(RPC_CONFIG_FOLDER, f"{selected_game_id}.txt")
                 cfg = rpc_read_config(config_path)
                 selected_target = cfg.get("target", "")
             
@@ -6197,7 +6255,7 @@ class ProfileTab:
             self.save_settings_silent()
             
             # ALSO save to the game-specific RPC config file
-            config_path = os.path.join(os.path.dirname(__file__), "rpc_config", f"{selected_game_id}.txt")
+            config_path = os.path.join(RPC_CONFIG_FOLDER, f"{selected_game_id}.txt")
             cfg = rpc_read_config(config_path)
             cfg["target"] = selected_target
             cfg["odds"] = selected_odds
@@ -6770,6 +6828,8 @@ class ProfileTab:
         self._set_inactive_icons()
         self._set_counter_button_colors(False)
         self.set_tab_title()
+        if self.rpc_is_running:
+            self.stop_broadcast()
         if title == "Window Minimized":
             show_custom_error(
                 "count_error",
@@ -7374,6 +7434,7 @@ class ProfileTab:
 # =========================
 # MAIN UI
 # =========================
+hide_console_window()
 register_font(FONT_PATH)
 TOOLTIP_ENABLED = load_tooltip_enabled()
 
@@ -7461,7 +7522,7 @@ def on_rename_profile(_event=None):
 
     # Build a custom modal dialog so we can set the window title and icon
     dlg = tk.Toplevel(root)
-    apply_window_style(dlg, title="RotomCamRPC")
+    apply_window_style(dlg, title="XIII Auto Counter")
     dlg.transient(root)
     dlg.resizable(False, False)
     dlg.grab_set()
