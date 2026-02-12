@@ -290,6 +290,7 @@ HOTKEYS_CONFIG_PATH = os.path.join(DATA_FOLDER, "hotkeys_config.txt")
 UI_CONFIG_PATH = os.path.join(DATA_FOLDER, "ui_config.txt")
 ALERTS_AUDIO_FOLDER = resource_path(os.path.join("assets", "audio"))
 ICON_PATH = resource_path(os.path.join("assets", "rotom", "main", "main_icon.ico"))
+ICON_PATH_PNG = resource_path(os.path.join("assets", "rotom", "main", "main_icon.png"))
 RESOURCE_CONFIG_FOLDER = resource_path("config")
 RESOURCE_RPC_CONFIG_FOLDER = resource_path("rpc_config")
 RESOURCE_JSON_FOLDER = resource_path("json")
@@ -359,6 +360,7 @@ RUN_BADGE_IMG = None
 TOOLTIP_ENABLED = True
 TOOLTIP_ENABLED_KEY = "tooltips_enabled:"
 TOOLTIP_ICON = None
+ICON_PHOTO = None
 
 
 # =========================
@@ -416,6 +418,15 @@ def apply_window_style(window, title="RotomCamRPC"):
     try:
         if os.path.isfile(ICON_PATH):
             window.iconbitmap(ICON_PATH)
+            return
+    except Exception:
+        pass
+    try:
+        global ICON_PHOTO
+        if ICON_PHOTO is None and os.path.isfile(ICON_PATH_PNG):
+            ICON_PHOTO = tk.PhotoImage(file=ICON_PATH_PNG)
+        if ICON_PHOTO:
+            window.iconphoto(False, ICON_PHOTO)
     except Exception:
         pass
 
@@ -6817,6 +6828,8 @@ class ProfileTab:
         self._set_inactive_icons()
         self._set_counter_button_colors(False)
         self.set_tab_title()
+        if self.rpc_is_running:
+            self.stop_broadcast()
         if title == "Window Minimized":
             show_custom_error(
                 "count_error",
