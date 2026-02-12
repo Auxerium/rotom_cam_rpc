@@ -287,8 +287,8 @@ RPC_CONFIG_FOLDER = os.path.join(DATA_FOLDER, "rpc_config")
 REFERENCES_FOLDER = os.path.join(DATA_FOLDER, "references")
 HOTKEYS_CONFIG_PATH = os.path.join(DATA_FOLDER, "hotkeys_config.txt")
 UI_CONFIG_PATH = os.path.join(DATA_FOLDER, "ui_config.txt")
-ALERTS_AUDIO_FOLDER = os.path.join(SCRIPT_FOLDER, "assets", "audio")
-ICON_PATH = os.path.join(SCRIPT_FOLDER, "assets", "rotom", "main", "main_icon.ico")
+ALERTS_AUDIO_FOLDER = resource_path(os.path.join("assets", "audio"))
+ICON_PATH = resource_path(os.path.join("assets", "rotom", "main", "main_icon.ico"))
 FONT_PATH = resource_path(os.path.join("fonts", FONT_FILENAME))
 ICON_RPC_INACTIVE_PATH = resource_path(os.path.join("assets", "rotom", "rpc", "icon_rpc_inactive.png"))
 ICON_RPC_ENABLED_PATH = resource_path(os.path.join("assets", "rotom", "rpc", "icon_rpc_enabled.png"))
@@ -312,7 +312,10 @@ os.makedirs(DATA_FOLDER, exist_ok=True)
 os.makedirs(CONFIG_FOLDER, exist_ok=True)
 os.makedirs(RPC_CONFIG_FOLDER, exist_ok=True)
 os.makedirs(REFERENCES_FOLDER, exist_ok=True)
-os.makedirs(ALERTS_AUDIO_FOLDER, exist_ok=True)
+try:
+    os.makedirs(ALERTS_AUDIO_FOLDER, exist_ok=True)
+except Exception:
+    pass
 
 
 # =========================
@@ -390,6 +393,16 @@ def apply_window_style(window, title="RotomCamRPC"):
     try:
         if os.path.isfile(ICON_PATH):
             window.iconbitmap(ICON_PATH)
+    except Exception:
+        pass
+
+def hide_console_window():
+    if os.name != "nt":
+        return
+    try:
+        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+        if hwnd:
+            ctypes.windll.user32.ShowWindow(hwnd, 0)
     except Exception:
         pass
 
@@ -1874,7 +1887,7 @@ def rpc_open_options(profile, parent_grab=None):
 
             icon_name = cfg.get("icon", "")
             if icon_name:
-                icon_path = os.path.join(SCRIPT_FOLDER, "assets", "game_icon", f"{icon_name}.png")
+                icon_path = resource_path(os.path.join("assets", "game_icon", f"{icon_name}.png"))
                 if os.path.isfile(icon_path):
                     image = Image.open(icon_path).resize((RPC_ICON_SIZE, RPC_ICON_SIZE), Image.LANCZOS)
                     icon_image = ImageTk.PhotoImage(image)
@@ -5603,7 +5616,7 @@ class ProfileTab:
                 
                 icon_name = cfg.get("icon", "")
                 if icon_name:
-                    icon_path = os.path.join(SCRIPT_FOLDER, "assets", "game_icon", f"{icon_name}.png")
+                    icon_path = resource_path(os.path.join("assets", "game_icon", f"{icon_name}.png"))
                     if os.path.isfile(icon_path):
                         image = Image.open(icon_path).resize((RPC_ICON_SIZE, RPC_ICON_SIZE), Image.LANCZOS)
                         icon_image = ImageTk.PhotoImage(image)
@@ -7385,6 +7398,7 @@ class ProfileTab:
 # =========================
 # MAIN UI
 # =========================
+hide_console_window()
 register_font(FONT_PATH)
 TOOLTIP_ENABLED = load_tooltip_enabled()
 
