@@ -274,10 +274,19 @@ def set_window_disabled(window, disabled):
 # PATHS
 # =========================
 SCRIPT_FOLDER = os.path.dirname(os.path.abspath(__file__))
-RPC_CONFIG_FOLDER = os.path.join(SCRIPT_FOLDER, "rpc_config")
-REFERENCES_FOLDER = os.path.join(SCRIPT_FOLDER, "references")
-HOTKEYS_CONFIG_PATH = os.path.join(SCRIPT_FOLDER, "hotkeys_config.txt")
-UI_CONFIG_PATH = os.path.join(SCRIPT_FOLDER, "ui_config.txt")
+def _get_data_folder():
+    if os.name == "nt":
+        appdata = os.environ.get("APPDATA")
+        if appdata:
+            return os.path.join(appdata, "RotomCamRPC")
+    return os.path.join(os.path.expanduser("~"), ".rotom_cam_rpc")
+
+DATA_FOLDER = _get_data_folder()
+CONFIG_FOLDER = os.path.join(DATA_FOLDER, "config")
+RPC_CONFIG_FOLDER = os.path.join(DATA_FOLDER, "rpc_config")
+REFERENCES_FOLDER = os.path.join(DATA_FOLDER, "references")
+HOTKEYS_CONFIG_PATH = os.path.join(DATA_FOLDER, "hotkeys_config.txt")
+UI_CONFIG_PATH = os.path.join(DATA_FOLDER, "ui_config.txt")
 ALERTS_AUDIO_FOLDER = os.path.join(SCRIPT_FOLDER, "assets", "audio")
 ICON_PATH = os.path.join(SCRIPT_FOLDER, "assets", "rotom", "main", "main_icon.ico")
 FONT_PATH = resource_path(os.path.join("fonts", FONT_FILENAME))
@@ -299,6 +308,8 @@ UI_SOUND_START_PATH = resource_path(os.path.join("assets", "ui_audio", "start.wa
 UI_SOUND_STOP_PATH = resource_path(os.path.join("assets", "ui_audio", "stop.wav"))
 UI_SOUND_ERROR_PATH = resource_path(os.path.join("assets", "ui_audio", "error.wav"))
 
+os.makedirs(DATA_FOLDER, exist_ok=True)
+os.makedirs(CONFIG_FOLDER, exist_ok=True)
 os.makedirs(RPC_CONFIG_FOLDER, exist_ok=True)
 os.makedirs(REFERENCES_FOLDER, exist_ok=True)
 os.makedirs(ALERTS_AUDIO_FOLDER, exist_ok=True)
@@ -2744,7 +2755,7 @@ class ProfileTab:
         self.notebook = parent
         self.profile_index = profile_index
         self.default_tab_name = f"Profile {profile_index}"
-        self.config_path = os.path.join("config", f"config{profile_index}.txt")
+        self.config_path = os.path.join(CONFIG_FOLDER, f"config{profile_index}.txt")
 
         self.selected_image_path = ""
         self.selected_text_path = ""
@@ -6152,7 +6163,7 @@ class ProfileTab:
             selected_target = selected_pokemon_name
             if not selected_target and selected_game_id:
                 # Load current config to preserve existing target
-                config_path = os.path.join(os.path.dirname(__file__), "rpc_config", f"{selected_game_id}.txt")
+                config_path = os.path.join(RPC_CONFIG_FOLDER, f"{selected_game_id}.txt")
                 cfg = rpc_read_config(config_path)
                 selected_target = cfg.get("target", "")
             
@@ -6197,7 +6208,7 @@ class ProfileTab:
             self.save_settings_silent()
             
             # ALSO save to the game-specific RPC config file
-            config_path = os.path.join(os.path.dirname(__file__), "rpc_config", f"{selected_game_id}.txt")
+            config_path = os.path.join(RPC_CONFIG_FOLDER, f"{selected_game_id}.txt")
             cfg = rpc_read_config(config_path)
             cfg["target"] = selected_target
             cfg["odds"] = selected_odds
