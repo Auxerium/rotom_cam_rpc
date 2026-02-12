@@ -413,7 +413,7 @@ def build_tab_badge(size=12, color=START_ACTIVE_COLOR, filled=True, outline_widt
     return ImageTk.PhotoImage(img)
 
 
-def apply_window_style(window, title="RotomCamRPC"):
+def apply_window_style(window, title="XIII Auto Counter"):
     window.title(title)
     try:
         if os.path.isfile(ICON_PATH):
@@ -7522,7 +7522,7 @@ def on_rename_profile(_event=None):
 
     # Build a custom modal dialog so we can set the window title and icon
     dlg = tk.Toplevel(root)
-    apply_window_style(dlg, title="RotomCamRPC")
+    apply_window_style(dlg, title="XIII Auto Counter")
     dlg.transient(root)
     dlg.resizable(False, False)
     dlg.grab_set()
