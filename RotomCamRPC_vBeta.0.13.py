@@ -31,6 +31,7 @@ import tkinter.font as tkfont
 from ctypes import wintypes
 from tkinter import messagebox, filedialog, ttk, simpledialog
 from PIL import Image, ImageTk, ImageSequence, ImageDraw
+import shutil
 
 try:
     from pypresence import Presence
@@ -289,6 +290,9 @@ HOTKEYS_CONFIG_PATH = os.path.join(DATA_FOLDER, "hotkeys_config.txt")
 UI_CONFIG_PATH = os.path.join(DATA_FOLDER, "ui_config.txt")
 ALERTS_AUDIO_FOLDER = resource_path(os.path.join("assets", "audio"))
 ICON_PATH = resource_path(os.path.join("assets", "rotom", "main", "main_icon.ico"))
+RESOURCE_CONFIG_FOLDER = resource_path("config")
+RESOURCE_RPC_CONFIG_FOLDER = resource_path("rpc_config")
+RESOURCE_JSON_FOLDER = resource_path("json")
 FONT_PATH = resource_path(os.path.join("fonts", FONT_FILENAME))
 ICON_RPC_INACTIVE_PATH = resource_path(os.path.join("assets", "rotom", "rpc", "icon_rpc_inactive.png"))
 ICON_RPC_ENABLED_PATH = resource_path(os.path.join("assets", "rotom", "rpc", "icon_rpc_enabled.png"))
@@ -316,6 +320,25 @@ try:
     os.makedirs(ALERTS_AUDIO_FOLDER, exist_ok=True)
 except Exception:
     pass
+
+def _seed_folder(src_dir, dst_dir):
+    if not os.path.isdir(src_dir):
+        return
+    for root, _, files in os.walk(src_dir):
+        rel = os.path.relpath(root, src_dir)
+        dest_root = os.path.join(dst_dir, "" if rel == "." else rel)
+        os.makedirs(dest_root, exist_ok=True)
+        for fname in files:
+            src_path = os.path.join(root, fname)
+            dst_path = os.path.join(dest_root, fname)
+            if not os.path.exists(dst_path):
+                try:
+                    shutil.copy2(src_path, dst_path)
+                except Exception:
+                    pass
+
+_seed_folder(RESOURCE_CONFIG_FOLDER, CONFIG_FOLDER)
+_seed_folder(RESOURCE_RPC_CONFIG_FOLDER, RPC_CONFIG_FOLDER)
 
 
 # =========================
@@ -5223,11 +5246,11 @@ class ProfileTab:
 
         # Load images for visible/not visible states
         try:
-            visible_img = Image.open(os.path.join(os.path.dirname(__file__), "assets", "rotom", "image_test", "visible.png"))
+            visible_img = Image.open(resource_path(os.path.join("assets", "rotom", "image_test", "visible.png")))
             visible_img = visible_img.resize((100, 100), Image.Resampling.LANCZOS)
             visible_photo = ImageTk.PhotoImage(visible_img)
             
-            not_visible_img = Image.open(os.path.join(os.path.dirname(__file__), "assets", "rotom", "image_test", "not_visible.png"))
+            not_visible_img = Image.open(resource_path(os.path.join("assets", "rotom", "image_test", "not_visible.png")))
             not_visible_img = not_visible_img.resize((100, 100), Image.Resampling.LANCZOS)
             not_visible_photo = ImageTk.PhotoImage(not_visible_img)
         except Exception as e:
